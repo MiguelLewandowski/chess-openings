@@ -1,4 +1,5 @@
 'use client'
+import Board from '@/components/chess/Board';
 import CoachCard from '@/components/gambito/CoachCard';
 import { useGameStore } from '@/store/GameStore';
 
@@ -10,6 +11,8 @@ return (
     <div className="p-8 max-w-md mx-auto space-y-4">
         <CoachCard comment={comment || 'Esperando jogada...'} theme="Desenvolvimento" isError={hasError} />
         
+        <Board />
+
         <button 
             className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
             onClick={() => {
