@@ -1,0 +1,137 @@
+// Configurações Iniciais
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// --- NÚCLEO DE USUÁRIOS E PERMISSÕES ---
+
+enum Role {
+  STUDENT
+  TEACHER
+  ADMIN
+}
+
+model User {
+  id                String         @id @default(cuid())
+  email             String         @unique
+  name              String?
+  role              Role           @default(STUDENT)
+  styleArchetype    String?        // Resultado do Quiz de Estilo
+  xp                Int            @default(0)
+  streak            Int            @default(0)
+  lastStudyDate     DateTime?
+  createdAt         DateTime       @default(now())
+
+  // Relações
+  progress          UserProgress[]
+  classroomsManaged Classroom[]    @relation("TeacherClassrooms")
+  enrollments       Enrollment[]   @relation("StudentEnrollments")
+}
+
+// --- NÚCLEO PEDAGÓGICO (ESTRUTURA DE CONTEÚDO) ---
+
+model Opening {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  description String?
+  styleTags   String[] // Tags para o sistema de recomendação
+  lessons     Lesson[]
+}
+
+model Lesson {
+  id        String     @id @default(cuid())
+  title     String
+  order     Int        // Ordem da lição dentro da abertura
+  openingId String
+  opening   Opening    @relation(fields: [openingId], references: [id], onDelete: Cascade)
+  exercises Exercise[]
+}
+
+enum ExerciseType {
+  THEORY   // Modo passivo: explicação de lances
+  PRACTICE // Modo ativo: o usuário deve acertar o lance
+}
+
+model Exercise {
+  id          String       @id @default(cuid())
+  title       String
+  description String?        
+  type        ExerciseType @default(PRACTICE)
+  lessonId    String
+  lesson      Lesson       @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  moves       Move[]
+  progress    UserProgress[]
+}
+
+
+model Move {
+  id                 String   @id @default(cuid())
+  san                String   // Ex: "e4", "Bc4", "Nf6"
+  fen                String   // Posição após o lance
+  
+  // Dados Pedagógicos (Estruturados como JSON para flexibilidade)
+  coachInsights      Json?    // Armazena { comment: "...", theme: "..." }
+  alternatives       Json?    // Armazena { "Bb5": "Explicação...", "d3": "..." }
+  
+  absoluteCp         Int?     // Avaliação da engine (opcional para análise interna)
+  complexity         String?  // Baixa, Média, Alta
+  visualMarkers      Json?    // Setas e círculos: { arrows: [], circles: [] }
+  isOpponentResponse Boolean  @default(false) // Se true, o sistema joga sozinho (Playback)
+  
+  exerciseId         String
+  exercise           Exercise @relation(fields: [exerciseId], references: [id], onDelete: Cascade)
+  
+  // Estrutura de Árvore (Recursividade para linhas e variantes)
+  parentId           String?
+  parent             Move?    @relation("MoveTree", fields: [parentId], references: [id])
+  children           Move[]   @relation("MoveTree")
+}
+
+
+
+// --- MOTOR DE APRENDIZADO (SM-2 / SRS) ---
+
+model UserProgress {
+  id             String   @id @default(cuid())
+  userId         String
+  exerciseId     String
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  exercise       Exercise @relation(fields: [exerciseId], references: [id], onDelete: Cascade)
+  
+  // Algoritmo SM-2
+  easinessFactor Float    @default(2.5)
+  interval       Int      @default(0)     // Dias para a próxima revisão
+  repetitions    Int      @default(0)     // Acertos consecutivos
+  nextReview     DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@unique([userId, exerciseId])
+}
+
+// --- SISTEMA DE GESTÃO (B2B / PROFESSORES) ---
+
+model Classroom {
+  id           String       @id @default(cuid())
+  name         String
+  inviteCode   String       @unique // Ex: "PROFE-2026"
+  teacherId    String
+  teacher      User         @relation("TeacherClassrooms", fields: [teacherId], references: [id])
+  enrollments  Enrollment[]
+  createdAt    DateTime     @default(now())
+}
+
+model Enrollment {
+  id          String    @id @default(cuid())
+  studentId   String
+  classroomId String
+  student     User      @relation("StudentEnrollments", fields: [studentId], references: [id])
+  classroom   Classroom @relation(fields: [classroomId], references: [id], onDelete: Cascade)
+  joinedAt    DateTime  @default(now())
+
+  @@unique([studentId, classroomId])
+}
+
