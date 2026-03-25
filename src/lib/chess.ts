@@ -1,4 +1,5 @@
 import { Chess, Move } from 'chess.js'
+import { Key } from 'chessground/types';
 
 /**
  * Wrapper utilitário em torno da biblioteca chess.js.
@@ -28,11 +29,11 @@ export const ChessWrapper = {
   },
 
   /**
-   * Valida um lance (SAN ou notação curta ex: 'e4') a partir de um FEN específico.
+   * Valida um lance (SAN ou notação curta ex: 'e4', ou objeto {from, to}) a partir de um FEN específico.
    * Se o lance for válido, retorna o novo FEN e os detalhes do lance.
    * Se for inválido, retorna null.
    */
-  playMove(fen: string, move: string): { newFen: string; moveDetails: Move } | null {
+  playMove(fen: string, move: string | {from: string, to: string, promotion?: string}): { newFen: string; moveDetails: Move } | null {
     try {
       // Criamos uma nova instância aqui para não poluir a instância de leitura rápida
       // se esta função for chamada em concorrência no servidor.
@@ -59,6 +60,34 @@ export const ChessWrapper = {
     } catch {
       return []
     }
+  },
+
+  /**
+   * Gera um Map de destinos válidos para o Chessground.
+   * O Chessground espera um Map<Key, Key[]> onde a chave é a casa de origem ('e2')
+   * e o valor é um array de casas de destino ('e3', 'e4').
+   */
+  getLegalMovesMap(fen: string): Map<Key, Key[]> {
+    const dests = new Map<Key, Key[]>();
+    try {
+      readOnlyChess.load(fen);
+      const moves = readOnlyChess.moves({ verbose: true });
+      
+      moves.forEach(move => {
+        const from = move.from as Key;
+        const to = move.to as Key;
+        
+        if (dests.has(from)) {
+          dests.get(from)?.push(to);
+        } else {
+          dests.set(from, [to]);
+        }
+      });
+      
+    } catch (e) {
+      // Ignorar erros de FEN inválido e retornar Map vazio
+    }
+    return dests;
   },
 
   /**
