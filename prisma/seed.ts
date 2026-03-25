@@ -17,8 +17,7 @@ async function main() {
   console.log("🌱 Iniciando o Seed do Chess Openings...");
   
   try {
-    // Vamos chamar o nosso Ingestor para ler este PGN mockado e guardar na BD
-    await IngestorService.ingestStudy(sampleItalianPgn, "Abertura Italiana (Giuoco Piano)");
+    await IngestorService.ingestStudy(sampleItalianPgn, { openingName: "Abertura Italiana (Giuoco Piano)" } as any);
     
     console.log("✅ Seed concluído com sucesso!");
   } catch (error) {
