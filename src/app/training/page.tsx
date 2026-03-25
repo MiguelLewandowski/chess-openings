@@ -1,19 +1,20 @@
 'use client'
 import CoachCard from '@/components/gambito/CoachCard';
-import { useState } from 'react';
+import { useGameStore } from '@/store/GameStore';
 
 export default function TrainingPage(){
-const [hasError, setHasError] = useState(false);    
-const [commentText, setCommentText] = useState('');
+
+    const {fen, setFen, comment, setComment, hasError, setHasError} = useGameStore();
+
 return (
     <div className="p-8 max-w-md mx-auto space-y-4">
-        <CoachCard comment={commentText || 'Esperando jogada...'} theme="Desenvolvimento" isError={hasError} />
+        <CoachCard comment={comment || 'Esperando jogada...'} theme="Desenvolvimento" isError={hasError} />
         
         <button 
             className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
             onClick={() => {
                 setHasError(!hasError); 
-                setCommentText(hasError ? 'Lance normal.' : 'Capivara, perdeste a dama!');
+                setComment(hasError ? 'Lance normal.' : 'Capivara, perdeste a dama!');
             }}
         >
             Alternar Erro
