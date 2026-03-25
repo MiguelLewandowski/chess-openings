@@ -1,8 +1,10 @@
-import { PrismaClient } from '@prisma/client'
+import { PrismaClient } from "@prisma/client";
 
 // Previne múltiplas instâncias do Prisma Client em ambiente de desenvolvimento (hot-reloading do Next.js)
 const prismaClientSingleton = () => {
-  return new PrismaClient()
+  return new PrismaClient({
+    log: process.env.NODE_ENV === 'development' ? ['query', 'error', 'warn'] : ['error'],
+  })
 }
 
 // Declaração global para que o TypeScript saiba que esta variável pode existir no objeto `globalThis`
