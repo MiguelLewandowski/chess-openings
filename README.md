@@ -86,7 +86,7 @@ chess-openings/
 
 ---
 
-## 🎨 Design e Sensação (UX)
+## Design e Sensação (UX)
 
 O Chess Openings foca-se numa estética **"Elegant Classic Chess Club"**:
 * **Cores:** Creme, Verde Floresta e Madeira.
@@ -95,7 +95,7 @@ O Chess Openings foca-se numa estética **"Elegant Classic Chess Club"**:
 
 ---
 
-## 🛠️ Como Iniciar o Projeto Localmente
+## Como Iniciar o Projeto Localmente
 
 ### Pré-requisitos
 * [Node.js](https://nodejs.org/) (v18 ou superior)
@@ -142,14 +142,14 @@ Acede a [http://localhost:3000](http://localhost:3000) e bem-vindo ao teu novo c
 
 ---
 
-## 🚫 O que NÃO está no MVP (Próximas Fases)
+## O que NÃO está no MVP (Próximas Fases)
 Para manter o pragmatismo e foco na entrega:
-* ❌ Análise de partidas reais do Lichess/Chess.com.
-* ❌ Multijogador ou lances em tempo real contra humanos.
-* ❌ Vídeos longos de ensino.
+* Análise de partidas reais do Lichess/Chess.com.
+* Multijogador ou lances em tempo real contra humanos.
+* Vídeos longos de ensino.
 
 ---
 
 <div align="center">
-  <p>Feito com pragmatismo, código limpo e muito amor pelo xadrez. ♟️</p>
+  <p>Feito com pragmatismo e código limpo.</p>
 </div>
