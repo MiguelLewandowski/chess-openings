@@ -15,14 +15,17 @@ const cgRef = useRef<Api | null>(null);
 // Efeito 1: Instanciar o tabuleiro apenas UMA VEZ quando a div entra no DOM
 useEffect(() => {
     if(boardRef.current && !cgRef.current){
+        // Usamos a FEN do Zustand que está atualizada neste momento
+        const currentFen = useGameStore.getState().fen;
+        
         cgRef.current = Chessground(boardRef.current, {
-            fen: fen,
+            fen: currentFen,
             viewOnly: false,
             turnColor: 'white', // Diz ao chessground de quem é a vez
             movable: {
                 color: 'white', // O jogador só pode mover as brancas
                 free: false, // Só permite lances legais do xadrez
-                dests: ChessWrapper.getLegalMovesMap(fen) // Precisamos calcular os destinos válidos!
+                dests: ChessWrapper.getLegalMovesMap(currentFen) // Calculamos os destinos com a FEN correta
             },
             events: {
                 move: (orig, dest) => {
@@ -74,9 +77,9 @@ useEffect(() => {
             fen, 
             turnColor: color,
             movable: { 
-                color,
+                color: 'white', // <-- REVERTI PARA WHITE PARA MANTER AS PEÇAS ARRASTÁVEIS
                 free: false,
-                dests: ChessWrapper.getLegalMovesMap(fen)
+                dests: isWhiteTurn ? ChessWrapper.getLegalMovesMap(fen) : new Map()
             } 
         });
     }
