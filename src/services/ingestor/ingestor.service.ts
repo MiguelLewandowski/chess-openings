@@ -108,6 +108,16 @@ export const IngestorService = {
   ) {
     console.log(`💾 Guardando na Base de Dados...`);
 
+    const slugify = (text: string) => {
+      return text.toString().toLowerCase()
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/(^-|-$)+/g, "");
+    };
+
+    const openingSlug = slugify(openingName);
+
     // O Prisma tem uma limitação arquitetural: quando crias aninhamentos profundos numa self-relation (Move -> Move), 
     // ele não consegue propagar automaticamente a relação do "Avô" (Exercise -> Move).
     // Para resolver isto, em vez de criar tudo num único statement aninhado, 
@@ -115,10 +125,13 @@ export const IngestorService = {
 
     // 1. Cria a Abertura e Lições
     const prismaOpening = await prisma.opening.upsert({
-      where: { name: openingName },
-      update: {}, 
+      where: { slug: openingSlug },
+      update: {
+        name: openingName
+      }, 
       create: {
         name: openingName,
+        slug: openingSlug,
         description: `Importado automaticamente`,
       }
     });
