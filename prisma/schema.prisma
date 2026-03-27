@@ -38,6 +38,7 @@ model User {
 model Opening {
   id          String   @id @default(cuid())
   name        String   @unique
+  slug        String   @unique
   description String?
   styleTags   String[] // Tags para o sistema de recomendação
   lessons     Lesson[]
