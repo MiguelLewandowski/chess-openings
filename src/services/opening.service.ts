@@ -8,3 +8,11 @@ export async function getAllOpenings(){
     })
     return openings
 }
+
+export async function getOpeningBySlug(slug: string) {
+    const openingBySlug = await prisma.opening.findUnique({
+        where: { slug },
+        include: { lessons: true }
+    });
+    return openingBySlug
+}
