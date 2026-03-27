@@ -11,9 +11,6 @@ import { Key } from 'chessground/types';
  * 3. Cria uma interface mais simples e direcionada para as necessidades do Chess Openings.
  */
 
-// Instância global para operações de leitura rápida (não deve manter estado entre chamadas assíncronas)
-const readOnlyChess = new Chess()
-
 export const ChessWrapper = {
   /**
    * Verifica se uma string FEN (Forsyth-Edwards Notation) é válida.
@@ -21,7 +18,7 @@ export const ChessWrapper = {
   isValidFen(fen: string): boolean {
     try {
       // O chess.js v1.0.0+ usa .load() que lança erro se o FEN for inválido
-      readOnlyChess.load(fen)
+      new Chess(fen)
       return true
     } catch {
       return false
@@ -55,8 +52,8 @@ export const ChessWrapper = {
    */
   getLegalMoves(fen: string): string[] {
     try {
-      readOnlyChess.load(fen)
-      return readOnlyChess.moves()
+      const game = new Chess(fen)
+      return game.moves()
     } catch {
       return []
     }
@@ -70,8 +67,8 @@ export const ChessWrapper = {
   getLegalMovesMap(fen: string): Map<Key, Key[]> {
     const dests = new Map<Key, Key[]>();
     try {
-      readOnlyChess.load(fen);
-      const moves = readOnlyChess.moves({ verbose: true });
+      const game = new Chess(fen)
+      const moves = game.moves({ verbose: true });
       
       moves.forEach(move => {
         const from = move.from as Key;
