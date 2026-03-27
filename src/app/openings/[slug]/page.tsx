@@ -1,4 +1,5 @@
 import { getOpeningBySlug } from "@/services/opening.service";
+import Link from "next/link";
 import { notFound } from "next/navigation";
 
 export default async function OpeningTrackPage({ params }: { params: { slug: string } }) {
@@ -18,9 +19,9 @@ export default async function OpeningTrackPage({ params }: { params: { slug: str
       <div className="space-y-4">
         <h2 className="text-2xl font-semibold">Trilha de Aprendizagem</h2>
         {opening.lessons.map(lesson => (
-            <div key={lesson.id} className="border p-4 rounded bg-white">
+            <Link href={`/lessons/${lesson.id}`} key={lesson.id} className="border p-4 rounded bg-white">
                 Lesson {lesson.order}: {lesson.title}
-            </div>
+            </Link>
         ))}
       </div>
     </div>
