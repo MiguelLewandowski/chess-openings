@@ -7,6 +7,7 @@ interface GameState {
     setFen: (newFen: string) => void;
     comment: string;
     setComment: (newComment: string) => void;
+    initializeGame: (fen: string) => void;
 }
 
 export const useGameStore = create<GameState>((set) => ({
@@ -17,5 +18,7 @@ export const useGameStore = create<GameState>((set) => ({
     setFen: (newFen) => set({ fen: newFen }),
     
     comment: '',
-    setComment: (newComment) => set({ comment: newComment })
+    setComment: (newComment) => set({ comment: newComment }),
+
+    initializeGame: (fen) => set({ fen, comment: "Sua vez!" }),
 }));
