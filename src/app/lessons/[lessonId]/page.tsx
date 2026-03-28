@@ -1,4 +1,5 @@
 import Board from "@/components/chess/Board"
+import CoachConsole from "@/components/chess/CoachConsole"
 import GameInitializer from "@/components/chess/GameInitializer"
 import { getLessonById } from "@/services/lesson.service"
 import { notFound } from "next/navigation"
@@ -10,23 +11,24 @@ export default async function LessonPage({ params }: { params: { lessonId: strin
         notFound()
     }
 
-    const testFen = "r1bqkbnr/pp1ppppp/2n5/2p5/4P3/5N2/PPPP1PPP/RNBQKB1R w KQkq - 2 3"
+    const testFen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
+
+    const firstExercise = lesson.exercises[0];
+    if (!firstExercise) {
+        return <div>Esta lição não tem exercícios.</div>;
+    }
 
     return (
         <div className="flex flex-col md:flex-row gap-8 p-8">
 
-            <GameInitializer initialFen={testFen} />x
+            <GameInitializer initialFen={testFen} movesTree={firstExercise.moves} />
             {/* Lado Esquerdo: O Tabuleiro */}
             <div className="flex-1">
                 <h2>{lesson.title}</h2>
                 <Board />
             </div>
 
-            {/* Lado Direito: A "consola" do treinador (placeholder) */}
-            <div className="flex-1 bg-gray-100 p-4 rounded">
-                <h3>Explicações do Mestre</h3>
-                <p>Os comentários vão aparecer aqui...</p>
-            </div>
+           <CoachConsole/>
         </div>
     )
 }
