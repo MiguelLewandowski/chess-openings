@@ -3,13 +3,14 @@
 import { useGameStore } from "@/store/GameStore";
 import { useRef } from "react"
 
-export default function GameInitializer({initialFen} : {initialFen: string}){
+
+export default function GameInitializer({ initialFen, movesTree }: { initialFen: string, movesTree: any[] }){
     const isInitialized = useRef(false);
 
-    const initializeGame = useGameStore(state => state.initializeGame);
+    const setupExercise = useGameStore(state => state.setupExercise);
 
     if(!isInitialized.current) {
-        initializeGame(initialFen);
+        setupExercise(initialFen, movesTree);
         isInitialized.current = true;
     }
 
