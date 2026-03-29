@@ -14,6 +14,7 @@ interface GameState {
     currentNodeId: string | null;
     isThinking: boolean;
     isCompleted: boolean;
+    playerColor: 'white' | 'black';
     setupExercise: (initialFen: string, movesTree: any[]) => void;
     handlePlayerMove: (orig: string, dest: string) => boolean;
     checkCompletion: () => void;
@@ -35,16 +36,23 @@ export const useGameStore = create<GameState>((set, get) => ({
     currentNodeId: null,
     isThinking: false,
     isCompleted: false,
+    playerColor: 'white',
 
-    setupExercise: (initialFen, movesTree) => set({
-        fen: initialFen,
-        exerciseMoves: movesTree,
-        currentNodeId: null,
-        isThinking: false,
-        isCompleted: false,
-        comment: "Sua vez! Encontre o melhor lance.",
-        hasError: false
-    }),
+    setupExercise: (initialFen, movesTree) => {
+        // Descobre a cor do jogador: se o primeiro lance é do oponente, o jogador é as pretas!
+        const isBlackLesson = movesTree.length > 0 && movesTree.find((m: any) => m.parentId === null)?.isOpponentResponse === true;
+        
+        set({
+            fen: initialFen,
+            exerciseMoves: movesTree,
+            currentNodeId: null,
+            isThinking: false,
+            isCompleted: false,
+            playerColor: isBlackLesson ? 'black' : 'white',
+            comment: "Sua vez! Encontre o melhor lance.",
+            hasError: false
+        });
+    },
 
     handlePlayerMove: (orig, dest) => {
         const state = get();
