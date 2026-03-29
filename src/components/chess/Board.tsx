@@ -7,7 +7,7 @@ import { Api } from 'chessground/api';
 import { ChessWrapper } from '@/lib/chess';
 
 export default function Board() {
-    const { fen, setFen, comment, setComment } = useGameStore();
+    const { fen, isThinking } = useGameStore();
     const boardRef = useRef<HTMLDivElement>(null);
     // Guardamos a instância do Chessground numa ref para podermos aceder-lhe sem causar re-renders
     const cgRef = useRef<Api | null>(null);
@@ -22,6 +22,7 @@ export default function Board() {
                 fen: currentFen,
                 viewOnly: false,
                 turnColor: 'white', // Diz ao chessground de quem é a vez
+                premovable: { enabled: false },
                 movable: {
                     color: 'white', // O jogador só pode mover as brancas
                     free: false, // Só permite lances legais do xadrez
@@ -52,24 +53,25 @@ export default function Board() {
     }, []); // <-- Array vazio: só corre na montagem inicial!
 
     // Efeito 2: Atualizar a posição quando a FEN do Zustand mudar
-    useEffect(() => {
-        if (cgRef.current) {
-            // 2. Correção do Turno:
-            // O chessground precisa saber de quem é a vez. A FEN tem essa informação na segunda parte (ex: "... w ...")
-            const isWhiteTurn = fen.split(' ')[1] === 'w';
-            const color = isWhiteTurn ? 'white' : 'black';
+useEffect(() => {
+    if (cgRef.current) {
+        // 2. Correção do Turno:
+        // O chessground precisa saber de quem é a vez. A FEN tem essa informação na segunda parte (ex: "... w ...")
+        const isWhiteTurn = fen.split(' ')[1] === 'w';
+        const color = isWhiteTurn ? 'white' : 'black';
 
-            cgRef.current.set({
-                fen,
-                turnColor: color,
-                movable: {
-                    color: 'white', // <-- REVERTI PARA WHITE PARA MANTER AS PEÇAS ARRASTÁVEIS
-                    free: false,
-                    dests: isWhiteTurn ? ChessWrapper.getLegalMovesMap(fen) : new Map()
-                }
-            });
-        }
-    }, [fen]); // <-- Este corre sempre que a FEN muda
+        cgRef.current.set({ 
+            fen, 
+            turnColor: color,
+            premovable: { enabled: false }, 
+            movable: { 
+                color: 'white', // <-- REVERTI PARA WHITE PARA MANTER AS PEÇAS ARRASTÁVEIS
+                free: false,
+                dests: (isWhiteTurn && !isThinking && !useGameStore.getState().isCompleted) ? ChessWrapper.getLegalMovesMap(fen) : new Map()
+            } 
+        });
+    }
+}, [fen, isThinking]); // <-- Este corre sempre que a FEN ou isThinking muda
 
     return (
         <div className="flex flex-col items-center">
