@@ -1,4 +1,5 @@
 import { ChessWrapper } from "@/lib/chess";
+import next from "next";
 import { create } from "zustand";
 
 interface GameState {
@@ -59,8 +60,28 @@ export const useGameStore = create<GameState>((set, get) => ({
                 fen:result.newFen,
                 hasError: false,
                 currentNodeId: expectedMove.id,
-                comment: expectedMove.coachInsights?.comment || `Bom lance: ${moveSan}`
-            })
+                 comment: expectedMove.coachInsights?.comment?.includes("Erro") 
+                         ? `Bom lance: ${moveSan}` 
+                         : (expectedMove.coachInsights?.comment || `Bom lance: ${moveSan}`)
+            });
+
+            const updatedState = get();
+
+            const nextMove = updatedState.exerciseMoves.find(move => move.parentId === updatedState.currentNodeId);
+
+            if(nextMove && nextMove.isOpponentResponse){
+                set({comment: "O oponente esta jogando..."});
+
+                setTimeout(() => {
+                    set({
+                        fen: nextMove.fen,
+                        currentNodeId: nextMove.id,
+                        comment: nextMove.coachInsights?.comment?.includes("Erro") 
+                                 ? `Oponente jogou: ${nextMove.san}. Sua vez!`
+                                 : (nextMove.coachInsights?.comment || `Oponente jogou: ${nextMove.san}. Sua vez!`)
+                    });
+                }, 500);
+            }
             return true;
         }else{
             set({hasError: true, comment: `${moveSan} é legal, mas não é a teoria!`})
