@@ -41,7 +41,12 @@ export const useGameStore = create<GameState>((set, get) => ({
     setupExercise: (initialFen, movesTree) => {
         // Descobre a cor do jogador: se o primeiro lance é do oponente, o jogador é as pretas!
         const isBlackLesson = movesTree.length > 0 && movesTree.find((m: any) => m.parentId === null)?.isOpponentResponse === true;
+          const firstExpectedMove = movesTree.find((m: any) => m.parentId === null);
         
+        // Pega o comentário desse lance, ou usa o fallback
+        const initialComment = firstExpectedMove?.coachInsights?.comment 
+            ? `Dica: ${firstExpectedMove.coachInsights.comment}` 
+            : "Sua vez! Encontre o melhor lance.";
         set({
             fen: initialFen,
             exerciseMoves: movesTree,
@@ -49,7 +54,7 @@ export const useGameStore = create<GameState>((set, get) => ({
             isThinking: false,
             isCompleted: false,
             playerColor: isBlackLesson ? 'black' : 'white',
-            comment: "Sua vez! Encontre o melhor lance.",
+            comment: initialComment,
             hasError: false
         });
     },
@@ -69,6 +74,11 @@ export const useGameStore = create<GameState>((set, get) => ({
         const expectedMove = state.exerciseMoves.find(move => {
             return move.san === moveSan && move.parentId === state.currentNodeId;
         })
+
+          if (expectedMove) {
+             console.log("DADOS DO LANCE:", expectedMove);
+             console.log("INSIGHTS:", expectedMove.coachInsights);
+        }
 
         if (expectedMove) {
             set({

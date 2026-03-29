@@ -64,33 +64,44 @@ export const IngestorService = {
     const fensToEvaluate: string[] = [];
     const coachRequests: CoachRequest[] = [];
 
-    const traverse = (node: ParsedNode, parentEvalCp: number | null) => {
+    const traverse = (node: ParsedNode, parentEvalCp: number | null, lessonColor: string) => {
       fensToEvaluate.push(node.fen);
 
       // Só pedimos insight ao Gemini para a Linha Principal (Theory)
       if (node.isMainLine) {
+        // Determina a cor baseada no turno do lance na árvore (assumindo que o capítulo começa sempre de brancas ou a FEN indica)
+        // Uma forma mais robusta é ler a FEN do lance ANTERIOR, mas o m.player (WHITE/BLACK) já foi extraído no PgnParser!
+        const playerWhoMoved = node.player;
+        
         coachRequests.push({
-          id: node.id,
-          san: node.san,
-          cpChangeTheme: "Desenvolvimento", // Simplificação por agora (evita dependência estrita do eval anterior)
-          originalComment: node.originalComment,
-          tacticalContext: {
-            pieceMoved: node.pieceMoved,
-            capturedPiece: node.capturedPiece,
-            isCheck: node.isCheck
-          }
-        });
+            id: node.id,
+            san: node.san,
+            cpChangeTheme: "Desenvolvimento", // Simplificação por agora (evita dependência estrita do eval anterior)
+            originalComment: node.originalComment,
+            isOpponentResponse: node.player !== lessonColor, // Se quem jogou é diferente da cor da lição, é o bot!
+            playerColor: lessonColor as 'WHITE' | 'BLACK',
+            tacticalContext: {
+              pieceMoved: node.pieceMoved,
+              capturedPiece: node.capturedPiece,
+              isCheck: node.isCheck
+            }
+          });
       }
 
       for (const child of node.children) {
-        traverse(child, null);
+        traverse(child, null, lessonColor);
       }
     };
 
     for (const chapter of chapters) {
       fensToEvaluate.push(chapter.initialFen); // A posição inicial também precisa de eval
+
+      // Se a lição é sobre a Abertura Branca, as Brancas são o Aluno. Se for Defesa, Pretas são o Aluno.
+      const isBlackLesson = chapter.rootNodes[0]?.player === 'BLACK';
+      const lessonColor = isBlackLesson ? 'BLACK' : 'WHITE';
+
       for (const root of chapter.rootNodes) {
-        traverse(root, null);
+        traverse(root, null, lessonColor);
       }
     }
 

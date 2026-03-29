@@ -5,22 +5,23 @@ const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
 
 const systemPrompt = `
 [T] - TAREFA (TASK)
-Você é o Mestre Gambito, um Instrutor Sênior de Xadrez. A sua ÚNICA função é atuar como "Ghostwriter" (Formatador de Texto) para as anotações brutas deixadas pelo autor do curso (um Mestre Nacional). 
-Você vai receber notas curtas, jargões ou rascunhos e o seu trabalho é transformar isso numa fala elegante, didática e direta.
+Você é o Mestre Gambito, um Instrutor Sênior de Xadrez caloroso e profundo. A sua função é expandir e "enfeitar" as anotações curtas do autor do curso, transformando-as numa fala de professor.
 
-[R] - ROLE (PAPEL)
-Você NÃO É um motor de xadrez (Stockfish). Não tente inventar táticas, descobrir cravadas ou calcular lances. Confie 100% nas notas do autor. A sua voz é autoritária, impessoal e pragmática.
+[R] - ROLE E TOM (PAPEL)
+Você é experiente, didático e usa analogias de xadrez, mas NUNCA apaga o conhecimento original. O seu tom é de quem está ao lado do aluno a explicar o "porquê" do lance.
+IMPORTANTE: A sua fala deve refletir a perspectiva de quem FEZ o lance. Se for o lance do aluno, fale como quem aprova a decisão ("Nós jogamos isso para..."). Se for o lance do oponente, fale como quem alerta sobre a ameaça ("As pretas jogam isso porque querem...").
 
 [I] - INSTRUÇÕES & REGRAS (INSTRUCTIONS)
-1. REGRA DE OURO: Nunca invente informações táticas que não estejam nas notas originais. Se o autor escreveu "quebra o centro", você fala sobre quebrar o centro.
-2. CONCISÃO RADICAL: O comentário final DEVE ter no máximo 2 frases curtas. Sem poesia, sem rodeios.
-3. PROIBIÇÕES:
-   - PROIBIDO listar casas (ex: "controla c5 e f6"). As LLMs alucinam geometria, não o faça.
-   - PROIBIDO falar diretamente com o usuário ("Você jogou...").
-   - PROIBIDO usar palavras como 'Stockfish', 'Centipeões', 'Avaliação'.
+1. PRESERVAÇÃO ESTRITA: Se o comentário original citar casas específicas (ex: "controla d5", "ataca f7") ou peças, VOCÊ É OBRIGADO a incluir essas exatas casas e peças na sua explicação final. É estritamente proibido trocar casas reais por termos genéricos como "ala do rei" ou "centro".
+2. EXPANSÃO: Pegue a ideia do autor e explique o *motivo* estratégico de forma didática (ex: "Por que controlar d5 é importante aqui?").
+3. CONCISÃO: O comentário final deve ter no máximo 3 frases. 
+4. PROIBIÇÕES:
+   - PROIBIDO inventar lances futuros ou táticas que não estão no texto original.
+   - PROIBIDO usar palavras como 'Stockfish', 'Centipeões'.
+   - PROIBIDO dirigir-se ao usuário com "Você" se o lance for do Oponente.
 
 [C] - CASOS ESPECÍFICOS:
-- Se não houver "Comentário original do autor" fornecido no prompt, gere apenas uma frase genérica e curta baseada no tema: "Lance natural de desenvolvimento." ou "Avança a teoria da abertura."
+- Se não houver "Comentário original", gere uma frase curta focada no princípio básico do lance (ex: desenvolvimento, controle).
 `;
 
 const responseSchema: Schema = {
@@ -48,7 +49,8 @@ export interface CoachRequest {
   san: string;
   cpChangeTheme: string;
   originalComment?: string;
-  // Contexto tático explícito para evitar alucinações da LLM
+  isOpponentResponse: boolean; // NOVO CAMPO PARA SABER DE QUEM É O LANCE
+  playerColor: 'WHITE' | 'BLACK'; // A cor de quem está aprendendo a lição
   tacticalContext: {
     pieceMoved: string;
     capturedPiece?: string;
@@ -71,7 +73,7 @@ export const CoachService = {
     }
 
     const model = genAI.getGenerativeModel({
-      model: 'gemini-2.0-flash-lite-preview-02-05', // Versão específica e ultra-barata do Flash Lite
+      model: 'gemini-3-flash-preview', // Versão estável do Gemini
       systemInstruction: systemPrompt,
       generationConfig: {
         responseMimeType: "application/json",
@@ -88,7 +90,14 @@ export const CoachService = {
       console.log(`🧠 [Coach] Processando lote ${i / batchSize + 1} de ${Math.ceil(requests.length / batchSize)}...`);
       
       const batchPromises = batch.map(async (req) => {
-        let prompt = `Lance atual: ${req.san}\n`;
+        const actor = req.isOpponentResponse ? "OPONENTE (Bot)" : "ALUNO (Você)";
+        const actorColor = req.isOpponentResponse 
+          ? (req.playerColor === 'WHITE' ? 'Pretas' : 'Brancas')
+          : (req.playerColor === 'WHITE' ? 'Brancas' : 'Pretas');
+
+        let prompt = `Cor que o Aluno está jogando a lição: ${req.playerColor === 'WHITE' ? 'Brancas' : 'Pretas'}\n`;
+        prompt += `Quem fez este lance: ${actor} (Jogando de ${actorColor})\n`;
+        prompt += `Lance atual: ${req.san}\n`;
         prompt += `Peça que se moveu: ${req.tacticalContext.pieceMoved}\n`;
         if (req.tacticalContext.capturedPiece) {
           prompt += `[ATENÇÃO] Houve uma captura! Peça capturada: ${req.tacticalContext.capturedPiece}\n`;
@@ -99,9 +108,9 @@ export const CoachService = {
         prompt += `Tema sugerido pela mudança de avaliação: ${req.cpChangeTheme}\n`;
         
         if (req.originalComment) {
-          prompt += `Comentário original do autor: "${req.originalComment}"\nRefine este comentário com seus insights de GM.`;
+          prompt += `\nCOMENTÁRIO DO AUTOR (PRESERVAR IDEIAS E CASAS CITADAS):\n"${req.originalComment}"\n\nExpanda este comentário didaticamente, mas MANTENHA todas as casas mencionadas. Lembre-se de adaptar o tom dependendo se quem jogou foi o Aluno ou o Oponente!`;
         } else {
-          prompt += `Explique este lance de acordo com as regras estabelecidas.`;
+          prompt += `Explique este lance de acordo com as regras estabelecidas. Lembre-se de adaptar o tom dependendo se quem jogou foi o Aluno ou o Oponente!`;
         }
 
         try {
@@ -111,7 +120,7 @@ export const CoachService = {
           return { id: req.id, insight: parsed };
         } catch (error) {
           console.error(`Erro ao gerar insight para ${req.san}:`, error);
-          return { id: req.id, insight: { comment: "Erro ao gerar explicação pedagógica.", theme: req.cpChangeTheme } };
+          return { id: req.id, insight: { comment: req.originalComment || "Lance teórico.", theme: req.cpChangeTheme } };
         }
       });
 
