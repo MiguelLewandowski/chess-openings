@@ -29,44 +29,6 @@ export interface ParsedChapter {
 
 export const PgnParserService = {
   /**
-   * Extrai texto humano e metadados visuais (setas, círculos) de uma string de comentário.
-   */
-  parseComments(commentStr?: string): { text: string; visualMarkers: VisualMarkers | null } {
-    if (!commentStr) return { text: "", visualMarkers: null };
-
-    const markers: VisualMarkers = { arrows: [], circles: [] };
-    let hasMarkers = false;
-
-    // Extrai [%cal ...] (Arrows)
-    const calMatches = commentStr.match(/\[%cal\s+([^\]]+)\]/g);
-    if (calMatches) {
-      hasMarkers = true;
-      calMatches.forEach(match => {
-        const inner = match.match(/\[%cal\s+([^\]]+)\]/)?.[1];
-        if (inner) markers.arrows.push(...inner.split(',').map(s => s.trim()));
-      });
-    }
-
-    // Extrai [%csl ...] (Circles)
-    const cslMatches = commentStr.match(/\[%csl\s+([^\]]+)\]/g);
-    if (cslMatches) {
-      hasMarkers = true;
-      cslMatches.forEach(match => {
-        const inner = match.match(/\[%csl\s+([^\]]+)\]/)?.[1];
-        if (inner) markers.circles.push(...inner.split(',').map(s => s.trim()));
-      });
-    }
-
-    // Remove todos os comandos [%...] para isolar o texto humano
-    const cleanText = commentStr.replace(/\[%[^\]]+\]/g, '').trim();
-
-    return {
-      text: cleanText,
-      visualMarkers: hasMarkers ? markers : null
-    };
-  },
-
-  /**
    * Converte a AST do @mliebelt/pgn-parser na nossa estrutura de Árvore (com FENs calculados)
    */
   buildTree(movesAst: any[], currentFen: string, isMainLine: boolean = true): ParsedNode[] {
@@ -95,14 +57,64 @@ export const PgnParserService = {
         return []; // Se for ilegal, aborta este ramo
       }
 
-      const { text, visualMarkers } = this.parseComments(moveObj.commentDiag?.comment);
+      const commentText = moveObj.commentDiag?.comment || moveObj.commentAfter || "";
       
+      const markers: VisualMarkers = { arrows: [], circles: [] };
+      let hasMarkers = false;
+
+      // O @mliebelt/pgn-parser já extrai colorArrows e colorFields se estiverem no formato certo,
+      // mas como vimos, o Lichess pode colocar os [%cal] e [%csl] no meio de commentAfter ou num formato que o parser falha em identificar estruturalmente.
+      // Por isso, vamos fazer parsing manual com regex de toda a string de comentário para garantir.
+      
+      const fullComment = `${moveObj.commentDiag?.comment || ''} ${moveObj.commentAfter || ''}`;
+      
+      // Extrai [%cal ...] (Arrows)
+      const calMatches = fullComment.match(/\[%cal\s+([^\]]+)\]/g);
+      if (calMatches) {
+        hasMarkers = true;
+        calMatches.forEach(match => {
+          const inner = match.match(/\[%cal\s+([^\]]+)\]/)?.[1];
+          if (inner) markers.arrows.push(...inner.split(',').map(s => s.trim()));
+        });
+      } else if (moveObj.commentDiag?.colorArrows?.length > 0) {
+        hasMarkers = true;
+        markers.arrows.push(...moveObj.commentDiag.colorArrows);
+      } else if (moveObj.commentDiag?.cal) {
+        // Fallback para o caso onde o parser engole o [%cal] e joga diretamente na prop 'cal'
+        hasMarkers = true;
+        const cals = typeof moveObj.commentDiag.cal === 'string' ? moveObj.commentDiag.cal.split(',') : moveObj.commentDiag.cal;
+        markers.arrows.push(...cals.map((s: string) => s.trim()));
+      }
+
+      // Extrai [%csl ...] (Circles)
+      const cslMatches = fullComment.match(/\[%csl\s+([^\]]+)\]/g);
+      if (cslMatches) {
+        hasMarkers = true;
+        cslMatches.forEach(match => {
+          const inner = match.match(/\[%csl\s+([^\]]+)\]/)?.[1];
+          if (inner) markers.circles.push(...inner.split(',').map(s => s.trim()));
+        });
+      } else if (moveObj.commentDiag?.colorFields?.length > 0) {
+        hasMarkers = true;
+        markers.circles.push(...moveObj.commentDiag.colorFields);
+      } else if (moveObj.commentDiag?.csl) {
+         // Fallback para o caso onde o parser engole o [%csl] e joga diretamente na prop 'csl'
+         hasMarkers = true;
+         const csls = typeof moveObj.commentDiag.csl === 'string' ? moveObj.commentDiag.csl.split(',') : moveObj.commentDiag.csl;
+         markers.circles.push(...csls.map((s: string) => s.trim()));
+      }
+
+      // Limpar os marcadores visuais do comentário para não irem para a LLM
+      const cleanCommentText = commentText.replace(/\[%(cal|csl)\s+[^\]]+\]/g, '').trim();
+
+      const visualMarkers: VisualMarkers | null = hasMarkers ? markers : null;
+
       const node: ParsedNode = {
         id: Math.random().toString(36).substring(7),
         san,
         fen: playResult.newFen,
         player: playResult.moveDetails.color === 'w' ? 'WHITE' : 'BLACK',
-        originalComment: text,
+        originalComment: cleanCommentText,
         visualMarkers,
         isMainLine: mainLineFlag,
         children: [],

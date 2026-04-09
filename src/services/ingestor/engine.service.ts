@@ -69,9 +69,9 @@ export const EngineService = {
       const batch = uniqueFens.slice(i, i + batchSize);
       console.log(`⚙️ [Engine] Avaliando lote ${i / batchSize + 1} de ${Math.ceil(uniqueFens.length / batchSize)}...`);
       
-      const promises = batch.map(async (fen) => {
-        // Pequeno delay para não levar rate limit de 429 da Lichess
-        await new Promise(r => setTimeout(r, 100)); 
+      const promises = batch.map(async (fen, index) => {
+        // Aumentamos o delay escalonado para evitar Rate Limit 429 do Lichess
+        await new Promise(r => setTimeout(r, index * 250)); 
         const evalData = await this.getEvaluation(fen);
         return { fen, evalData };
       });

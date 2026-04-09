@@ -7,6 +7,7 @@ export interface IngestOptions {
   openingName?: string;
   chapterLimit?: number; // Ex: 3 (analisa os primeiros 3 capítulos)
   specificChapter?: number; // Ex: 2 (analisa apenas o capítulo 2, base 1)
+  styleTags?: string[];
 }
 
 export const IngestorService = {
@@ -54,7 +55,7 @@ export const IngestorService = {
     console.log(`✅ Enriquecimento concluído.`);
 
     // 4. Salvar na Base de Dados usando Nested Writes
-    return this.persistToDatabase(finalOpeningName, chapters, evaluations, coachInsights);
+    return this.persistToDatabase(finalOpeningName, chapters, evaluations, coachInsights, options.styleTags || []);
   },
 
   /**
@@ -115,7 +116,8 @@ export const IngestorService = {
     openingName: string, 
     chapters: ParsedChapter[], 
     evaluations: Record<string, EngineEvaluation | null>, 
-    coachInsights: Record<string, CoachInsight>
+    coachInsights: Record<string, CoachInsight>,
+    styleTags: string[] = []
   ) {
     console.log(`💾 Guardando na Base de Dados...`);
 
@@ -138,12 +140,14 @@ export const IngestorService = {
     const prismaOpening = await prisma.opening.upsert({
       where: { slug: openingSlug },
       update: {
-        name: openingName
+        name: openingName,
+        styleTags: styleTags
       }, 
       create: {
         name: openingName,
         slug: openingSlug,
         description: `Importado automaticamente`,
+        styleTags: styleTags
       }
     });
 

@@ -15,6 +15,11 @@ interface GameState {
     isThinking: boolean;
     isCompleted: boolean;
     playerColor: 'white' | 'black';
+    initialFen: string; // NOVO: para o player conseguir voltar ao início
+    initialComment: string; // NOVO: para restaurar o comentário inicial
+    isWaitingForNext: boolean; // Flag para pausar antes do lance do oponente
+    playNextMove: () => void; // NOVO: Avança lance
+    playPreviousMove: () => void; // NOVO: Recua lance
     setupExercise: (initialFen: string, movesTree: any[]) => void;
     handlePlayerMove: (orig: string, dest: string) => boolean;
     checkCompletion: () => void;
@@ -30,13 +35,101 @@ export const useGameStore = create<GameState>((set, get) => ({
     comment: '',
     setComment: (newComment) => set({ comment: newComment }),
 
-    initializeGame: (fen) => set({ fen, comment: "Sua vez!" }),
+    initializeGame: (fen) => set({ fen, comment: "Your turn!" }),
 
     exerciseMoves: [],
     currentNodeId: null,
     isThinking: false,
     isCompleted: false,
     playerColor: 'white',
+    initialFen: '',
+    initialComment: '',
+    isWaitingForNext: false, // Inicializa como false
+
+    playNextMove: () => {
+        const state = get();
+        if (state.isCompleted) return;
+
+        // 1. Se estivermos parados à espera que o oponente jogue (botão Continuar)
+        if (state.isWaitingForNext) {
+            const nextMove = state.exerciseMoves.find(move => move.parentId === state.currentNodeId);
+            if (nextMove && nextMove.isOpponentResponse) {
+                set({ isWaitingForNext: false, isThinking: true });
+
+                setTimeout(() => {
+                    set({
+                        fen: nextMove.fen,
+                        currentNodeId: nextMove.id,
+                        isThinking: false,
+                        comment: nextMove.coachInsights?.comment?.includes("Erro")
+                            ? `Opponent played: ${nextMove.san}. Your turn!`
+                            : (nextMove.coachInsights?.comment || `Opponent played: ${nextMove.san}. Your turn!`),
+                    });
+                    get().checkCompletion();
+                }, 300);
+            }
+            return;
+        }
+
+        // 2. Se for a nossa vez (Auto-play do lance correto para saltar)
+        const nextMove = state.exerciseMoves.find(move => move.parentId === state.currentNodeId);
+        if (nextMove && !nextMove.isOpponentResponse) {
+            set({
+                fen: nextMove.fen,
+                hasError: false,
+                currentNodeId: nextMove.id,
+                comment: nextMove.coachInsights?.comment?.includes("Erro")
+                    ? `Good move: ${nextMove.san}`
+                    : (nextMove.coachInsights?.comment || `Good move: ${nextMove.san}`)
+            });
+
+            // Verificar se o a seguir é o oponente para bloquear e pedir "Continuar"
+            const nextNextMove = get().exerciseMoves.find(move => move.parentId === nextMove.id);
+            if (nextNextMove && nextNextMove.isOpponentResponse) {
+                set({ isWaitingForNext: true });
+            } else {
+                get().checkCompletion();
+            }
+        }
+    },
+
+    playPreviousMove: () => {
+        const state = get();
+        
+        // Se ainda não houve nenhum lance, não há como recuar
+        if (!state.currentNodeId) return;
+
+        const currentMove = state.exerciseMoves.find(m => m.id === state.currentNodeId);
+        if (!currentMove) return;
+
+        // Limpa o estado de erro ou de lição concluída
+        set({ hasError: false, isCompleted: false, isWaitingForNext: false });
+
+        if (currentMove.parentId === null) {
+            // Recuamos para a posição inicial exata
+            set({
+                fen: state.initialFen,
+                currentNodeId: null,
+                comment: state.initialComment
+            });
+        } else {
+            // Recuamos um nó na árvore
+            const prevMove = state.exerciseMoves.find(m => m.id === currentMove.parentId);
+            if (prevMove) {
+                set({
+                    fen: prevMove.fen,
+                    currentNodeId: prevMove.id,
+                    comment: prevMove.coachInsights?.comment || `Move: ${prevMove.san}`
+                });
+
+                // Se o que vier a seguir for do oponente, garantimos que pausamos de novo no futuro
+                const nextMove = state.exerciseMoves.find(move => move.parentId === prevMove.id);
+                if (nextMove && nextMove.isOpponentResponse) {
+                    set({ isWaitingForNext: true });
+                }
+            }
+        }
+    },
 
     setupExercise: (initialFen, movesTree) => {
         // Descobre a cor do jogador: se o primeiro lance é do oponente, o jogador é as pretas!
@@ -45,15 +138,18 @@ export const useGameStore = create<GameState>((set, get) => ({
         
         // Pega o comentário desse lance, ou usa o fallback
         const initialComment = firstExpectedMove?.coachInsights?.comment 
-            ? `Dica: ${firstExpectedMove.coachInsights.comment}` 
-            : "Sua vez! Encontre o melhor lance.";
+            ? `Hint: ${firstExpectedMove.coachInsights.comment}` 
+            : "Your turn! Find the best move.";
         set({
+            initialFen,
+            initialComment,
             fen: initialFen,
             exerciseMoves: movesTree,
             currentNodeId: null,
             isThinking: false,
             isCompleted: false,
             playerColor: isBlackLesson ? 'black' : 'white',
+            isWaitingForNext: false, // Reseta a flag ao iniciar
             comment: initialComment,
             hasError: false
         });
@@ -65,7 +161,7 @@ export const useGameStore = create<GameState>((set, get) => ({
         const result = ChessWrapper.playMove(state.fen, moveAttempt);
 
         if (!result) {
-            set({ hasError: true, comment: "Lance ilegal!" });
+            set({ hasError: true, comment: "Illegal move!" });
             return false;
         }
 
@@ -86,36 +182,23 @@ export const useGameStore = create<GameState>((set, get) => ({
                 hasError: false,
                 currentNodeId: expectedMove.id,
                 comment: expectedMove.coachInsights?.comment?.includes("Erro")
-                    ? `Bom lance: ${moveSan}`
-                    : (expectedMove.coachInsights?.comment || `Bom lance: ${moveSan}`)
+                    ? `Good move: ${moveSan}`
+                    : (expectedMove.coachInsights?.comment || `Good move: ${moveSan}`)
             });
 
-
             const updatedState = get();
-
             const nextMove = updatedState.exerciseMoves.find(move => move.parentId === updatedState.currentNodeId);
 
             if (nextMove && nextMove.isOpponentResponse) {
-                set({ comment: "O oponente esta jogando...", isThinking: true });
-
-                setTimeout(() => {
-                    set({
-                        fen: nextMove.fen,
-                        currentNodeId: nextMove.id,
-                        isThinking: false,
-                        comment: nextMove.coachInsights?.comment?.includes("Erro")
-                            ? `Oponente jogou: ${nextMove.san}. Sua vez!`
-                            : (nextMove.coachInsights?.comment || `Oponente jogou: ${nextMove.san}. Sua vez!`),
-                        
-                    })
-                    get().checkCompletion();
-                }, 500);
+                // Em vez de jogar o lance do oponente imediatamente (atropelando as setas e os comentários do jogador),
+                // ativamos a flag isWaitingForNext para o utilizador poder ler a explicação calmamente.
+                set({ isWaitingForNext: true });
             } else {
                 get().checkCompletion();
             }
             return true;
         } else {
-            set({ hasError: true, comment: `${moveSan} é legal, mas não é a teoria!` })
+            set({ hasError: true, comment: `${moveSan} is legal, but not the theory!` })
             return false;
         }
     },
@@ -131,7 +214,7 @@ export const useGameStore = create<GameState>((set, get) => ({
         if(!hasChildren){
             set({
                 isCompleted: true,
-                comment: "Parabéns! Você concluiu a teoria desta lição!" 
+                comment: "Congratulations! You have completed the theory for this lesson!" 
             })
         }
     }
