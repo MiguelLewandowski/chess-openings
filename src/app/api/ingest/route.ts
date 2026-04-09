@@ -8,7 +8,7 @@ export const maxDuration = 60; // 60 segundos (limite do plano hobby da Vercel)
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { url, openingName, chapterLimit, specificChapter } = body;
+    const { url, openingName, chapterLimit, specificChapter, styleTags } = body;
 
     if (!url) {
       return NextResponse.json({ error: "A URL do estudo é obrigatória." }, { status: 400 });
@@ -24,6 +24,7 @@ export async function POST(request: Request) {
       openingName,
       chapterLimit: chapterLimit ? parseInt(chapterLimit) : undefined,
       specificChapter: specificChapter ? parseInt(specificChapter) : undefined,
+      styleTags: styleTags || [],
     });
 
     return NextResponse.json({ 
