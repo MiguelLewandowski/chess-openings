@@ -6,8 +6,18 @@ import { Chessground } from 'chessground';
 import { Api } from 'chessground/api';
 import { ChessWrapper } from '@/lib/chess';
 
+function getBrushColor(code: string) {
+    switch (code.toUpperCase()) {
+        case 'G': return 'green';
+        case 'R': return 'red';
+        case 'B': return 'blue';
+        case 'Y': return 'yellow';
+        default: return 'green';
+    }
+}
+
 export default function Board() {
-    const { fen, isThinking, playerColor } = useGameStore();
+    const { fen, isThinking, playerColor, currentNodeId, exerciseMoves } = useGameStore();
     const boardRef = useRef<HTMLDivElement>(null);
     // Guardamos a instância do Chessground numa ref para podermos aceder-lhe sem causar re-renders
     const cgRef = useRef<Api | null>(null);
@@ -71,6 +81,51 @@ export default function Board() {
             const isWhiteTurn = fen.split(' ')[1] === 'w';
             const color = isWhiteTurn ? 'white' : 'black';
 
+            // Extrair setas e círculos do lance atual
+            const currentMove = exerciseMoves.find(m => m.id === currentNodeId);
+            const visualMarkers = currentMove?.visualMarkers;
+            const shapes: any[] = [];
+
+            if (visualMarkers) {
+                // As cores do Lichess PGN são: G (green), R (red), B (blue), Y (yellow)
+                // Se a anotação for [%cal c4f7] (sem a letra da cor no início), assumimos green.
+                
+                if (visualMarkers.arrows) {
+                    visualMarkers.arrows.forEach((arrow: string) => {
+                        if (arrow.length === 5) {
+                            shapes.push({
+                                orig: arrow.substring(1, 3),
+                                dest: arrow.substring(3, 5),
+                                brush: getBrushColor(arrow[0])
+                            });
+                        } else if (arrow.length === 4) {
+                             // Caso do Lichess onde a cor é omitida, ex: [%cal c4f7]
+                             shapes.push({
+                                orig: arrow.substring(0, 2),
+                                dest: arrow.substring(2, 4),
+                                brush: 'green'
+                            });
+                        }
+                    });
+                }
+                if (visualMarkers.circles) {
+                    visualMarkers.circles.forEach((circle: string) => {
+                        if (circle.length === 3) {
+                            shapes.push({
+                                orig: circle.substring(1, 3),
+                                brush: getBrushColor(circle[0])
+                            });
+                        } else if (circle.length === 2) {
+                            // Caso do Lichess onde a cor é omitida, ex: [%csl e4]
+                             shapes.push({
+                                orig: circle.substring(0, 2),
+                                brush: 'green'
+                            });
+                        }
+                    });
+                }
+            }
+
             cgRef.current.set({
                 fen,
                 turnColor: color,
@@ -78,21 +133,26 @@ export default function Board() {
                 movable: {
                     color: playerColor, // O jogador só pode mover a SUA cor
                     free: false,
-                    // O mapa de destinos só é gerado se for a vez do jogador E o bot não estiver a pensar E o jogo não tiver acabado
-                    dests: (color === playerColor && !isThinking && !useGameStore.getState().isCompleted) ? ChessWrapper.getLegalMovesMap(fen) : new Map()
+                    // O mapa de destinos só é gerado se for a vez do jogador E o bot não estiver a pensar E o jogo não tiver acabado E não estiver esperando clique no Continuar
+                    dests: (color === playerColor && !isThinking && !useGameStore.getState().isWaitingForNext && !useGameStore.getState().isCompleted) ? ChessWrapper.getLegalMovesMap(fen) : new Map()
+                },
+                drawable: {
+                    enabled: true, // Tem que habilitar o drawable para as setas aparecerem
+                    visible: true, // OBRIGATÓRIO: garante que as formas SVG sejam visíveis
+                    autoShapes: shapes // Setas programáticas devem ir no autoShapes
                 }
             });
         }
-    }, [fen, isThinking, playerColor]); // <-- Adicionado playerColor às dependências
+    }, [fen, isThinking, playerColor, currentNodeId, exerciseMoves]); // <-- Adicionado currentNodeId e exerciseMoves às dependências
 
     return (
-        <div className="flex flex-col items-center">
+        <div className="flex flex-col items-center w-full h-full bg-slate-900">
             {/* 3. Correção do Tamanho:
             O Chessground usa SVGs absolutos e necessita de dimensões rígidas no seu container.
-            Vamos garantir valores fixos (w-[400px] h-[400px]) para não colapsar. */}
+            Vamos garantir que ele preencha o container do pai. */}
             <div
                 ref={boardRef}
-                className="w-[350px] h-[350px] md:w-[500px] md:h-[500px] mx-auto shadow-2xl rounded-sm bg-white"
+                className="w-full h-full mx-auto"
             />
         </div>
     )
