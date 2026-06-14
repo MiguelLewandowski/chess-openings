@@ -41,3 +41,4 @@ docs
 
 # Claude Code local settings + worktrees (never commit — worktrees are full repo copies)
 .claude/
+CLAUDE.md
