@@ -1,4 +1,4 @@
-import type { OpeningSummary, LessonDetail } from '@chess-openings/domain'
+import type { OpeningSummary, LessonDetail, MoveSummary } from '@chess-openings/domain'
 
 export interface ApiUser {
   id: string
@@ -61,10 +61,6 @@ export const apiClient = {
     remove: (id: string, token: string) =>
       apiFetch<void>(`/openings/${id}`, { method: 'DELETE', token }),
   },
-  moves: {
-    expected: (fen: string) =>
-      apiFetch<ExpectedMove | null>(`/moves/expected?fen=${encodeURIComponent(fen)}`),
-  },
   puzzles: {
     list: (openingNames: string[], limit = 10, maxRating = 1800) => {
       const params = new URLSearchParams({ limit: String(limit), maxRating: String(maxRating) })
@@ -123,28 +119,12 @@ export interface IngestStudyInput {
   styleTags?: string[]
 }
 
-export interface ExpectedMove {
-  id: string
-  san: string
-  fen: string
-  coachInsights: { comment?: string } | null
-}
-
-export interface PuzzleMoveNode {
-  id: string
-  san: string
-  fen: string
-  parentId: string | null
-  isOpponentResponse: boolean
-  coachInsights: { comment: string }
-}
-
 export interface PuzzleData {
   id: string
   lichessId: string
   openingName: string
   initialFen: string
-  movesTree: PuzzleMoveNode[]
+  movesTree: MoveSummary[]
   playerColor: 'white' | 'black'
   rating: number
 }
