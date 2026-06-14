@@ -1,0 +1,11 @@
+**/node_modules
+**/dist
+**/.next
+**/.turbo
+.git
+.claude
+docs
+**/*.env
+**/.env*
+puzzles.csv
+puzzles.csv.zst
