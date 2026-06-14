@@ -26,7 +26,7 @@ export default function ModeToggle({ currentMode, hasTheory, hasPractice }: Mode
                 }`}
             >
                 <BookOpen className="w-3.5 h-3.5" />
-                Theory
+                Teoria
             </button>
             <button
                 onClick={() => router.push(`${pathname}?mode=practice`)}
@@ -37,7 +37,7 @@ export default function ModeToggle({ currentMode, hasTheory, hasPractice }: Mode
                 }`}
             >
                 <Swords className="w-3.5 h-3.5" />
-                Practice
+                Prática
             </button>
         </div>
     )

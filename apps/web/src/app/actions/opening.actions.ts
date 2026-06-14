@@ -6,7 +6,7 @@ import { revalidatePath } from 'next/cache'
 
 export async function deleteOpening(id: string) {
   const session = await getSession()
-  if (!session) return { success: false, error: 'Not authenticated.' }
+  if (!session) return { success: false, error: 'Não autenticado.' }
 
   try {
     await apiClient.openings.remove(id, session.apiToken)

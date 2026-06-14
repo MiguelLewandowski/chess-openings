@@ -2,121 +2,122 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { ChevronRight, BrainCircuit, Target, Shield, Check } from 'lucide-react';
+import { ChevronRight, BrainCircuit } from 'lucide-react';
 import { Chessground } from 'chessground';
 import type { Key } from 'chessground/types';
 import { Chess } from 'chess.js';
 import { saveUserArchetype } from '@/app/actions/auth.actions';
+import { ARCHETYPES, dominantStyle } from '@/lib/archetypes';
 
 const QUESTIONS = [
   {
     id: 1,
     fen: 'r1bqkbnr/pppp1ppp/2n5/4p3/4P3/5N2/PPPP1PPP/RNBQKB1R w KQkq - 2 3', // e4 e5 Nf3 Nc6
-    title: 'The Opening Choice',
-    description: 'You are playing White. How do you develop your bishop?',
+    title: 'A escolha de abertura',
+    description: 'Você joga de brancas. Como desenvolve seu bispo?',
     options: [
-      { move: 'Bc4', label: 'Italian Game (Active & Direct)', style: 'Aggressive' },
-      { move: 'Bb5', label: 'Ruy Lopez (Strategic Pressure)', style: 'Positional' },
-      { move: 'Nc3', label: 'Three Knights (Solid Development)', style: 'Solid' }
+      { move: 'Bc4', label: 'Abertura Italiana (Ativa e direta)', style: 'Aggressive' },
+      { move: 'Bb5', label: 'Ruy Lopez (Pressão estratégica)', style: 'Positional' },
+      { move: 'Nc3', label: 'Três Cavalos (Desenvolvimento sólido)', style: 'Solid' }
     ]
   },
   {
     id: 2,
     fen: 'rnbqkbnr/pppppppp/8/8/3P4/8/PPP1PPPP/RNBQKBNR b KQkq d3 0 1', // d4
-    title: 'Reacting to d4',
-    description: 'Your opponent plays 1.d4. What is your response?',
+    title: 'Reagindo a 1.d4',
+    description: 'Seu adversário joga 1.d4. Qual é a sua resposta?',
     options: [
-      { move: 'Nf6', label: 'Indian Defense (Flexible)', style: 'Positional' },
-      { move: 'd5', label: 'Queen\'s Pawn Game (Solid Center)', style: 'Solid' },
-      { move: 'f5', label: 'Dutch Defense (Asymmetrical)', style: 'Aggressive' }
+      { move: 'Nf6', label: 'Defesa Índia (Flexível)', style: 'Positional' },
+      { move: 'd5', label: 'Jogo do Peão da Dama (Centro sólido)', style: 'Solid' },
+      { move: 'f5', label: 'Defesa Holandesa (Assimétrica)', style: 'Aggressive' }
     ]
   },
   {
     id: 3,
     fen: 'r1bqkbnr/pppp1ppp/2n5/1B2p3/4P3/5N2/PPPP1PPP/RNBQK2R b KQkq - 3 3', // Ruy Lopez Bb5
-    title: 'The Spanish Torture',
-    description: 'White plays the Ruy Lopez. How do you defend?',
+    title: 'A tortura espanhola',
+    description: 'As brancas jogam a Ruy Lopez. Como você defende?',
     options: [
-      { move: 'a6', label: 'Morphy Defense (Challenge the Bishop)', style: 'Positional' },
-      { move: 'Nf6', label: 'Berlin Defense (Solid Counterattack)', style: 'Solid' },
-      { move: 'f5', label: 'Schliemann Defense (Wild Gambit)', style: 'Aggressive' }
+      { move: 'a6', label: 'Defesa Morphy (Desafia o bispo)', style: 'Positional' },
+      { move: 'Nf6', label: 'Defesa Berlim (Contra-ataque sólido)', style: 'Solid' },
+      { move: 'f5', label: 'Defesa Schliemann (Gambito selvagem)', style: 'Aggressive' }
     ]
   },
   {
     id: 4,
     fen: 'rnbqkb1r/pppppppp/5n2/8/2P5/8/PP1PPPPP/RNBQKBNR w KQkq - 1 2', // c4 Nf6
-    title: 'The English Opening',
-    description: 'You played 1.c4 and Black replies with 1...Nf6. What is your plan?',
+    title: 'A Abertura Inglesa',
+    description: 'Você jogou 1.c4 e as pretas respondem 1...Cf6. Qual é o seu plano?',
     options: [
-      { move: 'Nc3', label: 'Develop the Knight (Solid)', style: 'Solid' },
-      { move: 'g3', label: 'Fianchetto (Positional & Slow)', style: 'Positional' },
-      { move: 'd4', label: 'Transposing to d4 lines (Direct)', style: 'Aggressive' }
+      { move: 'Nc3', label: 'Desenvolver o cavalo (Sólido)', style: 'Solid' },
+      { move: 'g3', label: 'Fianqueto (Posicional e lento)', style: 'Positional' },
+      { move: 'd4', label: 'Transpor para linhas de d4 (Direto)', style: 'Aggressive' }
     ]
   },
   {
     id: 5,
     fen: 'rnbqkbnr/pp1ppppp/8/2p5/4P3/8/PPPP1PPP/RNBQKBNR w KQkq c6 0 2', // e4 c5
-    title: 'Facing the Sicilian',
-    description: 'Black plays the Sicilian Defense. How do you proceed?',
+    title: 'Enfrentando a Siciliana',
+    description: 'As pretas jogam a Defesa Siciliana. Como você procede?',
     options: [
-      { move: 'Nf3', label: 'Open Sicilian (Mainline & Tactical)', style: 'Aggressive' },
-      { move: 'Nc3', label: 'Closed Sicilian (Positional setup)', style: 'Positional' },
-      { move: 'c3', label: 'Alapin Variation (Solid Center Control)', style: 'Solid' },
+      { move: 'Nf3', label: 'Siciliana Aberta (Principal e tática)', style: 'Aggressive' },
+      { move: 'Nc3', label: 'Siciliana Fechada (Esquema posicional)', style: 'Positional' },
+      { move: 'c3', label: 'Variante Alapin (Controle sólido do centro)', style: 'Solid' },
     ]
   },
   {
     id: 6,
     fen: 'rnbqkbnr/pp1ppppp/8/2p5/4P3/5N2/PPPP1PPP/RNBQKB1R b KQkq - 1 2', // e4 c5 Nf3
-    title: 'Sicilian Defense',
-    description: 'White plays Nf3. What is your choice in the Sicilian?',
+    title: 'Defesa Siciliana',
+    description: 'As brancas jogam Cf3. Qual é a sua escolha na Siciliana?',
     options: [
-      { move: 'd6', label: 'Najdorf/Dragon setup (Flexible)', style: 'Positional' },
-      { move: 'Nc6', label: 'Sveshnikov/Pelikan (Fight for center)', style: 'Aggressive' },
-      { move: 'e6', label: 'Kan/Taimanov (Solid & Compact)', style: 'Solid' }
+      { move: 'd6', label: 'Esquema Najdorf/Dragão (Flexível)', style: 'Positional' },
+      { move: 'Nc6', label: 'Sveshnikov/Pelikan (Luta pelo centro)', style: 'Aggressive' },
+      { move: 'e6', label: 'Kan/Taimanov (Sólido e compacto)', style: 'Solid' }
     ]
   },
   {
     id: 7,
     fen: 'rnbqkbnr/pppp1ppp/8/4p3/4P3/8/PPPP1PPP/RNBQKBNR w KQkq - 0 2', // e4 e5
-    title: 'King\'s Pawn Game',
-    description: 'After 1.e4 e5, what is your preferred 2nd move for White?',
+    title: 'Jogo do Peão do Rei',
+    description: 'Após 1.e4 e5, qual é o seu 2º lance preferido para as brancas?',
     options: [
-      { move: 'Nf3', label: 'Mainline development', style: 'Positional' },
-      { move: 'f4', label: 'King\'s Gambit (Sacrifice for attack)', style: 'Aggressive' },
-      { move: 'Nc3', label: 'Vienna Game (Solid)', style: 'Solid' }
+      { move: 'Nf3', label: 'Desenvolvimento principal', style: 'Positional' },
+      { move: 'f4', label: 'Gambito do Rei (Sacrifício pelo ataque)', style: 'Aggressive' },
+      { move: 'Nc3', label: 'Jogo Vienense (Sólido)', style: 'Solid' }
     ]
   },
   {
     id: 8,
     fen: 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1', // Start
-    title: 'The First Move',
-    description: 'You have the white pieces. How do you open the game?',
+    title: 'O primeiro lance',
+    description: 'Você tem as peças brancas. Como abre o jogo?',
     options: [
-      { move: 'e4', label: 'King\'s Pawn (Tactical & Open)', style: 'Aggressive' },
-      { move: 'd4', label: 'Queen\'s Pawn (Positional & Closed)', style: 'Positional' },
-      { move: 'c4', label: 'English Opening (Solid & Flank attack)', style: 'Solid' },
+      { move: 'e4', label: 'Peão do Rei (Tático e aberto)', style: 'Aggressive' },
+      { move: 'd4', label: 'Peão da Dama (Posicional e fechado)', style: 'Positional' },
+      { move: 'c4', label: 'Abertura Inglesa (Sólida e de flanco)', style: 'Solid' },
     ]
   },
   {
     id: 9,
     fen: 'rnbqkb1r/pppp1ppp/4pn2/8/2PP4/8/PP2PPPP/RNBQKBNR w KQkq - 0 3', // d4 Nf6 c4 e6
-    title: 'Nimzo-Indian Defense',
-    description: 'Black plays e6. What is your strategy?',
+    title: 'Defesa Nimzo-Índia',
+    description: 'As pretas jogam e6. Qual é a sua estratégia?',
     options: [
-      { move: 'Nc3', label: 'Allow the Nimzo-Indian (Complex)', style: 'Positional' },
-      { move: 'Nf3', label: 'Bogo-Indian/Queen\'s Indian (Solid)', style: 'Solid' },
-      { move: 'g3', label: 'Catalan (Positional control)', style: 'Positional' } // giving more weight to positional here
+      { move: 'Nc3', label: 'Permitir a Nimzo-Índia (Complexa)', style: 'Positional' },
+      { move: 'Nf3', label: 'Bogo-Índia/Índia da Dama (Sólida)', style: 'Solid' },
+      { move: 'g3', label: 'Catalã (Controle posicional)', style: 'Positional' } // giving more weight to positional here
     ]
   },
   {
     id: 10,
     fen: 'rnbqkbnr/ppppp1pp/8/5p2/4P3/8/PPPP1PPP/RNBQKBNR w KQkq f6 0 2', // e4 f5
-    title: 'The Dutch Defense',
-    description: 'Black challenges your e4 pawn with f5. How do you react?',
+    title: 'A Defesa Holandesa',
+    description: 'As pretas desafiam seu peão de e4 com f5. Como você reage?',
     options: [
-      { move: 'exf5', label: 'Accept the gambit (Tactical)', style: 'Aggressive' },
-      { move: 'd3', label: 'Defend the pawn (Solid)', style: 'Solid' },
-      { move: 'Nc3', label: 'Develop and prepare to attack', style: 'Positional' }
+      { move: 'exf5', label: 'Aceitar o gambito (Tático)', style: 'Aggressive' },
+      { move: 'd3', label: 'Defender o peão (Sólido)', style: 'Solid' },
+      { move: 'Nc3', label: 'Desenvolver e preparar o ataque', style: 'Positional' }
     ]
   }
 ];
@@ -125,69 +126,21 @@ export default function StyleQuizPage() {
   const [currentStep, setCurrentStep] = useState(0);
   const [answers, setAnswers] = useState<string[]>([]);
   const [isFinished, setIsFinished] = useState(false);
-  const [archetype, setArchetype] = useState<{name: string, description: string, icon: React.ElementType, color: string} | null>(null);
+  const [archetype, setArchetype] = useState<(typeof ARCHETYPES)[keyof typeof ARCHETYPES] | null>(null);
 
   const calculateArchetype = async (finalAnswers: string[]) => {
-    const counts = finalAnswers.reduce((acc, style) => {
-      acc[style] = (acc[style] || 0) + 1;
-      return acc;
-    }, {} as Record<string, number>);
-
-    let maxStyle = 'Universal';
-    let maxCount = 0;
-
-    for (const [style, count] of Object.entries(counts)) {
-      if (count > maxCount) {
-        maxCount = count;
-        maxStyle = style;
-      }
-    }
-
-    let result;
-    switch (maxStyle) {
-      case 'Aggressive':
-        result = {
-          name: 'The Tactical Predator',
-          description: 'You thrive in chaos. You prefer sharp, tactical positions where calculation and initiative are king. You are not afraid to sacrifice material for a crushing attack.',
-          icon: Target,
-          color: 'text-rose-500 bg-rose-500/10 border-rose-500/20'
-        };
-        break;
-      case 'Solid':
-        result = {
-          name: 'The Iron Wall',
-          description: 'Safety first. You build unbreakable structures and wait for your opponent to overextend. Your prophylactic play makes you incredibly tough to beat.',
-          icon: Shield,
-          color: 'text-sky-500 bg-sky-500/10 border-sky-500/20'
-        };
-        break;
-      case 'Positional':
-        result = {
-          name: 'The Strategic Mastermind',
-          description: 'You play the long game. You understand pawn structures, outposts, and piece maneuvering. You slowly squeeze your opponents until they have no good moves left.',
-          icon: BrainCircuit,
-          color: 'text-emerald-500 bg-emerald-500/10 border-emerald-500/20'
-        };
-        break;
-      default:
-        result = {
-          name: 'The Universal Player',
-          description: 'You are flexible and adaptable. You can play both tactical and positional chess depending on what the position demands. You are unpredictable.',
-          icon: Check,
-          color: 'text-violet-500 bg-violet-500/10 border-violet-500/20'
-        };
-    }
+    const style = dominantStyle(finalAnswers);
 
     if (typeof window !== 'undefined') {
-      localStorage.setItem('chess_style_archetype', result.name);
+      localStorage.setItem('chess_style_archetype', style);
     }
 
-    setArchetype(result);
+    setArchetype(ARCHETYPES[style]);
     setIsFinished(true);
 
-    // Save to database if user is logged in
+    // Save the style key to the database if the user is logged in
     try {
-      await saveUserArchetype(result.name);
+      await saveUserArchetype(style);
     } catch (e) {
       console.error('Could not save archetype to db', e);
     }
@@ -291,7 +244,7 @@ export default function StyleQuizPage() {
             <Icon className="w-12 h-12" />
           </div>
           
-          <h2 className="text-sm font-bold tracking-widest text-slate-400 uppercase mb-2">Your Playing Style</h2>
+          <h2 className="text-sm font-bold tracking-widest text-slate-400 uppercase mb-2">Seu estilo de jogo</h2>
           <h1 className="text-3xl font-extrabold tracking-tight text-white mb-4">{archetype.name}</h1>
           <p className="text-slate-300 leading-relaxed mb-8">
             {archetype.description}
@@ -301,7 +254,7 @@ export default function StyleQuizPage() {
             href="/openings"
             className="inline-flex items-center justify-center gap-2 w-full py-4 bg-violet-600 hover:bg-violet-500 text-white rounded-xl font-bold shadow-lg shadow-violet-500/25 transition-all active:scale-95"
           >
-            Go to Repertoire
+            Ir para o repertório
             <ChevronRight className="w-5 h-5" />
           </Link>
           
@@ -313,7 +266,7 @@ export default function StyleQuizPage() {
             }}
             className="mt-4 text-sm text-slate-400 hover:text-slate-200 font-medium transition-colors"
           >
-            Retake Quiz
+            Refazer teste
           </button>
         </div>
       </div>
@@ -331,7 +284,7 @@ export default function StyleQuizPage() {
         <div className="max-w-4xl mx-auto px-4 h-16 flex items-center justify-between">
           <div className="flex items-center gap-2 text-sm font-bold text-slate-300">
             <BrainCircuit className="w-5 h-5 text-violet-400" />
-            Style Profiler
+            Perfil de estilo
           </div>
           <div className="text-sm font-bold text-slate-400">
             {currentStep + 1} / {QUESTIONS.length}
@@ -360,7 +313,7 @@ export default function StyleQuizPage() {
           
           <div className="mb-4 flex items-center gap-2 text-sm text-violet-400 bg-violet-500/10 p-3 rounded-lg border border-violet-500/20">
             <BrainCircuit className="w-4 h-4" />
-            <p>Play your move on the board, or select an option below.</p>
+            <p>Jogue seu lance no tabuleiro ou escolha uma opção abaixo.</p>
           </div>
 
           <div className="space-y-3">
@@ -373,7 +326,7 @@ export default function StyleQuizPage() {
                 <div className="flex items-center justify-between relative z-10">
                   <div>
                     <span className="inline-block px-2 py-1 bg-slate-950 text-slate-300 text-xs font-bold rounded mb-2 border border-slate-800">
-                      Play {opt.move}
+                      Jogar {opt.move}
                     </span>
                     <p className="font-medium text-slate-200 group-hover:text-white transition-colors">
                       {opt.label}

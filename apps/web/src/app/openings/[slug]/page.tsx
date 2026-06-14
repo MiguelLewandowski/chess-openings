@@ -1,4 +1,3 @@
-import { getOpeningBySlug } from "@/services/opening.service";
 import { getSession } from "@/lib/session";
 import { apiClient } from "@/lib/api-client";
 import Link from "next/link";
@@ -8,7 +7,7 @@ import { ChevronLeft, Star, Lock, BookOpen } from "lucide-react";
 export default async function OpeningTrackPage({ params }: { params: Promise<{ slug: string }> }) {
   const resolvedParams = await params;
 
-  const opening = await getOpeningBySlug(resolvedParams.slug);
+  const opening = await apiClient.openings.findBySlug(resolvedParams.slug);
   if (!opening) notFound();
 
   const sortedLessons = [...opening.lessons].sort((a, b) => a.order - b.order);
@@ -36,7 +35,7 @@ export default async function OpeningTrackPage({ params }: { params: Promise<{ s
             className="inline-flex items-center gap-2 text-sm font-medium text-slate-400 hover:text-slate-200 transition-colors"
           >
             <ChevronLeft className="w-5 h-5" />
-            <span className="hidden sm:inline">Gallery</span>
+            <span className="hidden sm:inline">Galeria</span>
           </Link>
 
           <h1 className="font-bold tracking-tight text-slate-100 truncate px-4">
@@ -54,9 +53,9 @@ export default async function OpeningTrackPage({ params }: { params: Promise<{ s
       <main className="max-w-3xl mx-auto px-4 py-16 flex flex-col items-center">
 
         <div className="text-center mb-16">
-          <h2 className="text-3xl font-extrabold tracking-tight mb-3">Your Path</h2>
+          <h2 className="text-3xl font-extrabold tracking-tight mb-3">Sua trilha</h2>
           <p className="text-slate-400 max-w-md mx-auto">
-            {opening.description || "Complete the lessons in order to master this opening."}
+            {opening.description || "Conclua as lições em ordem para dominar esta abertura."}
           </p>
         </div>
 
@@ -152,7 +151,7 @@ export default async function OpeningTrackPage({ params }: { params: Promise<{ s
               }`} />
             </div>
             {completedLessonIds.size === sortedLessons.length && sortedLessons.length > 0 && (
-              <p className="mt-3 text-sm font-bold text-amber-400">Opening Mastered!</p>
+              <p className="mt-3 text-sm font-bold text-amber-400">Abertura dominada!</p>
             )}
           </div>
 

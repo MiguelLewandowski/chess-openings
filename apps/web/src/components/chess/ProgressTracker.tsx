@@ -5,14 +5,14 @@ import { useGameStore } from '@/store/GameStore';
 import { completeExerciseAction } from '@/app/actions/progress.actions';
 
 export default function ProgressTracker() {
-    const isCompleted = useGameStore(state => state.isCompleted);
+    const status = useGameStore(state => state.status);
     const exerciseId = useGameStore(state => state.exerciseId);
     const errorCount = useGameStore(state => state.errorCount);
     const hasTracked = useRef(false);
 
     useEffect(() => {
         // Reset tracker when a new exercise starts
-        if (!isCompleted) {
+        if (status !== 'completed') {
             hasTracked.current = false;
             return;
         }
@@ -21,10 +21,10 @@ export default function ProgressTracker() {
 
         hasTracked.current = true;
 
-        // quality 5 = perfeito, 4 = bom, 3 = com erros
+        // quality 5 = perfect, 4 = good, 3 = with errors
         const quality = errorCount === 0 ? 5 : errorCount <= 2 ? 4 : 3;
         completeExerciseAction(exerciseId, quality);
-    }, [isCompleted, exerciseId, errorCount]);
+    }, [status, exerciseId, errorCount]);
 
     return null;
 }

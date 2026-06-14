@@ -28,7 +28,7 @@ export default async function Home() {
           <nav className="flex items-center gap-4 sm:gap-6">
             <Link href="/admin/import" className="hidden sm:inline-flex items-center gap-1.5 text-sm font-medium text-slate-400 hover:text-white transition-colors">
               <Lock className="w-3.5 h-3.5" />
-              Administration
+              Administração
             </Link>
             
             {session ? (
@@ -40,11 +40,11 @@ export default async function Home() {
                   href="/openings" 
                   className="px-5 py-2.5 bg-violet-600 hover:bg-violet-500 rounded-xl text-sm font-bold text-white transition-all shadow-lg shadow-violet-500/20 active:scale-95"
                 >
-                  Dashboard
+                  Painel
                 </Link>
                 <form action={logoutAction} className="inline">
                   <button type="submit" className="px-5 py-2.5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-sm font-medium transition-all active:scale-95">
-                    Logout
+                    Sair
                   </button>
                 </form>
               </div>
@@ -54,13 +54,13 @@ export default async function Home() {
                   href="/login" 
                   className="px-5 py-2.5 text-sm font-bold text-slate-300 hover:text-white transition-colors"
                 >
-                  Sign In
+                  Entrar
                 </Link>
-                <Link 
-                  href="/register" 
+                <Link
+                  href="/register"
                   className="px-5 py-2.5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-sm font-medium transition-all active:scale-95"
                 >
-                  Register
+                  Criar conta
                 </Link>
               </div>
             )}
@@ -76,18 +76,18 @@ export default async function Home() {
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-violet-400 opacity-75"></span>
             <span className="relative inline-flex rounded-full h-2 w-2 bg-violet-500"></span>
           </span>
-          Your intelligent opening coach
+          Seu treinador de aberturas inteligente
         </div>
 
         <h1 className="text-5xl md:text-7xl font-extrabold tracking-tight text-white max-w-4xl leading-[1.1] mb-8">
-          Master the board with <br className="hidden md:block" />
+          Domine o tabuleiro com <br className="hidden md:block" />
           <span className="text-transparent bg-clip-text bg-gradient-to-r from-violet-400 to-fuchsia-400">
             Master Gambito
           </span>
         </h1>
 
         <p className="text-lg md:text-xl text-slate-400 max-w-2xl mb-12 leading-relaxed">
-          Train openings interactively. Import your Lichess studies and learn the concepts behind each move with personalized pedagogical feedback.
+          Treine aberturas de forma interativa. Importe seus estudos do Lichess e aprenda os conceitos por trás de cada lance com feedback pedagógico personalizado.
         </p>
 
         <div className="flex flex-col sm:flex-row items-center gap-4">
@@ -95,7 +95,7 @@ export default async function Home() {
             href="/openings" 
             className="group flex items-center justify-center gap-2 w-full sm:w-auto px-8 py-4 bg-violet-600 hover:bg-violet-500 text-white rounded-2xl font-bold text-lg shadow-xl shadow-violet-600/25 transition-all duration-200 active:scale-95"
           >
-            Start Training
+            Começar a treinar
             <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
           </Link>
           <Link 
@@ -103,14 +103,14 @@ export default async function Home() {
             className="flex items-center justify-center gap-2 w-full sm:w-auto px-8 py-4 bg-slate-800 hover:bg-slate-700 text-white border border-slate-700 hover:border-slate-600 rounded-2xl font-bold text-lg transition-all duration-200 active:scale-95"
           >
             <BrainCircuit className="w-5 h-5 text-violet-400" />
-            Style Quiz
+            Teste de estilo
           </Link>
           <Link 
             href="/admin/import" 
             className="flex items-center justify-center gap-2 w-full sm:w-auto px-8 py-4 bg-slate-900 hover:bg-slate-800 text-white border border-slate-800 hover:border-slate-700 rounded-2xl font-bold text-lg transition-all duration-200 active:scale-95"
           >
             <BookOpen className="w-5 h-5 text-slate-500" />
-            Import Study
+            Importar estudo
           </Link>
         </div>
 
@@ -120,9 +120,9 @@ export default async function Home() {
             <div className="bg-emerald-500/10 w-12 h-12 rounded-xl flex items-center justify-center mb-6">
               <Target className="w-6 h-6 text-emerald-400" />
             </div>
-            <h3 className="text-xl font-bold text-white mb-3">Spaced Repetition</h3>
+            <h3 className="text-xl font-bold text-white mb-3">Repetição espaçada</h3>
             <p className="text-slate-400 leading-relaxed">
-              Our algorithm knows exactly when you should review a variation so the memory becomes permanent.
+              Nosso algoritmo sabe exatamente quando você deve revisar uma variação para que a memória se torne permanente.
             </p>
           </div>
 
@@ -133,9 +133,9 @@ export default async function Home() {
             <div className="bg-violet-500/10 w-12 h-12 rounded-xl flex items-center justify-center mb-6">
               <Sparkles className="w-6 h-6 text-violet-400" />
             </div>
-            <h3 className="text-xl font-bold text-white mb-3">Socratic Insights</h3>
+            <h3 className="text-xl font-bold text-white mb-3">Análises socráticas</h3>
             <p className="text-slate-400 leading-relaxed">
-              The AI doesn&apos;t just give the answer. It explains the concepts and key squares while preserving the original knowledge.
+              A IA não entrega só a resposta. Ela explica os conceitos e as casas-chave, preservando o conhecimento original.
             </p>
           </div>
 
@@ -143,9 +143,9 @@ export default async function Home() {
             <div className="bg-sky-500/10 w-12 h-12 rounded-xl flex items-center justify-center mb-6">
               <BookOpen className="w-6 h-6 text-sky-400" />
             </div>
-            <h3 className="text-xl font-bold text-white mb-3">Duolingo Paths</h3>
+            <h3 className="text-xl font-bold text-white mb-3">Trilhas estilo Duolingo</h3>
             <p className="text-slate-400 leading-relaxed">
-              Advance in theory and practice in a gamified and visual way, unlocking knowledge step by step.
+              Avance na teoria e na prática de forma gamificada e visual, desbloqueando conhecimento passo a passo.
             </p>
           </div>
         </div>

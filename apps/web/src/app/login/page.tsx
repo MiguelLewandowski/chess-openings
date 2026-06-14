@@ -6,11 +6,11 @@ import { loginAction } from '@/app/actions/auth.actions';
 import { Loader2, ArrowRight, BrainCircuit } from 'lucide-react';
 
 function validateEmail(email: string) {
-  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) ? '' : 'Enter a valid email address.';
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) ? '' : 'Informe um e-mail válido.';
 }
 
 function validatePassword(password: string) {
-  return password.length > 0 ? '' : 'Password is required.';
+  return password.length > 0 ? '' : 'A senha é obrigatória.';
 }
 
 export default function LoginPage() {
@@ -54,8 +54,8 @@ export default function LoginPage() {
       </Link>
 
       <div className="bg-slate-900 border border-slate-800 rounded-3xl p-8 max-w-md w-full shadow-2xl shadow-black/50">
-        <h1 className="text-3xl font-extrabold tracking-tight text-white mb-2">Welcome Back</h1>
-        <p className="text-slate-400 mb-8">Sign in to your account to continue your training.</p>
+        <h1 className="text-3xl font-extrabold tracking-tight text-white mb-2">Bem-vindo de volta</h1>
+        <p className="text-slate-400 mb-8">Entre na sua conta para continuar seu treino.</p>
 
         {error && (
           <div className="bg-rose-500/10 border border-rose-500/20 text-rose-400 text-sm font-medium p-4 rounded-xl mb-6">
@@ -65,7 +65,7 @@ export default function LoginPage() {
 
         <form onSubmit={handleSubmit} className="space-y-5">
           <div>
-            <label className="block text-sm font-bold text-slate-300 mb-2">Email Address</label>
+            <label className="block text-sm font-bold text-slate-300 mb-2">E-mail</label>
             <input
               name="email"
               type="email"
@@ -83,7 +83,7 @@ export default function LoginPage() {
           </div>
 
           <div>
-            <label className="block text-sm font-bold text-slate-300 mb-2">Password</label>
+            <label className="block text-sm font-bold text-slate-300 mb-2">Senha</label>
             <input
               name="password"
               type="password"
@@ -105,15 +105,15 @@ export default function LoginPage() {
             disabled={isLoading}
             className="w-full mt-4 flex items-center justify-center gap-2 py-4 bg-violet-600 hover:bg-violet-500 text-white rounded-xl font-bold shadow-lg shadow-violet-500/25 transition-all active:scale-95 disabled:opacity-70 disabled:cursor-not-allowed"
           >
-            {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Sign In'}
+            {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Entrar'}
             {!isLoading && <ArrowRight className="w-5 h-5" />}
           </button>
         </form>
 
         <p className="text-center mt-8 text-slate-400 text-sm">
-          Don&apos;t have an account?{' '}
+          Não tem uma conta?{' '}
           <Link href="/register" className="text-violet-400 font-bold hover:underline underline-offset-4">
-            Create one
+            Crie uma
           </Link>
         </p>
       </div>

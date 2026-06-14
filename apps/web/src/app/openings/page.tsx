@@ -1,6 +1,4 @@
-import { getAllOpenings } from "@/services/opening.service"
-import { getDueReviews } from "@/services/review.service"
-import { apiClient } from "@/lib/api-client"
+import { apiClient, type DueReview } from "@/lib/api-client"
 import Link from "next/link";
 import { PlusCircle, Search, BookOpen, ChevronLeft, Swords } from "lucide-react";
 import OpeningCard from "./OpeningCard";
@@ -10,18 +8,18 @@ import { getSession } from "@/lib/session";
 
 export default async function OpeningsCatalogPage() {
     const [openings, session] = await Promise.all([
-        getAllOpenings(),
+        apiClient.openings.findAll(),
         getSession(),
     ]);
 
-    // Dados SM-2 — só busca se estiver logado
-    let dueReviews: Awaited<ReturnType<typeof getDueReviews>> = [];
+    // SM-2 data — only fetched when logged in
+    let dueReviews: DueReview[] = [];
     let userStreak = 0;
     let userXp = 0;
 
     if (session) {
         const [reviews, user] = await Promise.all([
-            getDueReviews(session.apiToken),
+            apiClient.progress.dueReviews(session.apiToken),
             apiClient.auth.me(session.apiToken),
         ]);
         dueReviews = reviews;
@@ -39,7 +37,7 @@ export default async function OpeningsCatalogPage() {
                         <Link
                             href="/"
                             className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-slate-900 border border-slate-800 hover:bg-slate-800 hover:border-slate-700 text-slate-400 hover:text-slate-200 transition-all"
-                            title="Voltar para a Página Inicial"
+                            title="Voltar para a página inicial"
                         >
                             <ChevronLeft className="w-5 h-5" />
                         </Link>
@@ -49,14 +47,14 @@ export default async function OpeningsCatalogPage() {
                                 <Search className="w-6 h-6" />
                             </div>
                             <div>
-                                <h1 className="text-2xl font-bold tracking-tight text-slate-100">Openings Gallery</h1>
-                                <p className="text-sm text-slate-400 font-medium">Your personal chess repertoire</p>
+                                <h1 className="text-2xl font-bold tracking-tight text-slate-100">Galeria de aberturas</h1>
+                                <p className="text-sm text-slate-400 font-medium">Seu repertório pessoal de xadrez</p>
                             </div>
                         </div>
                     </div>
 
                     <div className="flex sm:hidden items-center gap-3">
-                        <h1 className="text-xl font-bold tracking-tight text-slate-100">Gallery</h1>
+                        <h1 className="text-xl font-bold tracking-tight text-slate-100">Galeria</h1>
                     </div>
 
                     <div className="flex items-center gap-3">
@@ -65,10 +63,10 @@ export default async function OpeningsCatalogPage() {
                         <Link
                             href="/blunder"
                             className="inline-flex items-center gap-2 px-4 py-2.5 bg-rose-600/20 hover:bg-rose-600/30 border border-rose-500/30 text-rose-300 rounded-xl font-medium transition-all duration-200 active:scale-95"
-                            title="Punishment Mode"
+                            title="Modo Punição"
                         >
                             <Swords className="w-4 h-4" />
-                            <span className="hidden sm:inline text-sm">Punish</span>
+                            <span className="hidden sm:inline text-sm">Punir</span>
                         </Link>
 
                         <Link
@@ -76,7 +74,7 @@ export default async function OpeningsCatalogPage() {
                             className="inline-flex items-center gap-2 px-5 py-2.5 bg-violet-600 hover:bg-violet-500 text-white rounded-xl font-medium shadow-lg shadow-violet-500/25 transition-all duration-200 active:scale-95"
                         >
                             <PlusCircle className="w-5 h-5" />
-                            <span className="hidden sm:inline">New Opening</span>
+                            <span className="hidden sm:inline">Nova abertura</span>
                         </Link>
                     </div>
                 </div>
@@ -99,19 +97,19 @@ export default async function OpeningsCatalogPage() {
                         <div className="w-24 h-24 bg-slate-800 rounded-full flex items-center justify-center mb-6">
                             <BookOpen className="w-12 h-12 text-slate-400" />
                         </div>
-                        <h2 className="text-2xl font-bold tracking-tight text-slate-200 mb-3">No openings yet</h2>
+                        <h2 className="text-2xl font-bold tracking-tight text-slate-200 mb-3">Nenhuma abertura ainda</h2>
                         <p className="text-slate-400 max-w-md mb-2 leading-relaxed">
-                            Your repertoire is empty. Import a public Lichess study to generate interactive lessons, AI coach commentary, and spaced repetition training.
+                            Seu repertório está vazio. Importe um estudo público do Lichess para gerar lições interativas, comentários do treinador com IA e treino por repetição espaçada.
                         </p>
                         <p className="text-slate-400 max-w-md mb-8 text-sm">
-                            After importing, each chapter becomes a lesson with Theory and Practice modes.
+                            Após importar, cada capítulo vira uma lição com os modos Teoria e Prática.
                         </p>
                         <Link
                             href="/admin/import"
                             className="inline-flex items-center gap-2 px-6 py-3 bg-violet-600 hover:bg-violet-500 text-white rounded-xl font-medium shadow-lg shadow-violet-500/25 transition-all duration-200 active:scale-95"
                         >
                             <PlusCircle className="w-5 h-5" />
-                            Import First Study
+                            Importar primeiro estudo
                         </Link>
                     </div>
                 ) : (

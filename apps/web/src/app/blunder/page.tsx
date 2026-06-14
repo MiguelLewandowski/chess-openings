@@ -1,22 +1,21 @@
 import BlunderTrainer from '@/components/chess/BlunderTrainer'
-import { getPuzzlesForSession } from '@/services/puzzle.service'
+import { apiClient } from '@/lib/api-client'
 import { getSession } from '@/lib/session'
-import { getAllOpenings } from '@/services/opening.service'
 import { ChevronLeft, Swords } from 'lucide-react'
 import Link from 'next/link'
 
 export default async function BlunderTrainingPage() {
     const session = await getSession()
 
-    // Se o utilizador tem aberturas no repertório, filtra puzzles por elas.
-    // Caso contrário (ou sem login), devolve puzzles de abertura aleatórios.
+    // If the user has a repertoire, filter puzzles by it; otherwise return random
+    // opening puzzles.
     let openingNames: string[] = []
     if (session) {
-        const openings = await getAllOpenings()
+        const openings = await apiClient.openings.findAll()
         openingNames = openings.map((o) => o.name)
     }
 
-    const puzzles = await getPuzzlesForSession(openingNames, 10)
+    const puzzles = await apiClient.puzzles.list(openingNames, 10)
 
     return (
         <div className="min-h-screen bg-slate-950 text-slate-50 font-sans selection:bg-violet-500/30">
@@ -30,14 +29,14 @@ export default async function BlunderTrainingPage() {
                         <div className="flex items-center justify-center w-8 h-8 rounded-full bg-slate-900 border border-slate-800 hover:bg-slate-800 hover:border-slate-700 transition-all">
                             <ChevronLeft className="w-4 h-4" />
                         </div>
-                        <span className="hidden sm:inline">Dashboard</span>
+                        <span className="hidden sm:inline">Painel</span>
                     </Link>
 
                     <div className="flex items-center gap-3">
                         <div className="bg-rose-500/10 p-2 rounded-lg text-rose-400">
                             <Swords className="w-5 h-5" />
                         </div>
-                        <h1 className="font-bold tracking-tight text-slate-100">Punishment Mode</h1>
+                        <h1 className="font-bold tracking-tight text-slate-100">Modo Punição</h1>
                     </div>
 
                     <div className="w-20" />

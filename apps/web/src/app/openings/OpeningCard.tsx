@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { BookOpen, Trash2, Loader2, ChevronRight } from "lucide-react";
 import { deleteOpening } from "@/app/actions/opening.actions";
+import { isStyleArchetype, type StyleArchetype } from "@/lib/archetypes";
 
 interface Opening {
     id: string;
@@ -16,22 +17,14 @@ interface Opening {
 
 export default function OpeningCard({ opening }: { opening: Opening }) {
     const [isDeleting, setIsDeleting] = useState(false);
-    const [userStyle, setUserStyle] = useState<string | null>(null);
+    const [userStyle, setUserStyle] = useState<StyleArchetype | null>(null);
     const [mounted, setMounted] = useState(false);
 
     useEffect(() => {
         // eslint-disable-next-line react-hooks/set-state-in-effect
         setMounted(true);
-        if (typeof window !== 'undefined') {
-            const saved = localStorage.getItem('chess_style_archetype');
-            if (saved) {
-                // Map the string name back to the tag style
-                if (saved.includes('Predator')) setUserStyle('Aggressive');
-                else if (saved.includes('Wall')) setUserStyle('Solid');
-                else if (saved.includes('Mastermind')) setUserStyle('Positional');
-                else setUserStyle('Universal');
-            }
-        }
+        const saved = localStorage.getItem('chess_style_archetype');
+        if (isStyleArchetype(saved)) setUserStyle(saved);
     }, []);
 
     const isMatch = userStyle && opening.styleTags?.includes(userStyle);
@@ -39,7 +32,7 @@ export default function OpeningCard({ opening }: { opening: Opening }) {
     const handleDelete = async (e: React.MouseEvent) => {
         e.preventDefault(); // Prevent navigating to the link
         
-        if (!window.confirm(`Are you sure you want to delete "${opening.name}"? This action cannot be undone.`)) {
+        if (!window.confirm(`Tem certeza que deseja excluir "${opening.name}"? Esta ação não pode ser desfeita.`)) {
             return;
         }
 
@@ -59,7 +52,7 @@ export default function OpeningCard({ opening }: { opening: Opening }) {
         >
             {mounted && isMatch && (
                 <div className="absolute top-0 right-0 bg-emerald-500 text-white text-[10px] font-black px-3 py-1 rounded-bl-xl shadow-md z-20">
-                    PERFECT MATCH
+                    COMBINA COM VOCÊ
                 </div>
             )}
             {/* Hover Gradient Effect */}
@@ -86,7 +79,7 @@ export default function OpeningCard({ opening }: { opening: Opening }) {
                     onClick={handleDelete}
                     disabled={isDeleting}
                     className="p-2 text-slate-500 hover:text-rose-400 hover:bg-rose-500/10 rounded-lg transition-colors z-20"
-                    title="Delete Opening"
+                    title="Excluir abertura"
                 >
                     {isDeleting ? (
                         <Loader2 className="w-5 h-5 animate-spin" />
@@ -98,17 +91,17 @@ export default function OpeningCard({ opening }: { opening: Opening }) {
 
             <div className="relative z-10 flex-1">
                 <p className="text-slate-400 text-sm leading-relaxed line-clamp-2 mb-6">
-                    {opening.description || "No description available."}
+                    {opening.description || "Sem descrição disponível."}
                 </p>
             </div>
 
             <div className="relative z-10 flex items-center justify-between pt-4 border-t border-slate-800/50">
                 <span className="text-xs font-medium text-slate-400 bg-slate-800/50 px-2.5 py-1 rounded-full">
-                    {opening.lessons.length} {opening.lessons.length === 1 ? 'lesson' : 'lessons'}
+                    {opening.lessons.length} {opening.lessons.length === 1 ? 'lição' : 'lições'}
                 </span>
-                
+
                 <div className="flex items-center gap-1 text-sm font-medium text-violet-400 opacity-0 group-hover:opacity-100 transition-opacity translate-x-[-10px] group-hover:translate-x-0 duration-300">
-                    Study
+                    Estudar
                     <ChevronRight className="w-4 h-4" />
                 </div>
             </div>

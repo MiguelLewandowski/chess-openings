@@ -21,7 +21,7 @@ export async function registerAction(formData: FormData) {
   const password = formData.get('password') as string;
 
   if (!email || !password || !name) {
-    return { error: 'Please fill out all fields.' };
+    return { error: 'Preencha todos os campos.' };
   }
 
   try {
@@ -29,10 +29,10 @@ export async function registerAction(formData: FormData) {
     await startSession(auth);
   } catch (error) {
     if (error instanceof Error && error.message.startsWith('API error 409')) {
-      return { error: 'Email already in use.' };
+      return { error: 'Este e-mail já está em uso.' };
     }
     console.error('Register error:', error);
-    return { error: 'Failed to create account.' };
+    return { error: 'Não foi possível criar a conta.' };
   }
 
   redirect('/');
@@ -43,7 +43,7 @@ export async function loginAction(formData: FormData) {
   const password = formData.get('password') as string;
 
   if (!email || !password) {
-    return { error: 'Please enter email and password.' };
+    return { error: 'Informe e-mail e senha.' };
   }
 
   try {
@@ -51,10 +51,10 @@ export async function loginAction(formData: FormData) {
     await startSession(auth);
   } catch (error) {
     if (error instanceof Error && error.message.startsWith('API error 401')) {
-      return { error: 'Invalid credentials.' };
+      return { error: 'Credenciais inválidas.' };
     }
     console.error('Login error:', error);
-    return { error: 'Failed to sign in.' };
+    return { error: 'Não foi possível entrar.' };
   }
 
   redirect('/');

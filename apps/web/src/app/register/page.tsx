@@ -6,15 +6,15 @@ import { registerAction } from '@/app/actions/auth.actions';
 import { Loader2, UserPlus, BrainCircuit } from 'lucide-react';
 
 function validateName(name: string) {
-  return name.trim().length > 0 ? '' : 'Name is required.';
+  return name.trim().length > 0 ? '' : 'O nome é obrigatório.';
 }
 
 function validateEmail(email: string) {
-  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) ? '' : 'Enter a valid email address.';
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) ? '' : 'Informe um e-mail válido.';
 }
 
 function validatePassword(password: string) {
-  return password.length >= 6 ? '' : 'Password must be at least 6 characters.';
+  return password.length >= 6 ? '' : 'A senha deve ter ao menos 6 caracteres.';
 }
 
 export default function RegisterPage() {
@@ -63,8 +63,8 @@ export default function RegisterPage() {
       </Link>
 
       <div className="bg-slate-900 border border-slate-800 rounded-3xl p-8 max-w-md w-full shadow-2xl shadow-black/50">
-        <h1 className="text-3xl font-extrabold tracking-tight text-white mb-2">Create Account</h1>
-        <p className="text-slate-400 mb-8">Join Master Gambito and elevate your chess openings.</p>
+        <h1 className="text-3xl font-extrabold tracking-tight text-white mb-2">Criar conta</h1>
+        <p className="text-slate-400 mb-8">Junte-se ao Mestre Gambito e eleve o nível das suas aberturas.</p>
 
         {error && (
           <div className="bg-rose-500/10 border border-rose-500/20 text-rose-400 text-sm font-medium p-4 rounded-xl mb-6">
@@ -74,7 +74,7 @@ export default function RegisterPage() {
 
         <form onSubmit={handleSubmit} className="space-y-5">
           <div>
-            <label className="block text-sm font-bold text-slate-300 mb-2">Name</label>
+            <label className="block text-sm font-bold text-slate-300 mb-2">Nome</label>
             <input
               name="name"
               type="text"
@@ -92,7 +92,7 @@ export default function RegisterPage() {
           </div>
 
           <div>
-            <label className="block text-sm font-bold text-slate-300 mb-2">Email Address</label>
+            <label className="block text-sm font-bold text-slate-300 mb-2">E-mail</label>
             <input
               name="email"
               type="email"
@@ -110,7 +110,7 @@ export default function RegisterPage() {
           </div>
 
           <div>
-            <label className="block text-sm font-bold text-slate-300 mb-2">Password</label>
+            <label className="block text-sm font-bold text-slate-300 mb-2">Senha</label>
             <input
               name="password"
               type="password"
@@ -133,15 +133,15 @@ export default function RegisterPage() {
             disabled={isLoading}
             className="w-full mt-4 flex items-center justify-center gap-2 py-4 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl font-bold shadow-lg shadow-emerald-500/25 transition-all active:scale-95 disabled:opacity-70 disabled:cursor-not-allowed"
           >
-            {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Create Account'}
+            {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Criar conta'}
             {!isLoading && <UserPlus className="w-5 h-5" />}
           </button>
         </form>
 
         <p className="text-center mt-8 text-slate-400 text-sm">
-          Already have an account?{' '}
+          Já tem uma conta?{' '}
           <Link href="/login" className="text-violet-400 font-bold hover:underline underline-offset-4">
-            Sign In
+            Entrar
           </Link>
         </p>
       </div>

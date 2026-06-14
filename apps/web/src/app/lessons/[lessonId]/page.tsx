@@ -1,10 +1,10 @@
 import Board from "@/components/chess/Board"
 import CoachConsole from "@/components/chess/CoachConsole"
 import GameInitializer from "@/components/chess/GameInitializer"
-import type { ExerciseMove } from "@/store/GameStore"
 import ModeToggle from "@/components/chess/ModeToggle"
 import ProgressTracker from "@/components/chess/ProgressTracker"
-import { getLessonById } from "@/services/lesson.service"
+import { apiClient } from "@/lib/api-client"
+import { getSession } from "@/lib/session"
 import { ChessWrapper } from "@/lib/chess"
 import { notFound } from "next/navigation"
 import { ChevronRight, GraduationCap } from "lucide-react"
@@ -19,7 +19,8 @@ export default async function LessonPage({
 }) {
     const resolvedParams = await params
     const resolvedSearch = await searchParams
-    const lesson = await getLessonById(resolvedParams.lessonId)
+    const session = await getSession()
+    const lesson = session ? await apiClient.lessons.findById(resolvedParams.lessonId, session.apiToken) : null
 
     if (!lesson) notFound()
 
@@ -37,11 +38,11 @@ export default async function LessonPage({
         return (
             <div className="min-h-screen bg-slate-950 text-slate-50 flex items-center justify-center p-8">
                 <div className="bg-slate-900 border border-slate-800 rounded-2xl p-8 max-w-md w-full text-center">
-                    <h2 className="text-xl font-bold tracking-tight mb-2">Incomplete Lesson</h2>
-                    <p className="text-slate-400">This lesson does not have any configured exercises yet.</p>
+                    <h2 className="text-xl font-bold tracking-tight mb-2">Lição incompleta</h2>
+                    <p className="text-slate-400">Esta lição ainda não tem exercícios configurados.</p>
                     <Link href={`/openings/${lesson.opening.slug}`} className="mt-6 inline-flex items-center gap-2 text-violet-400 hover:text-violet-300 transition-colors">
                         <ChevronRight className="w-4 h-4 rotate-180" />
-                        Back to Path
+                        Voltar à trilha
                     </Link>
                 </div>
             </div>
@@ -54,7 +55,7 @@ export default async function LessonPage({
         <div className="min-h-screen bg-slate-950 text-slate-50 font-sans selection:bg-violet-500/30">
             <GameInitializer
                 initialFen={initialFen}
-                movesTree={selectedExercise.moves as unknown as ExerciseMove[]}
+                movesTree={selectedExercise.moves}
                 exerciseId={selectedExercise.id}
             />
             <ProgressTracker />
@@ -68,7 +69,7 @@ export default async function LessonPage({
                             href="/openings"
                             className="text-slate-400 hover:text-slate-200 transition-colors shrink-0 hidden sm:inline"
                         >
-                            Gallery
+                            Galeria
                         </Link>
                         <ChevronRight className="w-3.5 h-3.5 text-slate-600 shrink-0 hidden sm:inline" />
                         <Link

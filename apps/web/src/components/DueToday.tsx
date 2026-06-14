@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { Flame, Zap, ChevronRight, CheckCircle2, Clock } from 'lucide-react';
-import type { DueReview } from '@/services/review.service';
+import type { DueReview } from '@/lib/api-client';
 
 interface DueTodayProps {
     reviews: DueReview[];
@@ -17,7 +17,7 @@ export default function DueToday({ reviews, streak, xp }: DueTodayProps) {
         <div className="flex items-center gap-3">
             <div className="flex items-center gap-1.5 px-3 py-1.5 bg-amber-500/10 border border-amber-500/20 rounded-lg">
                 <Flame className="w-4 h-4 text-amber-400" />
-                <span className="text-sm font-bold text-amber-300">{streak} day streak</span>
+                <span className="text-sm font-bold text-amber-300">{streak} {streak === 1 ? 'dia' : 'dias'} seguidos</span>
             </div>
             <div className="flex items-center gap-1.5 px-3 py-1.5 bg-violet-500/10 border border-violet-500/20 rounded-lg">
                 <Zap className="w-4 h-4 text-violet-400" />
@@ -34,8 +34,8 @@ export default function DueToday({ reviews, streak, xp }: DueTodayProps) {
                         <CheckCircle2 className="w-5 h-5 text-emerald-400" />
                     </div>
                     <div>
-                        <p className="font-bold text-emerald-300 text-sm">All caught up!</p>
-                        <p className="text-slate-400 text-xs mt-0.5">No reviews due. Come back tomorrow to keep your streak.</p>
+                        <p className="font-bold text-emerald-300 text-sm">Tudo em dia!</p>
+                        <p className="text-slate-400 text-xs mt-0.5">Nenhuma revisão pendente. Volte amanhã para manter sua sequência.</p>
                     </div>
                 </div>
                 {statsBar}
@@ -64,9 +64,9 @@ export default function DueToday({ reviews, streak, xp }: DueTodayProps) {
                     </div>
                     <div>
                         <p className="font-bold text-white text-sm">
-                            {dueCount} {dueCount === 1 ? 'exercise' : 'exercises'} due today
+                            {dueCount} {dueCount === 1 ? 'exercício' : 'exercícios'} para revisar hoje
                         </p>
-                        <p className="text-slate-400 text-xs">Review now to keep your memory fresh</p>
+                        <p className="text-slate-400 text-xs">Revise agora para fixar na memória</p>
                     </div>
                 </div>
                 {statsBar}
@@ -93,14 +93,14 @@ export default function DueToday({ reviews, streak, xp }: DueTodayProps) {
                                         {review.exercise.lesson.opening.name}
                                     </p>
                                     <p className="text-xs text-slate-400 truncate">
-                                        Lesson {review.exercise.lesson.order}: {review.exercise.lesson.title}
+                                        Lição {review.exercise.lesson.order}: {review.exercise.lesson.title}
                                     </p>
                                 </div>
                             </div>
                             <div className="flex items-center gap-3 flex-shrink-0 ml-4">
                                 {daysOverdue > 0 && (
                                     <span className="text-xs font-bold text-rose-400 bg-rose-500/10 px-2 py-0.5 rounded">
-                                        {daysOverdue}d overdue
+                                        {daysOverdue}d atrasado
                                     </span>
                                 )}
                                 <ChevronRight className="w-4 h-4 text-slate-600 group-hover:text-violet-400 transition-colors" />
@@ -111,7 +111,7 @@ export default function DueToday({ reviews, streak, xp }: DueTodayProps) {
 
                 {hidden > 0 && (
                     <div className="px-5 py-3 text-xs text-slate-400">
-                        + {hidden} more exercise{hidden > 1 ? 's' : ''}
+                        + {hidden} {hidden > 1 ? 'exercícios' : 'exercício'} a mais
                     </div>
                 )}
             </div>
@@ -123,7 +123,7 @@ export default function DueToday({ reviews, streak, xp }: DueTodayProps) {
                     className="flex items-center justify-center gap-2 w-full py-3 bg-amber-500 hover:bg-amber-400 text-black rounded-xl font-bold transition-all active:scale-95 shadow-lg shadow-amber-500/20"
                 >
                     <Zap className="w-4 h-4" />
-                    Start Review Session
+                    Iniciar sessão de revisão
                 </Link>
             </div>
         </div>

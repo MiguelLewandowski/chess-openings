@@ -6,9 +6,9 @@ import { ChevronLeft, Download, Loader2, Info, ShieldAlert } from 'lucide-react'
 import { importStudyAction } from '@/app/actions/ingest.actions';
 
 function validateUrl(val: string) {
-  if (!val) return 'URL is required.';
+  if (!val) return 'A URL é obrigatória.';
   if (!val.startsWith('https://lichess.org/study/')) {
-    return 'Must be a Lichess study URL (https://lichess.org/study/...).';
+    return 'Deve ser uma URL de estudo do Lichess (https://lichess.org/study/...).';
   }
   return '';
 }
@@ -48,14 +48,14 @@ export default function ImportPage() {
       });
 
       if (!data.success) {
-        throw new Error(data.error || 'Import failed');
+        throw new Error(data.error || 'Falha na importação');
       }
 
       setResult({ success: true, message: data.message });
       setUrl('');
       setOpeningName('');
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : 'An unexpected error occurred';
+      const message = err instanceof Error ? err.message : 'Ocorreu um erro inesperado';
       setResult({ success: false, error: message });
     } finally {
       setLoading(false);
@@ -70,11 +70,11 @@ export default function ImportPage() {
           <Link
             href="/openings"
             className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-slate-900 border border-slate-800 hover:bg-slate-800 hover:border-slate-700 text-slate-400 hover:text-slate-200 transition-all"
-            title="Back to Gallery"
+            title="Voltar à galeria"
           >
             <ChevronLeft className="w-5 h-5" />
           </Link>
-          <span className="font-medium text-slate-200">Back to Gallery</span>
+          <span className="font-medium text-slate-200">Voltar à galeria</span>
           <div className="ml-auto flex items-center gap-1.5 px-2.5 py-1 bg-amber-500/10 border border-amber-500/20 rounded-lg">
             <ShieldAlert className="w-3.5 h-3.5 text-amber-400" />
             <span className="text-xs font-bold text-amber-400">Admin</span>
@@ -89,17 +89,17 @@ export default function ImportPage() {
             <div className="bg-violet-500/10 p-3 rounded-xl text-violet-400">
               <Download className="w-6 h-6" />
             </div>
-            <h1 className="text-3xl font-bold tracking-tight text-slate-100">Lichess Importer</h1>
+            <h1 className="text-3xl font-bold tracking-tight text-slate-100">Importador do Lichess</h1>
           </div>
 
           <p className="text-slate-400 mb-8 ml-14">
-            Paste the URL of a Lichess study to generate interactive lessons, tactical analysis, and Master Gambito&apos;s comments.
+            Cole a URL de um estudo do Lichess para gerar lições interativas, análise tática e os comentários do Mestre Gambito.
           </p>
 
           <form onSubmit={handleSubmit} className="space-y-6 ml-14">
             <div>
               <label className="block text-sm font-medium text-slate-300 mb-1.5">
-                Lichess Study URL *
+                URL do estudo do Lichess *
               </label>
               <input
                 type="url"
@@ -120,54 +120,54 @@ export default function ImportPage() {
               ) : (
                 <div className="flex items-center gap-1.5 mt-2 text-xs text-slate-400">
                   <Info className="w-3.5 h-3.5" />
-                  <p>Must be a public Lichess study URL.</p>
+                  <p>Deve ser uma URL de estudo público do Lichess.</p>
                 </div>
               )}
             </div>
 
             <div>
               <label className="block text-sm font-medium text-slate-300 mb-1.5">
-                Opening Name <span className="text-slate-400 font-normal">(Optional)</span>
+                Nome da abertura <span className="text-slate-400 font-normal">(opcional)</span>
               </label>
               <input
                 type="text"
-                placeholder="E.g.: Ruy Lopez (Exchange Variation)"
+                placeholder="Ex.: Ruy Lopez (Variante da Troca)"
                 className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3.5 text-slate-100 placeholder:text-slate-600 focus:ring-2 focus:ring-violet-500 focus:border-transparent outline-none transition-all"
                 value={openingName}
                 onChange={e => setOpeningName(e.target.value)}
               />
               <div className="flex items-center gap-1.5 mt-2 text-xs text-slate-400">
                 <Info className="w-3.5 h-3.5" />
-                <p>If left blank, we will use the first chapter&apos;s name.</p>
+                <p>Se deixar em branco, usaremos o nome do primeiro capítulo.</p>
               </div>
             </div>
 
             <div>
               <label className="block text-sm font-medium text-slate-300 mb-1.5">
-                Playing Style Tag <span className="text-slate-400 font-normal">(Optional)</span>
+                Tag de estilo de jogo <span className="text-slate-400 font-normal">(opcional)</span>
               </label>
               <select
                 className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3.5 text-slate-100 focus:ring-2 focus:ring-violet-500 focus:border-transparent outline-none transition-all"
                 value={styleTag}
                 onChange={e => setStyleTag(e.target.value)}
               >
-                <option value="">Select a style...</option>
-                <option value="Aggressive">Aggressive (Tactical &amp; Sharp)</option>
-                <option value="Solid">Solid (Safe &amp; Defensive)</option>
-                <option value="Positional">Positional (Strategic &amp; Maneuvering)</option>
-                <option value="Universal">Universal (Flexible)</option>
+                <option value="">Selecione um estilo...</option>
+                <option value="Aggressive">Agressivo (Tático e afiado)</option>
+                <option value="Solid">Sólido (Seguro e defensivo)</option>
+                <option value="Positional">Posicional (Estratégico e de manobra)</option>
+                <option value="Universal">Universal (Flexível)</option>
               </select>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
               <div>
                 <label className="block text-sm font-medium text-slate-300 mb-1.5">
-                  Specific Chapter <span className="text-slate-400 font-normal">(Optional)</span>
+                  Capítulo específico <span className="text-slate-400 font-normal">(opcional)</span>
                 </label>
                 <input
                   type="number"
                   min="1"
-                  placeholder="E.g.: 2"
+                  placeholder="Ex.: 2"
                   className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3.5 text-slate-100 placeholder:text-slate-600 focus:ring-2 focus:ring-violet-500 focus:border-transparent outline-none transition-all"
                   value={specificChapter}
                   onChange={e => setSpecificChapter(e.target.value)}
@@ -176,12 +176,12 @@ export default function ImportPage() {
 
               <div>
                 <label className="block text-sm font-medium text-slate-300 mb-1.5">
-                  Chapter Limit <span className="text-slate-400 font-normal">(Optional)</span>
+                  Limite de capítulos <span className="text-slate-400 font-normal">(opcional)</span>
                 </label>
                 <input
                   type="number"
                   min="1"
-                  placeholder="E.g.: 3"
+                  placeholder="Ex.: 3"
                   className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3.5 text-slate-100 placeholder:text-slate-600 focus:ring-2 focus:ring-violet-500 focus:border-transparent outline-none transition-all"
                   value={chapterLimit}
                   onChange={e => setChapterLimit(e.target.value)}
@@ -201,10 +201,10 @@ export default function ImportPage() {
               {loading ? (
                 <>
                   <Loader2 className="w-5 h-5 animate-spin" />
-                  Master Gambito is analyzing...
+                  O Mestre Gambito está analisando...
                 </>
               ) : (
-                'Import and Generate Lessons'
+                'Importar e gerar lições'
               )}
             </button>
           </form>
@@ -216,13 +216,13 @@ export default function ImportPage() {
                 : 'bg-rose-500/10 border-rose-500/20 text-rose-300'
             }`}>
               <p className="font-semibold text-lg">
-                {result.success ? '✅ Success!' : '❌ An error occurred'}
+                {result.success ? '✅ Sucesso!' : '❌ Ocorreu um erro'}
               </p>
               <p className="mt-2 text-slate-300">{result.message || result.error}</p>
               {result.success && (
                 <div className="mt-4 flex gap-4">
                   <Link href="/openings" className="text-sm font-medium text-emerald-400 hover:text-emerald-300 underline underline-offset-4">
-                    &larr; Back to Gallery
+                    &larr; Voltar à galeria
                   </Link>
                 </div>
               )}
