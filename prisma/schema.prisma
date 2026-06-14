@@ -62,8 +62,9 @@ enum ExerciseType {
 model Exercise {
   id          String       @id @default(cuid())
   title       String
-  description String?        
+  description String?
   type        ExerciseType @default(PRACTICE)
+  initialFen  String?      // FEN da posição inicial (antes do primeiro lance)
   lessonId    String
   lesson      Lesson       @relation(fields: [lessonId], references: [id], onDelete: Cascade)
   moves       Move[]
@@ -113,6 +114,18 @@ model UserProgress {
   updatedAt      DateTime @updatedAt
 
   @@unique([userId, exerciseId])
+}
+
+// --- PUZZLES (Modo Punição) ---
+
+model Puzzle {
+  id          String  @id @default(cuid())
+  lichessId   String  @unique
+  fen         String  // FEN depois do erro adversário (vez do jogador)
+  moves       String  // Solução completa em UCI separada por espaços
+  rating      Int
+  openingTags String? // Ex: "B12_Caro-Kann_Defense_Advance_Variation"
+  themes      String  // Ex: "fork pin opening"
 }
 
 // --- SISTEMA DE GESTÃO (B2B / PROFESSORES) ---
