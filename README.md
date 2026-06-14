@@ -1,5 +1,4 @@
 <div align="center">
-  <img src="public/favicon.ico" alt="Chess Openings Logo" width="120" />
   <h1>Chess Openings</h1>
   <p><strong>O Treinador de Aberturas de Xadrez Pragmático & Inteligente</strong></p>
   <p><em>Aprende uma linha, pratica contra a máquina e sê punido se esqueceres. Tudo guiado pelo Mestre Gambito.</em></p>
@@ -44,11 +43,7 @@ Inspirado no modelo de retenção do Duolingo e no rigor dos clubes de xadrez cl
 * **Algoritmo SM-2 (SRS):** O sistema adapta as tuas revisões (ex: se acertares facilmente, revisas em 4 dias; se errares, revisas amanhã). Implementado via `completeExerciseAction()` que actualiza `easinessFactor`, `interval` e `repetitions` em cada submissão.
 * **ProgressTracker:** Componente que exibe o progresso SM-2 em tempo real, streak de dias consecutivos e XP acumulado directamente no ecrã de lição.
 * **Streaks & XP:** Contador de dias consecutivos e experiência ganha por aula.
-* **Arquétipos:** Definição do teu estilo de jogo (ex: *"Atacante Tático"*, *"Sólido Posicional"*).
-
-### 4. Gestão e B2B (Diferencial)
-* **Classrooms:** Professores podem criar salas, gerar *invite codes* e monitorizar o XP/Maestria dos alunos.
-* **Dashboard de Maestria:** Progresso visual real (0% a 100%) no domínio de cada abertura (ex: *Italiana*).
+* **Arquétipos:** Definição do teu estilo de jogo via *style-quiz* (ex: *"Atacante Tático"*, *"Sólido Posicional"*).
 
 ---
 
@@ -95,8 +90,8 @@ chess-openings/
 │   │           └── session.ts     # Sessão por cookie (JWT da API)
 │   └── api/                    # Backend NestJS 10 (porta 3001)
 │       ├── src/
-│       │   ├── modules/        # auth, opening, lesson, progress, ingestor
-│       │   └── infrastructure/ # PrismaService, services (Lichess, engine, coach)
+│       │   ├── modules/        # auth, opening, lesson, progress, ingestor, move, puzzle
+│       │   └── infrastructure/ # PrismaService, repositórios, services (Lichess, engine, coach)
 │       └── test/               # Testes de integração e2e (Jest + Supertest)
 └── packages/
     └── domain/                 # @chess-openings/domain — entidades, use-cases, interfaces (SM-2)
@@ -224,6 +219,17 @@ Acede a [http://localhost:3000](http://localhost:3000) (app) e [http://localhost
 > **Alternativa — API em Docker:** para correr a API em container em vez de `pnpm dev:all`,
 > usa `docker-compose --profile full up -d` (sobe banco + API) e depois só `pnpm dev` para o frontend.
 
+### Importar um estudo (conteúdo)
+
+A importação de estudos do Lichess (gera lições) exige um utilizador com role **ADMIN**:
+
+```bash
+pnpm make-admin teu@email.com    # promove a ADMIN (faz logout/login depois)
+```
+
+Depois, em `http://localhost:3000/admin/import`, cola o URL de um estudo público do Lichess.
+(Também disponível via Swagger: `POST /api/ingestor/study`.)
+
 ### Testes
 
 ```bash
@@ -235,6 +241,7 @@ pnpm test:e2e     # Testes de integração da API (requer PostgreSQL), via turbo
 
 ## O que NÃO está no MVP (Próximas Fases)
 Para manter o pragmatismo e foco na entrega:
+* **B2B / Classrooms:** os models `Classroom`/`Enrollment` existem no schema, mas o módulo e a UI ainda não foram implementados.
 * Análise de partidas reais do Lichess/Chess.com.
 * Multijogador ou lances em tempo real contra humanos.
 * Vídeos longos de ensino.
