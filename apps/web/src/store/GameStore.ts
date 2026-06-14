@@ -1,234 +1,194 @@
-import { ChessWrapper } from "@/lib/chess";
-import { create } from "zustand";
+import { ChessWrapper } from '@/lib/chess'
+import { coachComment, gameCopy } from '@/lib/coach-message'
+import type { MoveSummary } from '@chess-openings/domain'
+import { create } from 'zustand'
 
-export interface ExerciseMove {
-  id: string
-  san: string
-  fen: string
-  parentId: string | null
-  isOpponentResponse: boolean
-  coachInsights?: { comment?: string; theme?: string } | null
-  visualMarkers?: { arrows?: string[]; circles?: string[] } | null
+export type ExerciseMove = MoveSummary
+
+// Lifecycle of a training session. States are mutually exclusive, so invalid
+// combinations (e.g. "thinking" while "completed") are unrepresentable.
+export type GameStatus =
+  | 'idle' // waiting for the player's move
+  | 'error' // player's turn; last attempt was wrong (board stays interactive)
+  | 'thinking' // the opponent's move is animating
+  | 'waiting' // correct move played; waiting to reveal the opponent's reply
+  | 'completed' // exercise finished
+
+const firstChild = (moves: ExerciseMove[], parentId: string | null) =>
+  moves.find((m) => m.parentId === parentId)
+
+const findNode = (moves: ExerciseMove[], id: string | null) =>
+  moves.find((m) => m.id === id)
+
+// Status once the board lands on `nodeId` and control returns to the player.
+function nextStatus(moves: ExerciseMove[], nodeId: string): GameStatus {
+  const next = firstChild(moves, nodeId)
+  if (!next) return 'completed'
+  return next.isOpponentResponse ? 'waiting' : 'idle'
+}
+
+// Narration for a landed move: the completion line, the coach's own comment, or
+// a generic fallback.
+function landingComment(status: GameStatus, node: ExerciseMove, fallback: string): string {
+  return status === 'completed' ? gameCopy.lessonCompleted : coachComment(node) ?? fallback
 }
 
 interface GameState {
-    hasError: boolean;
-    setHasError: (newHasError: boolean) => void;
-    fen: string;
-    setFen: (newFen: string) => void;
-    comment: string;
-    setComment: (newComment: string) => void;
-    initializeGame: (fen: string) => void;
-    exerciseMoves: ExerciseMove[];
-    currentNodeId: string | null;
-    isThinking: boolean;
-    isCompleted: boolean;
-    playerColor: 'white' | 'black';
-    initialFen: string;
-    initialComment: string;
-    isWaitingForNext: boolean;
-    exerciseId: string | null;
-    errorCount: number;
-    playNextMove: () => void;
-    playPreviousMove: () => void;
-    setupExercise: (initialFen: string, movesTree: ExerciseMove[], exerciseId?: string, playerColor?: 'white' | 'black', autoPlayFirst?: boolean) => void;
-    restartExercise: () => void;
-    handlePlayerMove: (orig: string, dest: string) => boolean;
-    checkCompletion: () => void;
+  status: GameStatus
+  fen: string
+  comment: string
+  exerciseMoves: ExerciseMove[]
+  currentNodeId: string | null
+  playerColor: 'white' | 'black'
+  initialFen: string
+  initialComment: string
+  exerciseId: string | null
+  errorCount: number
+  autoPlayFirst: boolean
+  setupExercise: (
+    initialFen: string,
+    movesTree: ExerciseMove[],
+    exerciseId?: string,
+    playerColor?: 'white' | 'black',
+    autoPlayFirst?: boolean,
+  ) => void
+  restartExercise: () => void
+  handlePlayerMove: (orig: string, dest: string) => boolean
+  playNextMove: () => void
+  commitOpponentMove: () => void
+  playPreviousMove: () => void
 }
 
 export const useGameStore = create<GameState>((set, get) => ({
-    hasError: false,
-    setHasError: (newHasError) => set({ hasError: newHasError }),
+  status: 'idle',
+  fen: ChessWrapper.STARTING_FEN,
+  comment: '',
+  exerciseMoves: [],
+  currentNodeId: null,
+  playerColor: 'white',
+  initialFen: '',
+  initialComment: '',
+  exerciseId: null,
+  errorCount: 0,
+  autoPlayFirst: false,
 
-    fen: 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1',
-    setFen: (newFen) => set({ fen: newFen }),
+  setupExercise: (initialFen, movesTree, exerciseId, forcedPlayerColor, autoPlayFirst = false) => {
+    const firstMove = firstChild(movesTree, null)
+    const playerColor = forcedPlayerColor ?? (firstMove?.isOpponentResponse ? 'black' : 'white')
+    const hint = firstMove ? coachComment(firstMove) : null
+    const initialComment = autoPlayFirst
+      ? gameCopy.watchBlunder
+      : hint
+        ? gameCopy.hint(hint)
+        : gameCopy.yourTurn
 
-    comment: '',
-    setComment: (newComment) => set({ comment: newComment }),
+    set({
+      fen: initialFen,
+      initialFen,
+      initialComment,
+      comment: initialComment,
+      exerciseMoves: movesTree,
+      currentNodeId: null,
+      playerColor,
+      status: autoPlayFirst ? 'waiting' : 'idle',
+      exerciseId: exerciseId ?? null,
+      errorCount: 0,
+      autoPlayFirst,
+    })
+  },
 
-    initializeGame: (fen) => set({ fen, comment: "Your turn!" }),
+  restartExercise: () => {
+    const s = get()
+    s.setupExercise(s.initialFen, s.exerciseMoves, s.exerciseId ?? undefined, s.playerColor, s.autoPlayFirst)
+  },
 
-    exerciseMoves: [],
-    currentNodeId: null,
-    isThinking: false,
-    isCompleted: false,
-    playerColor: 'white',
-    initialFen: '',
-    initialComment: '',
-    isWaitingForNext: false,
-    exerciseId: null,
-    errorCount: 0,
-
-    playNextMove: () => {
-        const state = get();
-        if (state.isCompleted) return;
-
-        if (state.isWaitingForNext) {
-            const nextMove = state.exerciseMoves.find(move => move.parentId === state.currentNodeId);
-            if (nextMove && nextMove.isOpponentResponse) {
-                set({ isWaitingForNext: false, isThinking: true });
-
-                setTimeout(() => {
-                    set({
-                        fen: nextMove.fen,
-                        currentNodeId: nextMove.id,
-                        isThinking: false,
-                        comment: nextMove.coachInsights?.comment?.includes("Erro")
-                            ? `Opponent played: ${nextMove.san}. Your turn!`
-                            : (nextMove.coachInsights?.comment || `Opponent played: ${nextMove.san}. Your turn!`),
-                    });
-                    get().checkCompletion();
-                }, 300);
-            }
-            return;
-        }
-
-        const nextMove = state.exerciseMoves.find(move => move.parentId === state.currentNodeId);
-        if (nextMove && !nextMove.isOpponentResponse) {
-            set({
-                fen: nextMove.fen,
-                hasError: false,
-                currentNodeId: nextMove.id,
-                comment: nextMove.coachInsights?.comment?.includes("Erro")
-                    ? `Good move: ${nextMove.san}`
-                    : (nextMove.coachInsights?.comment || `Good move: ${nextMove.san}`)
-            });
-
-            const nextNextMove = get().exerciseMoves.find(move => move.parentId === nextMove.id);
-            if (nextNextMove && nextNextMove.isOpponentResponse) {
-                set({ isWaitingForNext: true });
-            } else {
-                get().checkCompletion();
-            }
-        }
-    },
-
-    playPreviousMove: () => {
-        const state = get();
-
-        if (!state.currentNodeId) return;
-
-        const currentMove = state.exerciseMoves.find(m => m.id === state.currentNodeId);
-        if (!currentMove) return;
-
-        set({ hasError: false, isCompleted: false, isWaitingForNext: false });
-
-        if (currentMove.parentId === null) {
-            set({
-                fen: state.initialFen,
-                currentNodeId: null,
-                comment: state.initialComment
-            });
-        } else {
-            const prevMove = state.exerciseMoves.find(m => m.id === currentMove.parentId);
-            if (prevMove) {
-                set({
-                    fen: prevMove.fen,
-                    currentNodeId: prevMove.id,
-                    comment: prevMove.coachInsights?.comment || `Move: ${prevMove.san}`
-                });
-
-                const nextMove = state.exerciseMoves.find(move => move.parentId === prevMove.id);
-                if (nextMove && nextMove.isOpponentResponse) {
-                    set({ isWaitingForNext: true });
-                }
-            }
-        }
-    },
-
-    setupExercise: (initialFen, movesTree, exerciseId, forcedPlayerColor, autoPlayFirst = false) => {
-        let playerColor: 'white' | 'black'
-        if (forcedPlayerColor) {
-            playerColor = forcedPlayerColor
-        } else {
-            const isBlackLesson = movesTree.length > 0 && movesTree.find(m => m.parentId === null)?.isOpponentResponse === true;
-            playerColor = isBlackLesson ? 'black' : 'white'
-        }
-
-        const firstExpectedMove = movesTree.find(m => m.parentId === null);
-
-        const initialComment = autoPlayFirst
-            ? "Watch your opponent — they're about to blunder!"
-            : (firstExpectedMove?.coachInsights?.comment
-                ? `Hint: ${firstExpectedMove.coachInsights.comment}`
-                : "Your turn! Find the best move.");
-
-        set({
-            initialFen,
-            initialComment,
-            fen: initialFen,
-            exerciseMoves: movesTree,
-            currentNodeId: null,
-            isThinking: false,
-            isCompleted: false,
-            playerColor,
-            isWaitingForNext: autoPlayFirst,
-            comment: initialComment,
-            hasError: false,
-            exerciseId: exerciseId ?? null,
-            errorCount: 0,
-        });
-    },
-
-    restartExercise: () => {
-        const state = get();
-        get().setupExercise(state.initialFen, state.exerciseMoves, state.exerciseId ?? undefined);
-    },
-
-    handlePlayerMove: (orig, dest) => {
-        const state = get();
-        const moveAttempt = { from: orig, to: dest, promotion: 'q' };
-        const result = ChessWrapper.playMove(state.fen, moveAttempt);
-
-        if (!result) {
-            set({ hasError: true, comment: "Illegal move!" });
-            return false;
-        }
-
-        const moveSan = result.moveDetails.san;
-
-        const expectedMove = state.exerciseMoves.find(move => {
-            return move.san === moveSan && move.parentId === state.currentNodeId;
-        });
-
-        if (expectedMove) {
-            set({
-                fen: result.newFen,
-                hasError: false,
-                currentNodeId: expectedMove.id,
-                comment: expectedMove.coachInsights?.comment?.includes("Erro")
-                    ? `Good move: ${moveSan}`
-                    : (expectedMove.coachInsights?.comment || `Good move: ${moveSan}`)
-            });
-
-            const updatedState = get();
-            const nextMove = updatedState.exerciseMoves.find(move => move.parentId === updatedState.currentNodeId);
-
-            if (nextMove && nextMove.isOpponentResponse) {
-                set({ isWaitingForNext: true });
-            } else {
-                get().checkCompletion();
-            }
-            return true;
-        } else {
-            set({ hasError: true, comment: `${moveSan} is legal, but not the theory!`, errorCount: state.errorCount + 1 });
-            return false;
-        }
-    },
-
-    checkCompletion: () => {
-        const state = get();
-
-        if (!state.currentNodeId) return;
-
-        const hasChildren = state.exerciseMoves.some(move => move.parentId === state.currentNodeId);
-
-        if (!hasChildren) {
-            set({
-                isCompleted: true,
-                comment: "Congratulations! You have completed the theory for this lesson!"
-            });
-        }
+  handlePlayerMove: (orig, dest) => {
+    const s = get()
+    const result = ChessWrapper.playMove(s.fen, { from: orig, to: dest, promotion: 'q' })
+    if (!result) {
+      set({ status: 'error', comment: gameCopy.illegalMove })
+      return false
     }
-}));
+
+    const san = result.moveDetails.san
+    const expected = s.exerciseMoves.find((m) => m.san === san && m.parentId === s.currentNodeId)
+    if (!expected) {
+      set({ status: 'error', comment: gameCopy.notTheory(san), errorCount: s.errorCount + 1 })
+      return false
+    }
+
+    const status = nextStatus(s.exerciseMoves, expected.id)
+    set({
+      fen: result.newFen,
+      currentNodeId: expected.id,
+      status,
+      comment: landingComment(status, expected, gameCopy.goodMove(san)),
+    })
+    return true
+  },
+
+  playNextMove: () => {
+    const s = get()
+    if (s.status === 'completed') return
+
+    const next = firstChild(s.exerciseMoves, s.currentNodeId)
+    if (!next) return
+
+    // Waiting on the opponent: enter the thinking phase. The reply is applied by
+    // commitOpponentMove() once the UI think-delay elapses.
+    if (s.status === 'waiting') {
+      if (next.isOpponentResponse) set({ status: 'thinking' })
+      return
+    }
+
+    // Theory stepping: reveal the next player move.
+    if (next.isOpponentResponse) return
+    const status = nextStatus(s.exerciseMoves, next.id)
+    set({
+      fen: next.fen,
+      currentNodeId: next.id,
+      status,
+      comment: landingComment(status, next, gameCopy.goodMove(next.san)),
+    })
+  },
+
+  commitOpponentMove: () => {
+    const s = get()
+    if (s.status !== 'thinking') return
+
+    const next = firstChild(s.exerciseMoves, s.currentNodeId)
+    if (!next) return
+
+    const status = nextStatus(s.exerciseMoves, next.id)
+    set({
+      fen: next.fen,
+      currentNodeId: next.id,
+      status,
+      comment: landingComment(status, next, gameCopy.opponentPlayed(next.san)),
+    })
+  },
+
+  playPreviousMove: () => {
+    const s = get()
+    if (!s.currentNodeId) return
+
+    const current = findNode(s.exerciseMoves, s.currentNodeId)
+    if (!current) return
+
+    if (current.parentId === null) {
+      set({ fen: s.initialFen, currentNodeId: null, comment: s.initialComment, status: 'idle' })
+      return
+    }
+
+    const prev = findNode(s.exerciseMoves, current.parentId)
+    if (!prev) return
+
+    const next = firstChild(s.exerciseMoves, prev.id)
+    set({
+      fen: prev.fen,
+      currentNodeId: prev.id,
+      comment: coachComment(prev) ?? gameCopy.previousMove(prev.san),
+      status: next?.isOpponentResponse ? 'waiting' : 'idle',
+    })
+  },
+}))
