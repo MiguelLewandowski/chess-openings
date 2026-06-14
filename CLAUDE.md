@@ -1,0 +1,150 @@
+# CLAUDE.md
+
+This file provides guidance to Claude Code when working with this repository.
+
+## Commands
+
+```bash
+pnpm dev               # Start the web app only (Next.js, http://localhost:3000)
+pnpm dev:api           # Start the API only (NestJS, http://localhost:3001, Swagger at /docs)
+pnpm dev:all           # Start web + API together (turbo)
+pnpm build             # Production build of all workspaces (turbo)
+pnpm lint              # Run ESLint (turbo — currently web only)
+pnpm test              # All unit tests via turbo (domain SM-2)
+pnpm test:domain       # Domain unit tests only
+pnpm test:e2e          # API integration tests via turbo (requires PostgreSQL)
+
+# Database (run from the repo root — schema lives in prisma/; use exec, NOT dlx → Prisma 7)
+# Note: `prisma generate` runs automatically on `pnpm install` (root postinstall).
+pnpm exec prisma db push         # Sync schema without migration history
+pnpm exec prisma migrate dev     # Create and apply a migration
+pnpm exec prisma studio          # GUI to inspect/edit DB data
+
+# Puzzle import (optional — enables /blunder route)
+pnpm import-puzzles                        # Default: puzzles.csv, max rating 2000
+pnpm import-puzzles puzzles.csv 1500       # Custom path + max rating
+
+# Promote a user to ADMIN (required to import studies / delete openings)
+pnpm make-admin user@example.com           # then log out and back in
+```
+
+## Environment
+
+Three `.env` files (all gitignored):
+
+- **`.env`** (root) — `DATABASE_URL` only, for the Prisma CLI and `import-puzzles`.
+- **`apps/web/.env`** — `DATABASE_URL`, `NEXT_PUBLIC_API_URL`.
+- **`apps/api/.env`** — `DATABASE_URL`, `SESSION_SECRET`, `GEMINI_API_KEY` (optional, only for study import), `PORT=3001`.
+
+> `SESSION_SECRET` must match between web and api — the web session cookie stores the JWT issued by the NestJS API.
+
+Start the PostgreSQL database with `docker-compose up -d` before running the apps.
+
+## Code style (all agents follow)
+
+- Language: **English** — variables, functions, files, comments
+- Commits: Portuguese, conventional commits format
+- Indentation: 2 spaces
+- Functions: max 20 lines — split if larger
+- No `any` in TypeScript
+- No obvious comments — the code must explain itself
+- No premature abstractions — solve the problem directly, abstract only when used 2+ times
+
+## Principles
+
+- **KISS** — simplest solution that solves the problem
+- **YAGNI** — don't implement what isn't needed now
+- **SOLID** — single responsibility, open for extension, depend on abstractions
+
+## Definition of done
+
+Before considering any task complete:
+
+1. `pnpm build` — no errors
+2. `pnpm lint` — no warnings
+3. No `any` in TypeScript
+4. No hardcoded secrets or `.env` values in code
+
+## Agent routing
+
+Before starting any task, always:
+1. Read the relevant agent files from `docs/agents/`
+2. Apply their rules throughout the entire task
+
+Routing guide:
+- New feature or unclear scope → read docs/agents/project-manager.md first
+- Technical decision or approach → read docs/agents/architect.md
+- Component, page, layout, form → read docs/agents/frontend.md
+- Visual consistency, spacing, feedback, navigation → read docs/agents/ui-ux.md
+- Server Action, business logic, API → read docs/agents/backend.md
+- Schema, migration, query → read docs/agents/database.md
+- Before every PR → read docs/agents/security.md
+- Tests → read docs/agents/qa.md
+- Deploy, env, CI → read docs/agents/devops.md
+
+For tasks that span multiple domains, read all relevant agent files before starting.
+
+## Specialists
+
+| Agent | File | When to use |
+|-------|------|-------------|
+| Project Manager | `docs/agents/project-manager.md` | Before any feature — breaks it into ordered tasks |
+| Architect | `docs/agents/architect.md` | Validates technical approach before execution |
+| Frontend | `docs/agents/frontend.md` | Components, pages, layouts, forms |
+| UI/UX | `docs/agents/ui-ux.md` | Visual consistency, spacing, feedback, navigation patterns |
+| Backend | `docs/agents/backend.md` | Server Actions, business logic, integrations |
+| Database | `docs/agents/database.md` | Schema, migrations, queries |
+| Security | `docs/agents/security.md` | Auth, permissions, data protection — run before every PR |
+| QA | `docs/agents/qa.md` | Tests for critical flows |
+| DevOps | `docs/agents/devops.md` | Deploy, CI/CD, environment |
+
+## Architecture
+
+**Next.js 15 App Router** · TypeScript · Prisma (PostgreSQL) · Zustand · Tailwind CSS v4 · `chess.js` · `chessground`
+
+### Data model (`prisma/schema.prisma`)
+
+Hierarchy: `Opening → Lesson → Exercise → Move` (tree via `Move.parentId`)
+
+- Each `Lesson` creates **two** `Exercise` records: `THEORY` and `PRACTICE`
+- `Move` is a recursive self-relation (`parent/children`) storing the full variation tree
+- `Move.isOpponentResponse` — when `true`, the engine plays the move without user input
+- `Move.coachInsights` (JSON) — `{ comment, theme }` generated by Gemini
+- `Move.visualMarkers` (JSON) — `{ arrows, circles }` for board annotations
+- `UserProgress` — implements SM-2 spaced repetition, updated via `completeExerciseAction()`
+
+### Content ingestor pipeline (`apps/api/src/modules/ingestor/` + `apps/api/src/infrastructure/services/`)
+
+Lives entirely in the NestJS API. Triggered via `POST /api/ingestor/study` (JWT-guarded), called from the web admin UI at `/admin/import` through the `importStudyAction` server action:
+
+1. `pgn-parser.service.ts` — parses raw PGN into `ParsedChapter[]` tree
+2. `engine.service.ts` — calls Lichess Cloud Eval API for centipawn evaluations per FEN
+3. `coach.service.ts` — calls `gemini-2.0-flash-lite` to expand comments into "Mestre Gambito" narration
+4. `IngestStudy` use case (`@chess-openings/domain`) orchestrates them and persists via `PrismaContentRepository`
+
+### Game state (`apps/web/src/store/GameStore.ts`)
+
+Single Zustand store `useGameStore` manages the entire training session:
+
+- `setupExercise()` — initializes state from flat moves array; determines player color by checking if the first root move has `isOpponentResponse: true`
+- `handlePlayerMove()` — validates drag-and-drop against `chess.js`, checks SAN against expected move; wrong-but-legal moves set `hasError: true` and increment `errorCount`
+- `isWaitingForNext` — set after a correct move; next action auto-plays opponent's response
+- `playNextMove` / `playPreviousMove` — used in Theory mode to step through moves
+
+### Authentication (NestJS `AuthModule` + `apps/web/src/lib/session.ts`)
+
+Credentials are validated by the NestJS `AuthModule` (`POST /auth/login|register`, bcrypt), which returns `{ token, user }`. The web `auth.actions` store that JWT in a cookie-based session via `jose` (`createSession`/`getSession`). The same `SESSION_SECRET` lets the NestJS `JwtStrategy` validate the token on protected routes. The web app does **not** hash passwords or mint tokens itself.
+
+### Key routes
+
+| Route | Description |
+|-------|-------------|
+| `/openings` | Catalogue of all openings |
+| `/openings/[slug]` | Opening detail with lessons |
+| `/lessons/[lessonId]` | Interactive training page |
+| `/blunder` | Puzzle trainer (requires puzzle import) |
+| `/style-quiz` | Onboarding quiz — sets `user.styleArchetype` to filter opening recommendations |
+
+### `GameInitializer` pattern
+
+`apps/web/src/components/chess/GameInitializer.tsx` is a **client component that renders nothing** — it calls `useGameStore.setupExercise()` in a `useEffect`. Rendered by server pages to bridge server-fetched data into the Zustand store without prop-drilling.
