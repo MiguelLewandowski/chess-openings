@@ -16,8 +16,20 @@ export class ProgressService {
     this.completeExercise = new CompleteExercise(progressRepo, userRepo)
   }
 
-  complete(userId: string, exerciseId: string, quality: number): Promise<void> {
-    return this.completeExercise.execute({ userId, exerciseId, quality })
+  async complete(userId: string, exerciseId: string, quality: number): Promise<void> {
+    const { sm2Result, newStreak } = await this.completeExercise.execute({ userId, exerciseId, quality })
+
+    await this.prisma.$transaction([
+      this.prisma.userProgress.upsert({
+        where: { userId_exerciseId: { userId, exerciseId } },
+        create: { userId, exerciseId, ...sm2Result },
+        update: { ...sm2Result },
+      }),
+      this.prisma.user.update({
+        where: { id: userId },
+        data: { streak: newStreak, lastStudyDate: new Date(), xp: { increment: 10 } },
+      }),
+    ])
   }
 
   findDueReviews(userId: string) {
