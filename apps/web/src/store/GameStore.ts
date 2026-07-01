@@ -5,14 +5,13 @@ import { create } from 'zustand'
 
 export type ExerciseMove = MoveSummary
 
-// Lifecycle of a training session. States are mutually exclusive, so invalid
-// combinations (e.g. "thinking" while "completed") are unrepresentable.
+// Ciclo de vida da sessão de treinamento. Estados são mutuamente exclusivos, então combinações inválidas não são representáveis. Não pode ter thinking e completed
 export type GameStatus =
-  | 'idle' // waiting for the player's move
-  | 'error' // player's turn; last attempt was wrong (board stays interactive)
-  | 'thinking' // the opponent's move is animating
-  | 'waiting' // correct move played; waiting to reveal the opponent's reply
-  | 'completed' // exercise finished
+  | 'idle' // esperando o usuário pensar e jogar
+  | 'error' // vez do usuário, a última tentativa de lance dele foi errada
+  | 'thinking' // O lance do "bot" está em estado pensando - ta dando 300ms do hook useOpponentReveal
+  | 'waiting' //Lance correto jogado; Esperando para revelar o lance do "bot"
+  | 'completed' // exercício completo
 
 const firstChild = (moves: ExerciseMove[], parentId: string | null) =>
   moves.find((m) => m.parentId === parentId)

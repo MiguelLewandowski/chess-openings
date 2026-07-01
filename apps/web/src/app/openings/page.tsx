@@ -1,10 +1,11 @@
 import { apiClient, type DueReview } from "@/lib/api-client"
 import Link from "next/link";
-import { PlusCircle, Search, BookOpen, ChevronLeft, Swords } from "lucide-react";
+import { PlusCircle, Search, BookOpen } from "lucide-react";
 import OpeningCard from "./OpeningCard";
 import UserProfile from "./UserProfile";
 import DueToday from "@/components/DueToday";
 import { getSession } from "@/lib/session";
+import { buttonClasses } from "@/components/ui";
 
 export default async function OpeningsCatalogPage() {
     const [openings, session] = await Promise.all([
@@ -12,7 +13,6 @@ export default async function OpeningsCatalogPage() {
         getSession(),
     ]);
 
-    // SM-2 data — only fetched when logged in
     let dueReviews: DueReview[] = [];
     let userStreak = 0;
     let userXp = 0;
@@ -28,62 +28,36 @@ export default async function OpeningsCatalogPage() {
     }
 
     return (
-        <div className="min-h-screen bg-slate-950 text-slate-50 font-sans selection:bg-violet-500/30">
+        <div className="min-h-screen bg-surface-app text-ink-900 font-body">
 
-            {/* Header da Galeria */}
-            <header className="border-b border-white/5 bg-slate-950/80 backdrop-blur-md sticky top-0 z-10">
-                <div className="max-w-6xl mx-auto px-4 md:px-8 h-20 flex items-center justify-between">
-                    <div className="flex items-center gap-4">
-                        <Link
-                            href="/"
-                            className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-slate-900 border border-slate-800 hover:bg-slate-800 hover:border-slate-700 text-slate-400 hover:text-slate-200 transition-all"
-                            title="Voltar para a página inicial"
-                        >
-                            <ChevronLeft className="w-5 h-5" />
+            <header className="border-b border-border-subtle bg-surface-card/90 backdrop-blur-md sticky top-0 z-10">
+                <div className="max-w-6xl mx-auto px-4 md:px-8 h-16 flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                        <Link href="/" className="flex items-center gap-2 no-underline">
+                            <div className="w-8 h-8 bg-ink-900 rounded-[9px] flex items-center justify-center text-[18px]">♞</div>
+                            <span className="hidden sm:block font-display font-extrabold text-[15px] tracking-tight text-ink-900">Chess Openings</span>
                         </Link>
 
-                        <div className="hidden sm:flex items-center gap-3 ml-2 border-l border-slate-800 pl-6">
-                            <div className="bg-violet-500/10 p-2.5 rounded-xl text-violet-400">
-                                <Search className="w-6 h-6" />
-                            </div>
-                            <div>
-                                <h1 className="text-2xl font-bold tracking-tight text-slate-100">Galeria de aberturas</h1>
-                                <p className="text-sm text-slate-400 font-medium">Seu repertório pessoal de xadrez</p>
-                            </div>
+                        <div className="hidden sm:flex items-center gap-2 ml-3 pl-4 border-l border-border-subtle text-ink-500">
+                            <Search className="w-4 h-4" />
+                            <span className="text-[14px] font-semibold text-ink-700">Galeria de aberturas</span>
                         </div>
-                    </div>
-
-                    <div className="flex sm:hidden items-center gap-3">
-                        <h1 className="text-xl font-bold tracking-tight text-slate-100">Galeria</h1>
                     </div>
 
                     <div className="flex items-center gap-3">
                         <UserProfile sessionArchetype={session?.styleArchetype || null} />
 
-                        <Link
-                            href="/blunder"
-                            className="inline-flex items-center gap-2 px-4 py-2.5 bg-rose-600/20 hover:bg-rose-600/30 border border-rose-500/30 text-rose-300 rounded-xl font-medium transition-all duration-200 active:scale-95"
-                            title="Modo Punição"
-                        >
-                            <Swords className="w-4 h-4" />
-                            <span className="hidden sm:inline text-sm">Punir</span>
-                        </Link>
-
-                        <Link
-                            href="/admin/import"
-                            className="inline-flex items-center gap-2 px-5 py-2.5 bg-violet-600 hover:bg-violet-500 text-white rounded-xl font-medium shadow-lg shadow-violet-500/25 transition-all duration-200 active:scale-95"
-                        >
-                            <PlusCircle className="w-5 h-5" />
+                        <Link href="/admin/import" className={buttonClasses({ variant: 'primary', size: 'sm' })}>
+                            <PlusCircle className="w-4 h-4" />
                             <span className="hidden sm:inline">Nova abertura</span>
+                            <span className="sm:hidden">Nova</span>
                         </Link>
                     </div>
                 </div>
             </header>
 
-            {/* Conteúdo Principal */}
-            <main className="max-w-6xl mx-auto px-4 md:px-8 py-12">
+            <main className="max-w-6xl mx-auto px-4 md:px-8 py-10">
 
-                {/* SM-2 Dashboard — só para utilizadores logados */}
                 {session && (
                     <DueToday
                         reviews={dueReviews}
@@ -93,27 +67,24 @@ export default async function OpeningsCatalogPage() {
                 )}
 
                 {openings.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center py-24 px-4 text-center bg-slate-900/50 border border-slate-800/50 rounded-3xl border-dashed">
-                        <div className="w-24 h-24 bg-slate-800 rounded-full flex items-center justify-center mb-6">
-                            <BookOpen className="w-12 h-12 text-slate-400" />
+                    <div className="flex flex-col items-center justify-center py-24 px-4 text-center bg-surface-card border border-dashed border-border-default rounded-[16px]">
+                        <div className="w-16 h-16 bg-surface-sunken rounded-full flex items-center justify-center mb-5">
+                            <BookOpen className="w-8 h-8 text-ink-400" />
                         </div>
-                        <h2 className="text-2xl font-bold tracking-tight text-slate-200 mb-3">Nenhuma abertura ainda</h2>
-                        <p className="text-slate-400 max-w-md mb-2 leading-relaxed">
+                        <h2 className="font-display font-bold text-[22px] tracking-tight text-ink-900 mb-2">Nenhuma abertura ainda</h2>
+                        <p className="text-ink-500 max-w-md mb-2 leading-relaxed text-[14px]">
                             Seu repertório está vazio. Importe um estudo público do Lichess para gerar lições interativas, comentários do treinador com IA e treino por repetição espaçada.
                         </p>
-                        <p className="text-slate-400 max-w-md mb-8 text-sm">
+                        <p className="text-ink-400 max-w-md mb-8 text-[13px]">
                             Após importar, cada capítulo vira uma lição com os modos Teoria e Prática.
                         </p>
-                        <Link
-                            href="/admin/import"
-                            className="inline-flex items-center gap-2 px-6 py-3 bg-violet-600 hover:bg-violet-500 text-white rounded-xl font-medium shadow-lg shadow-violet-500/25 transition-all duration-200 active:scale-95"
-                        >
+                        <Link href="/admin/import" className={buttonClasses({ variant: 'primary' })}>
                             <PlusCircle className="w-5 h-5" />
                             Importar primeiro estudo
                         </Link>
                     </div>
                 ) : (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
                         {openings.map((opening) => (
                             <OpeningCard key={opening.id} opening={opening} />
                         ))}

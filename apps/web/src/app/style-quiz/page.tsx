@@ -12,7 +12,7 @@ import { ARCHETYPES, dominantStyle } from '@/lib/archetypes';
 const QUESTIONS = [
   {
     id: 1,
-    fen: 'r1bqkbnr/pppp1ppp/2n5/4p3/4P3/5N2/PPPP1PPP/RNBQKB1R w KQkq - 2 3', // e4 e5 Nf3 Nc6
+    fen: 'r1bqkbnr/pppp1ppp/2n5/4p3/4P3/5N2/PPPP1PPP/RNBQKB1R w KQkq - 2 3',
     title: 'A escolha de abertura',
     description: 'Você joga de brancas. Como desenvolve seu bispo?',
     options: [
@@ -23,7 +23,7 @@ const QUESTIONS = [
   },
   {
     id: 2,
-    fen: 'rnbqkbnr/pppppppp/8/8/3P4/8/PPP1PPPP/RNBQKBNR b KQkq d3 0 1', // d4
+    fen: 'rnbqkbnr/pppppppp/8/8/3P4/8/PPP1PPPP/RNBQKBNR b KQkq d3 0 1',
     title: 'Reagindo a 1.d4',
     description: 'Seu adversário joga 1.d4. Qual é a sua resposta?',
     options: [
@@ -34,7 +34,7 @@ const QUESTIONS = [
   },
   {
     id: 3,
-    fen: 'r1bqkbnr/pppp1ppp/2n5/1B2p3/4P3/5N2/PPPP1PPP/RNBQK2R b KQkq - 3 3', // Ruy Lopez Bb5
+    fen: 'r1bqkbnr/pppp1ppp/2n5/1B2p3/4P3/5N2/PPPP1PPP/RNBQK2R b KQkq - 3 3',
     title: 'A tortura espanhola',
     description: 'As brancas jogam a Ruy Lopez. Como você defende?',
     options: [
@@ -45,7 +45,7 @@ const QUESTIONS = [
   },
   {
     id: 4,
-    fen: 'rnbqkb1r/pppppppp/5n2/8/2P5/8/PP1PPPPP/RNBQKBNR w KQkq - 1 2', // c4 Nf6
+    fen: 'rnbqkb1r/pppppppp/5n2/8/2P5/8/PP1PPPPP/RNBQKBNR w KQkq - 1 2',
     title: 'A Abertura Inglesa',
     description: 'Você jogou 1.c4 e as pretas respondem 1...Cf6. Qual é o seu plano?',
     options: [
@@ -56,7 +56,7 @@ const QUESTIONS = [
   },
   {
     id: 5,
-    fen: 'rnbqkbnr/pp1ppppp/8/2p5/4P3/8/PPPP1PPP/RNBQKBNR w KQkq c6 0 2', // e4 c5
+    fen: 'rnbqkbnr/pp1ppppp/8/2p5/4P3/8/PPPP1PPP/RNBQKBNR w KQkq c6 0 2',
     title: 'Enfrentando a Siciliana',
     description: 'As pretas jogam a Defesa Siciliana. Como você procede?',
     options: [
@@ -67,7 +67,7 @@ const QUESTIONS = [
   },
   {
     id: 6,
-    fen: 'rnbqkbnr/pp1ppppp/8/2p5/4P3/5N2/PPPP1PPP/RNBQKB1R b KQkq - 1 2', // e4 c5 Nf3
+    fen: 'rnbqkbnr/pp1ppppp/8/2p5/4P3/5N2/PPPP1PPP/RNBQKB1R b KQkq - 1 2',
     title: 'Defesa Siciliana',
     description: 'As brancas jogam Cf3. Qual é a sua escolha na Siciliana?',
     options: [
@@ -78,7 +78,7 @@ const QUESTIONS = [
   },
   {
     id: 7,
-    fen: 'rnbqkbnr/pppp1ppp/8/4p3/4P3/8/PPPP1PPP/RNBQKBNR w KQkq - 0 2', // e4 e5
+    fen: 'rnbqkbnr/pppp1ppp/8/4p3/4P3/8/PPPP1PPP/RNBQKBNR w KQkq - 0 2',
     title: 'Jogo do Peão do Rei',
     description: 'Após 1.e4 e5, qual é o seu 2º lance preferido para as brancas?',
     options: [
@@ -89,7 +89,7 @@ const QUESTIONS = [
   },
   {
     id: 8,
-    fen: 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1', // Start
+    fen: 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1',
     title: 'O primeiro lance',
     description: 'Você tem as peças brancas. Como abre o jogo?',
     options: [
@@ -100,18 +100,18 @@ const QUESTIONS = [
   },
   {
     id: 9,
-    fen: 'rnbqkb1r/pppp1ppp/4pn2/8/2PP4/8/PP2PPPP/RNBQKBNR w KQkq - 0 3', // d4 Nf6 c4 e6
+    fen: 'rnbqkb1r/pppp1ppp/4pn2/8/2PP4/8/PP2PPPP/RNBQKBNR w KQkq - 0 3',
     title: 'Defesa Nimzo-Índia',
     description: 'As pretas jogam e6. Qual é a sua estratégia?',
     options: [
       { move: 'Nc3', label: 'Permitir a Nimzo-Índia (Complexa)', style: 'Positional' },
       { move: 'Nf3', label: 'Bogo-Índia/Índia da Dama (Sólida)', style: 'Solid' },
-      { move: 'g3', label: 'Catalã (Controle posicional)', style: 'Positional' } // giving more weight to positional here
+      { move: 'g3', label: 'Catalã (Controle posicional)', style: 'Positional' }
     ]
   },
   {
     id: 10,
-    fen: 'rnbqkbnr/ppppp1pp/8/5p2/4P3/8/PPPP1PPP/RNBQKBNR w KQkq f6 0 2', // e4 f5
+    fen: 'rnbqkbnr/ppppp1pp/8/5p2/4P3/8/PPPP1PPP/RNBQKBNR w KQkq f6 0 2',
     title: 'A Defesa Holandesa',
     description: 'As pretas desafiam seu peão de e4 com f5. Como você reage?',
     options: [
@@ -138,7 +138,6 @@ export default function StyleQuizPage() {
     setArchetype(ARCHETYPES[style]);
     setIsFinished(true);
 
-    // Save the style key to the database if the user is logged in
     try {
       await saveUserArchetype(style);
     } catch (e) {
@@ -157,7 +156,6 @@ export default function StyleQuizPage() {
     }
   };
 
-  // Initialize board for the current question
   useEffect(() => {
     if (isFinished || currentStep >= QUESTIONS.length) return;
 
@@ -166,14 +164,11 @@ export default function StyleQuizPage() {
       const q = QUESTIONS[currentStep];
       const chess = new Chess(q.fen);
       const isWhiteTurn = chess.turn() === 'w';
-      
-      // Calculate legal dests only for the allowed options
+
       const dests = new Map<Key, Key[]>();
-      
+
       q.options.forEach(opt => {
         try {
-          // We need to figure out the from and to squares for the move string (e.g., 'Bc4')
-          // The easiest way is to use chess.js to make the move on a clone
           const clone = new Chess(q.fen);
           const moveObj = clone.move(opt.move);
           if (moveObj) {
@@ -199,14 +194,11 @@ export default function StyleQuizPage() {
         },
         events: {
           move: (orig, dest) => {
-            // Find which option was played
             const clone = new Chess(q.fen);
             const moves = clone.moves({ verbose: true });
             const playedMove = moves.find(m => m.from === orig && m.to === dest);
-            
+
             if (playedMove) {
-              // Find the corresponding option
-              // The options might be in SAN ('Bc4') or just standard. Let's match by comparing SAN.
               const matchedOption = q.options.find(opt => {
                 const testClone = new Chess(q.fen);
                 const testMoveObj = testClone.move(opt.move);
@@ -214,9 +206,8 @@ export default function StyleQuizPage() {
               });
 
               if (matchedOption) {
-                setTimeout(() => handleAnswer(matchedOption.style), 500); // small delay for dopamine
+                setTimeout(() => handleAnswer(matchedOption.style), 500);
               } else {
-                // Should not happen if dests are strictly limited, but just in case
                 setTimeout(() => cg.set({ fen: q.fen }), 200);
               }
             }
@@ -231,40 +222,38 @@ export default function StyleQuizPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentStep, isFinished]);
 
-
-
   if (isFinished && archetype) {
     const Icon = archetype.icon;
     return (
-      <div className="min-h-screen bg-slate-950 text-slate-50 flex items-center justify-center p-6">
-        <div className="bg-slate-900 border border-slate-800 rounded-3xl p-10 max-w-lg w-full text-center shadow-2xl shadow-black/50 relative overflow-hidden">
-          <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-violet-500 to-fuchsia-500" />
-          
+      <div className="min-h-screen bg-surface-app flex items-center justify-center p-6">
+        <div className="bg-surface-card border border-border-default rounded-[20px] p-10 max-w-lg w-full text-center shadow-lg relative overflow-hidden">
+          <div className="absolute top-0 left-0 w-full h-1.5 bg-accent rounded-t-[20px]" />
+
           <div className={`w-24 h-24 mx-auto rounded-full flex items-center justify-center mb-6 border ${archetype.color}`}>
             <Icon className="w-12 h-12" />
           </div>
-          
-          <h2 className="text-sm font-bold tracking-widest text-slate-400 uppercase mb-2">Seu estilo de jogo</h2>
-          <h1 className="text-3xl font-extrabold tracking-tight text-white mb-4">{archetype.name}</h1>
-          <p className="text-slate-300 leading-relaxed mb-8">
+
+          <h2 className="text-[12px] font-bold tracking-widest text-ink-400 uppercase mb-2">Seu estilo de jogo</h2>
+          <h1 className="font-display font-extrabold text-[30px] tracking-tight text-ink-900 mb-4">{archetype.name}</h1>
+          <p className="text-ink-600 leading-relaxed mb-8 text-[15px]">
             {archetype.description}
           </p>
 
-          <Link 
+          <Link
             href="/openings"
-            className="inline-flex items-center justify-center gap-2 w-full py-4 bg-violet-600 hover:bg-violet-500 text-white rounded-xl font-bold shadow-lg shadow-violet-500/25 transition-all active:scale-95"
+            className="inline-flex items-center justify-center gap-2 w-full py-3.5 bg-accent hover:bg-accent-hover text-white rounded-[8px] font-bold transition-all active:scale-[0.98] text-[15px]"
           >
             Ir para o repertório
             <ChevronRight className="w-5 h-5" />
           </Link>
-          
-          <button 
+
+          <button
             onClick={() => {
               setCurrentStep(0);
               setAnswers([]);
               setIsFinished(false);
             }}
-            className="mt-4 text-sm text-slate-400 hover:text-slate-200 font-medium transition-colors"
+            className="mt-4 text-[13px] text-ink-400 hover:text-ink-700 font-medium transition-colors"
           >
             Refazer teste
           </button>
@@ -277,62 +266,58 @@ export default function StyleQuizPage() {
   const progress = Math.round(((currentStep) / QUESTIONS.length) * 100);
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-50 font-sans selection:bg-violet-500/30 flex flex-col">
-      
-      {/* Header / Progress */}
-      <header className="border-b border-white/5 bg-slate-950/80 backdrop-blur-md sticky top-0 z-10">
+    <div className="min-h-screen bg-surface-app font-body flex flex-col">
+
+      <header className="border-b border-border-subtle bg-surface-card/90 backdrop-blur-md sticky top-0 z-10">
         <div className="max-w-4xl mx-auto px-4 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-2 text-sm font-bold text-slate-300">
-            <BrainCircuit className="w-5 h-5 text-violet-400" />
+          <div className="flex items-center gap-2 text-[14px] font-bold text-ink-700">
+            <BrainCircuit className="w-5 h-5 text-accent" />
             Perfil de estilo
           </div>
-          <div className="text-sm font-bold text-slate-400">
+          <div className="text-[13px] font-bold text-ink-500">
             {currentStep + 1} / {QUESTIONS.length}
           </div>
         </div>
-        <div className="h-1 w-full bg-slate-900">
-          <div 
-            className="h-full bg-violet-500 transition-all duration-500 ease-out"
+        <div className="h-1 w-full bg-surface-sunken">
+          <div
+            className="h-full bg-accent transition-all duration-500 ease-out"
             style={{ width: `${progress}%` }}
           />
         </div>
       </header>
 
-      {/* Main Quiz Area */}
       <main className="flex-1 max-w-5xl w-full mx-auto p-4 md:p-8 flex flex-col lg:flex-row items-center justify-center gap-8 lg:gap-16">
-        
-        {/* Board Side */}
-        <div className="w-full max-w-[400px] lg:max-w-[450px] aspect-square rounded-2xl overflow-hidden ring-1 ring-white/10 shadow-2xl shadow-black/50 bg-slate-900 flex-shrink-0">
-           <div id="quiz-board" className="w-full h-full" />
+
+        <div className="w-full max-w-[400px] lg:max-w-[450px] aspect-square rounded-[16px] overflow-hidden ring-1 ring-border-default shadow-xl bg-surface-card flex-shrink-0">
+          <div id="quiz-board" className="w-full h-full" />
         </div>
 
-        {/* Question Side */}
         <div className="flex-1 w-full max-w-md flex flex-col">
-          <h2 className="text-2xl font-bold tracking-tight text-white mb-2">{question.title}</h2>
-          <p className="text-slate-400 mb-8">{question.description}</p>
-          
-          <div className="mb-4 flex items-center gap-2 text-sm text-violet-400 bg-violet-500/10 p-3 rounded-lg border border-violet-500/20">
-            <BrainCircuit className="w-4 h-4" />
+          <h2 className="font-display font-bold text-[24px] tracking-tight text-ink-900 mb-2">{question.title}</h2>
+          <p className="text-ink-500 mb-6 text-[14px]">{question.description}</p>
+
+          <div className="mb-5 flex items-center gap-2 text-[13px] text-accent bg-accent-soft p-3 rounded-[8px] border border-accent/20">
+            <BrainCircuit className="w-4 h-4 flex-shrink-0" />
             <p>Jogue seu lance no tabuleiro ou escolha uma opção abaixo.</p>
           </div>
 
-          <div className="space-y-3">
+          <div className="space-y-2.5">
             {question.options.map((opt, i) => (
               <button
                 key={i}
                 onClick={() => handleAnswer(opt.style)}
-                className="w-full text-left p-4 rounded-xl border border-slate-800 bg-slate-900 hover:bg-slate-800 hover:border-violet-500/50 transition-all group relative overflow-hidden"
+                className="w-full text-left p-4 rounded-[10px] border border-border-default bg-surface-card hover:bg-surface-sunken hover:border-accent/40 transition-all group"
               >
-                <div className="flex items-center justify-between relative z-10">
+                <div className="flex items-center justify-between">
                   <div>
-                    <span className="inline-block px-2 py-1 bg-slate-950 text-slate-300 text-xs font-bold rounded mb-2 border border-slate-800">
-                      Jogar {opt.move}
+                    <span className="inline-block px-2 py-0.5 bg-surface-app text-ink-500 text-[11px] font-bold rounded mb-1.5 border border-border-subtle font-mono">
+                      {opt.move}
                     </span>
-                    <p className="font-medium text-slate-200 group-hover:text-white transition-colors">
+                    <p className="font-semibold text-[14px] text-ink-900 group-hover:text-accent transition-colors">
                       {opt.label}
                     </p>
                   </div>
-                  <ChevronRight className="w-5 h-5 text-slate-600 group-hover:text-violet-400 transition-colors" />
+                  <ChevronRight className="w-5 h-5 text-ink-300 group-hover:text-accent transition-colors" />
                 </div>
               </button>
             ))}

@@ -5,24 +5,23 @@ export type ButtonVariant = 'primary' | 'secondary' | 'success' | 'danger' | 'wa
 export type ButtonSize = 'sm' | 'md' | 'lg'
 
 const base =
-  'inline-flex items-center justify-center gap-2 rounded-xl font-bold transition-all active:scale-95 disabled:opacity-60 disabled:cursor-not-allowed'
+  'inline-flex items-center justify-center gap-2 font-semibold transition-all duration-[120ms] active:translate-y-px disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer select-none rounded-[8px]'
 
 const variants: Record<ButtonVariant, string> = {
-  primary: 'bg-violet-600 hover:bg-violet-500 text-white shadow-lg shadow-violet-500/25',
-  secondary: 'bg-slate-800 hover:bg-slate-700 text-slate-200 border border-white/5',
-  success: 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-lg shadow-emerald-500/20',
-  danger: 'bg-rose-600 hover:bg-rose-500 text-white shadow-lg shadow-rose-500/20',
-  warning: 'bg-amber-500 hover:bg-amber-400 text-black shadow-lg shadow-amber-500/20',
-  ghost: 'bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-slate-200 border border-slate-700',
+  primary:   'bg-accent text-white hover:bg-accent-hover shadow-sm',
+  secondary: 'bg-surface-card text-ink-700 border border-border-default hover:border-border-strong hover:bg-surface-raised shadow-sm',
+  success:   'bg-success text-white hover:bg-[#21824A] shadow-sm',
+  danger:    'bg-danger text-white hover:bg-[#C53A30] shadow-sm',
+  warning:   'bg-warning text-ink-900 hover:bg-[#C77F0E] shadow-sm',
+  ghost:     'bg-transparent text-ink-600 hover:bg-surface-sunken hover:text-ink-900',
 }
 
 const sizes: Record<ButtonSize, string> = {
-  sm: 'px-4 py-2.5 text-sm',
-  md: 'px-6 py-3',
-  lg: 'px-8 py-4 text-lg',
+  sm: 'h-8 px-3 text-[13px]',
+  md: 'h-10 px-5 text-[14px]',
+  lg: 'h-12 px-7 text-[15px]',
 }
 
-// Shared button styling, also usable on <Link> elements that look like buttons.
 export function buttonClasses(
   { variant = 'primary', size = 'md', className }: { variant?: ButtonVariant; size?: ButtonSize; className?: string } = {},
 ): string {

@@ -7,8 +7,6 @@ import Link from 'next/link'
 export default async function BlunderTrainingPage() {
     const session = await getSession()
 
-    // If the user has a repertoire, filter puzzles by it; otherwise return random
-    // opening puzzles.
     let openingNames: string[] = []
     if (session) {
         const openings = await apiClient.openings.findAll()
@@ -18,25 +16,25 @@ export default async function BlunderTrainingPage() {
     const puzzles = await apiClient.puzzles.list(openingNames, 10)
 
     return (
-        <div className="min-h-screen bg-slate-950 text-slate-50 font-sans selection:bg-violet-500/30">
+        <div className="min-h-screen bg-surface-app font-body">
 
-            <header className="border-b border-white/5 bg-slate-950/80 backdrop-blur-md sticky top-0 z-10">
+            <header className="border-b border-border-subtle bg-surface-card/90 backdrop-blur-md sticky top-0 z-10">
                 <div className="max-w-6xl mx-auto px-4 md:px-8 h-16 flex items-center justify-between">
                     <Link
                         href="/openings"
-                        className="inline-flex items-center gap-2 text-sm font-medium text-slate-400 hover:text-slate-200 transition-colors"
+                        className="inline-flex items-center gap-2 text-[13px] font-semibold text-ink-500 hover:text-ink-900 transition-colors"
                     >
-                        <div className="flex items-center justify-center w-8 h-8 rounded-full bg-slate-900 border border-slate-800 hover:bg-slate-800 hover:border-slate-700 transition-all">
+                        <div className="flex items-center justify-center w-8 h-8 rounded-full bg-surface-sunken border border-border-default hover:border-border-strong transition-all">
                             <ChevronLeft className="w-4 h-4" />
                         </div>
                         <span className="hidden sm:inline">Painel</span>
                     </Link>
 
-                    <div className="flex items-center gap-3">
-                        <div className="bg-rose-500/10 p-2 rounded-lg text-rose-400">
+                    <div className="flex items-center gap-2.5">
+                        <div className="bg-danger-soft p-2 rounded-[8px] text-danger">
                             <Swords className="w-5 h-5" />
                         </div>
-                        <h1 className="font-bold tracking-tight text-slate-100">Modo Punição</h1>
+                        <h1 className="font-display font-bold tracking-tight text-ink-900 text-[16px]">Modo Punição</h1>
                     </div>
 
                     <div className="w-20" />

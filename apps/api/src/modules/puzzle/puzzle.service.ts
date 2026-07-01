@@ -57,6 +57,8 @@ export class PuzzleService {
   constructor(private readonly prisma: PrismaService) {}
 
   async findForSession(openingNames: string[], limit = 10, maxRating = 1800): Promise<PuzzleData[]> {
+    const safeLimit = Math.min(limit, 20)
+
     const whereClause =
       openingNames.length > 0
         ? {
@@ -69,7 +71,7 @@ export class PuzzleService {
 
     const raw = await this.prisma.puzzle.findMany({
       where: whereClause,
-      take: limit * 5,
+      take: safeLimit * 5,
       orderBy: { rating: 'asc' },
     })
 
@@ -78,7 +80,7 @@ export class PuzzleService {
       ;[raw[i], raw[j]] = [raw[j], raw[i]]
     }
 
-    return raw.slice(0, limit).map((p) => {
+    return raw.slice(0, safeLimit).map((p) => {
       const movesTree = buildMovesTree(p.fen, p.moves.split(' '))
       const sideToMove = p.fen.split(' ')[1]
       const playerColor: 'white' | 'black' = sideToMove === 'w' ? 'black' : 'white'

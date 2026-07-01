@@ -1,5 +1,217 @@
+/* As fontes são carregadas via next/font/google no layout.tsx, que expõe as
+   variáveis --font-archivo / --font-public-sans / --font-jetbrains-mono. */
 @import "tailwindcss";
 @import "chessground/assets/chessground.base.css";
 @import "chessground/assets/chessground.brown.css";
 @import "chessground/assets/chessground.cburnett.css";
 
+/* ─── Design tokens ─────────────────────────────────────────────── */
+:root {
+  /* Neutrals — warm ink + paper */
+  --ink-900: #14161A;
+  --ink-800: #24272E;
+  --ink-700: #383C46;
+  --ink-600: #4C515D;
+  --ink-500: #646A78;
+  --ink-400: #8B91A0;
+  --ink-300: #B9BEC9;
+  --ink-200: #DDE0E6;
+  --ink-100: #ECEDF0;
+  --ink-50:  #F5F5F2;
+
+  --paper-0:   #FFFFFF;
+  --paper-50:  #FDFCFA;
+  --paper-100: #F4F1EB;
+  --paper-200: #ECE7DD;
+
+  /* Brand blue — progress / accent */
+  --blue-700: #154AAE;
+  --blue-600: #1E5FD0;
+  --blue-500: #2F7BF6;
+  --blue-400: #5E97F8;
+  --blue-300: #9CC0FB;
+  --blue-100: #E3EDFD;
+  --blue-50:  #F1F7FE;
+
+  /* Reward gold — XP, streaks, badges */
+  --gold-700: #9A6510;
+  --gold-600: #C77F0E;
+  --gold-500: #F5A623;
+  --gold-400: #F8BC55;
+  --gold-300: #FBD38C;
+  --gold-100: #FDEBCB;
+  --gold-50:  #FEF6E7;
+
+  /* Board — walnut */
+  --board-light: #EAD9BC;
+  --board-dark:  #946540;
+  --board-frame: #5C3E27;
+  --move-from:   rgba(47,123,246,.30);
+  --move-to:     rgba(47,123,246,.40);
+  --move-good:   rgba(46,160,93,.45);
+  --move-bad:    rgba(224,72,61,.42);
+
+  /* Semantic */
+  --green-600: #21824A;
+  --green-500: #2EA05D;
+  --green-100: #E1F2E8;
+  --red-600:   #C53A30;
+  --red-500:   #E0483D;
+  --red-100:   #FBE5E3;
+  --amber-500: #E8930F;
+  --amber-100: #FBEBCF;
+
+  /* Aliases */
+  --text-primary:   var(--ink-900);
+  --text-secondary: var(--ink-500);
+  --text-muted:     var(--ink-400);
+  --text-disabled:  var(--ink-300);
+  --text-link:      var(--blue-600);
+  --text-on-accent: #FFFFFF;
+  --text-on-reward: #3A2708;
+
+  --surface-app:    var(--paper-100);
+  --surface-card:   var(--paper-0);
+  --surface-raised: var(--paper-50);
+  --surface-sunken: var(--paper-200);
+  --surface-inverse: var(--ink-900);
+
+  --border-subtle:  var(--ink-100);
+  --border-default: var(--ink-200);
+  --border-strong:  var(--ink-300);
+
+  --accent:        var(--blue-500);
+  --accent-hover:  var(--blue-600);
+  --accent-soft:   var(--blue-100);
+  --accent-subtle: var(--blue-50);
+
+  --reward:        var(--gold-500);
+  --reward-strong: var(--gold-600);
+  --reward-soft:   var(--gold-100);
+  --reward-subtle: var(--gold-50);
+
+  --success:      var(--green-500);
+  --success-soft: var(--green-100);
+  --danger:       var(--red-500);
+  --danger-soft:  var(--red-100);
+  --warning:      var(--amber-500);
+  --warning-soft: var(--amber-100);
+
+  --focus-ring: rgba(47,123,246,.45);
+
+  --font-display: var(--font-archivo), system-ui, sans-serif;
+  --font-body:    var(--font-public-sans), system-ui, sans-serif;
+  --font-mono:    var(--font-jetbrains-mono), ui-monospace, monospace;
+
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  --radius-pill: 999px;
+
+  --shadow-sm:    0 1px 2px rgba(20,22,26,.06), 0 1px 3px rgba(20,22,26,.04);
+  --shadow-md:    0 2px 6px rgba(20,22,26,.08), 0 1px 3px rgba(20,22,26,.04);
+  --shadow-lg:    0 4px 16px rgba(20,22,26,.10), 0 2px 6px rgba(20,22,26,.06);
+  --shadow-board: 0 8px 28px rgba(20,22,26,.18), 0 2px 8px rgba(20,22,26,.10);
+  --shadow-focus: 0 0 0 3px var(--focus-ring);
+
+  --dur-fast:   120ms;
+  --dur-normal: 200ms;
+  --ease-out:   cubic-bezier(0.16, 1, 0.3, 1);
+
+  --sidebar-width: 248px;
+  --topbar-height: 64px;
+}
+
+/* ─── Tailwind v4 theme mapping ─────────────────────────────────── */
+@theme {
+  --font-display: var(--font-archivo), system-ui, sans-serif;
+  --font-body:    var(--font-public-sans), system-ui, sans-serif;
+  --font-mono:    var(--font-jetbrains-mono), ui-monospace, monospace;
+
+  --color-surface-app:    #F4F1EB;
+  --color-surface-card:   #FFFFFF;
+  --color-surface-raised: #FDFCFA;
+  --color-surface-sunken: #ECE7DD;
+  --color-surface-inverse: #14161A;
+
+  --color-ink-900: #14161A;
+  --color-ink-800: #24272E;
+  --color-ink-700: #383C46;
+  --color-ink-600: #4C515D;
+  --color-ink-500: #646A78;
+  --color-ink-400: #8B91A0;
+  --color-ink-300: #B9BEC9;
+  --color-ink-200: #DDE0E6;
+  --color-ink-100: #ECEDF0;
+  --color-ink-50:  #F5F5F2;
+
+  --color-accent:       #2F7BF6;
+  --color-accent-hover: #1E5FD0;
+  --color-accent-soft:  #E3EDFD;
+  --color-accent-subtle: #F1F7FE;
+
+  --color-reward:       #F5A623;
+  --color-reward-strong: #C77F0E;
+  --color-reward-soft:  #FDEBCB;
+  --color-reward-subtle: #FEF6E7;
+
+  --color-success:      #2EA05D;
+  --color-success-soft: #E1F2E8;
+  --color-danger:       #E0483D;
+  --color-danger-soft:  #FBE5E3;
+  --color-warning:      #E8930F;
+  --color-warning-soft: #FBEBCF;
+
+  --color-border-subtle:  #ECEDF0;
+  --color-border-default: #DDE0E6;
+  --color-border-strong:  #B9BEC9;
+
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+}
+
+/* ─── Base reset ────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; }
+
+html { -webkit-text-size-adjust: 100%; }
+
+body {
+  margin: 0;
+  font-family: var(--font-body);
+  color: var(--text-primary);
+  background: var(--surface-app);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+h1, h2, h3, h4 {
+  margin: 0;
+  font-family: var(--font-display);
+  letter-spacing: -0.02em;
+  color: var(--text-primary);
+}
+
+/* Kept in the `base` layer so Tailwind utility classes (e.g. text-white on
+   link-styled buttons) still override the default link color. Unlayered rules
+   would beat the utilities layer in Tailwind v4. */
+@layer base {
+  a { color: var(--text-link); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+}
+
+::selection { background: var(--accent-soft); color: var(--text-primary); }
+
+:focus-visible {
+  outline: none;
+  box-shadow: var(--shadow-focus);
+  border-radius: var(--radius-sm);
+}
+
+.notation {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0;
+}

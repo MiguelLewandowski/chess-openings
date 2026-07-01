@@ -57,23 +57,23 @@ export default function DemoSection() {
   }, [setupExercise])
 
   return (
-    <section className="max-w-6xl mx-auto px-6 py-24 border-t border-white/5">
+    <section className="max-w-6xl mx-auto px-6 py-24 border-t border-border-subtle">
       <div className="text-center mb-12">
-        <p className="text-sm font-bold tracking-widest text-violet-400 uppercase mb-3">
+        <p className="text-[12px] font-bold tracking-widest text-accent uppercase mb-3">
           Experimente agora — sem precisar de conta
         </p>
-        <h2 className="text-3xl md:text-4xl font-extrabold tracking-tight text-white">
+        <h2 className="font-display font-extrabold text-[32px] md:text-[42px] tracking-tight text-ink-900">
           Aprenda a Abertura Italiana em 3 lances
         </h2>
-        <p className="text-slate-400 mt-3 max-w-md mx-auto">
+        <p className="text-ink-500 mt-3 max-w-md mx-auto text-[15px] leading-relaxed">
           Jogue de brancas. Encontre o lance correto no tabuleiro ou clique em{' '}
-          <span className="text-slate-300 font-medium">Revelar lance</span> para uma dica.
+          <span className="text-ink-700 font-medium">Revelar lance</span> para uma dica.
         </p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
         <div className="lg:col-span-7">
-          <div className="w-full max-w-[500px] mx-auto aspect-square rounded-2xl overflow-hidden ring-1 ring-white/10 shadow-2xl shadow-black/50 bg-slate-900">
+          <div className="w-full max-w-[500px] mx-auto aspect-square rounded-[16px] overflow-hidden ring-1 ring-border-default shadow-xl bg-surface-card">
             <Board />
           </div>
         </div>
@@ -93,29 +93,24 @@ function DemoCoachPanel() {
 
   if (status === 'completed') {
     return (
-      <Card className="border-violet-500/30 p-8 text-center relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-violet-500/10 to-transparent pointer-events-none" />
-        <div className="absolute -top-16 -right-16 w-48 h-48 bg-violet-500/10 blur-3xl rounded-full pointer-events-none" />
-
-        <div className="relative z-10">
-          <div className="w-16 h-16 bg-violet-500/20 rounded-full flex items-center justify-center mx-auto mb-5">
-            <Trophy className="w-8 h-8 text-violet-400" />
-          </div>
-          <h3 className="text-xl font-bold text-white mb-2">Você acertou!</h3>
-          <p className="text-slate-300 mb-8 leading-relaxed">
-            Essa é a Abertura Italiana — uma das mais antigas e fundamentadas do xadrez. Há dezenas de variações para
-            dominar, cada uma com a sua própria estratégia.
-          </p>
-          <div className="flex flex-col gap-3">
-            <Link href="/register" className={buttonClasses({ className: 'w-full' })}>
-              Comece a aprender de graça
-              <ArrowRight className="w-5 h-5" />
-            </Link>
-            <Button variant="secondary" onClick={restartExercise} className="w-full">
-              <RefreshCcw className="w-4 h-4" />
-              Tentar de novo
-            </Button>
-          </div>
+      <Card className="p-8 text-center">
+        <div className="w-16 h-16 bg-success-soft rounded-full flex items-center justify-center mx-auto mb-5">
+          <Trophy className="w-8 h-8 text-success" />
+        </div>
+        <h3 className="font-display font-bold text-[20px] text-ink-900 mb-2">Você acertou!</h3>
+        <p className="text-ink-600 mb-8 leading-relaxed text-[14px]">
+          Essa é a Abertura Italiana — uma das mais antigas e fundamentadas do xadrez. Há dezenas de variações para
+          dominar, cada uma com a sua própria estratégia.
+        </p>
+        <div className="flex flex-col gap-3">
+          <Link href="/register" className={buttonClasses({ className: 'w-full' })}>
+            Comece a aprender de graça
+            <ArrowRight className="w-5 h-5" />
+          </Link>
+          <Button variant="secondary" onClick={restartExercise} className="w-full">
+            <RefreshCcw className="w-4 h-4" />
+            Tentar de novo
+          </Button>
         </div>
       </Card>
     )
@@ -125,11 +120,11 @@ function DemoCoachPanel() {
 
   return (
     <Card className="flex flex-col overflow-hidden">
-      <div className="p-5 border-b border-slate-800 flex items-center gap-2">
-        <div className="bg-violet-500/10 p-1.5 rounded-lg">
-          <BrainCircuit className="w-4 h-4 text-violet-400" />
+      <div className="p-5 border-b border-border-subtle flex items-center gap-2">
+        <div className="bg-accent-soft p-1.5 rounded-[6px]">
+          <BrainCircuit className="w-4 h-4 text-accent" />
         </div>
-        <h3 className="font-bold text-sm text-slate-200">Mestre Gambito</h3>
+        <h3 className="font-bold text-[13px] text-ink-900">Mestre Gambito</h3>
       </div>
 
       <div className="p-5 flex flex-col gap-4">
@@ -139,11 +134,11 @@ function DemoCoachPanel() {
 
         <div
           className={cn(
-            'rounded-xl p-4 border',
-            status === 'error' ? 'bg-rose-500/5 border-rose-500/10' : 'bg-slate-800/50 border-slate-700/50',
+            'rounded-[10px] p-4 border',
+            status === 'error' ? 'bg-danger-soft border-[#E0483D]/20' : 'bg-surface-sunken border-border-subtle',
           )}
         >
-          <p className={cn('text-base leading-relaxed', status === 'error' ? 'text-rose-200' : 'text-slate-300')}>
+          <p className={cn('text-[15px] leading-relaxed', status === 'error' ? 'text-danger' : 'text-ink-700')}>
             {comment || 'Jogue de brancas. Encontre o melhor lance de abertura.'}
           </p>
         </div>
@@ -152,7 +147,7 @@ function DemoCoachPanel() {
           <button
             onClick={playPreviousMove}
             disabled={!currentNodeId}
-            className="p-3.5 bg-slate-800 hover:bg-slate-700 disabled:opacity-40 disabled:cursor-not-allowed text-slate-300 rounded-xl transition-all active:scale-95"
+            className="p-3 bg-surface-sunken hover:bg-surface-app border border-border-subtle disabled:opacity-40 disabled:cursor-not-allowed text-ink-600 rounded-[8px] transition-all active:scale-95"
             title="Lance anterior"
           >
             <ChevronLeft className="w-5 h-5" />

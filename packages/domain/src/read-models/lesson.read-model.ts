@@ -1,5 +1,3 @@
-// Read models (query side / CQRS-lite): shapes returned by read endpoints.
-
 export interface MoveSummary {
   id: string
   san: string

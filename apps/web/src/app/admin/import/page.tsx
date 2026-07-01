@@ -13,6 +13,9 @@ function validateUrl(val: string) {
   return '';
 }
 
+const inputClass = "w-full bg-surface-app border border-border-default rounded-[8px] px-4 py-2.5 text-[14px] text-ink-900 placeholder:text-ink-300 focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-accent transition-all";
+const selectClass = "w-full bg-surface-app border border-border-default rounded-[8px] px-4 py-2.5 text-[14px] text-ink-900 focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-accent transition-all";
+
 export default function ImportPage() {
   const [url, setUrl] = useState('');
   const [openingName, setOpeningName] = useState('');
@@ -63,51 +66,49 @@ export default function ImportPage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-50 font-sans selection:bg-violet-500/30">
+    <div className="min-h-screen bg-surface-app font-body">
 
-      <header className="border-b border-white/5 bg-slate-950/80 backdrop-blur-md sticky top-0 z-10">
-        <div className="max-w-4xl mx-auto px-4 md:px-8 h-16 flex items-center gap-4">
+      <header className="border-b border-border-subtle bg-surface-card/90 backdrop-blur-md sticky top-0 z-10">
+        <div className="max-w-4xl mx-auto px-4 md:px-8 h-16 flex items-center gap-3">
           <Link
             href="/openings"
-            className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-slate-900 border border-slate-800 hover:bg-slate-800 hover:border-slate-700 text-slate-400 hover:text-slate-200 transition-all"
+            className="inline-flex items-center justify-center w-9 h-9 rounded-full bg-surface-sunken border border-border-default hover:border-border-strong text-ink-500 hover:text-ink-900 transition-all"
             title="Voltar à galeria"
           >
-            <ChevronLeft className="w-5 h-5" />
+            <ChevronLeft className="w-4 h-4" />
           </Link>
-          <span className="font-medium text-slate-200">Voltar à galeria</span>
-          <div className="ml-auto flex items-center gap-1.5 px-2.5 py-1 bg-amber-500/10 border border-amber-500/20 rounded-lg">
-            <ShieldAlert className="w-3.5 h-3.5 text-amber-400" />
-            <span className="text-xs font-bold text-amber-400">Admin</span>
+          <span className="text-[14px] font-semibold text-ink-700">Voltar à galeria</span>
+          <div className="ml-auto flex items-center gap-1.5 px-2.5 py-1 bg-warning-soft border border-warning/20 rounded-lg">
+            <ShieldAlert className="w-3.5 h-3.5 text-warning" />
+            <span className="text-[11px] font-bold text-warning">Admin</span>
           </div>
         </div>
       </header>
 
-      <main className="max-w-4xl mx-auto px-4 md:px-8 py-12">
-        <div className="bg-slate-900 border border-slate-800 rounded-2xl p-8 shadow-2xl shadow-black/20">
+      <main className="max-w-4xl mx-auto px-4 md:px-8 py-10">
+        <div className="bg-surface-card border border-border-default rounded-[16px] p-8 shadow-md">
 
           <div className="flex items-center gap-4 mb-2">
-            <div className="bg-violet-500/10 p-3 rounded-xl text-violet-400">
+            <div className="bg-accent-soft p-3 rounded-[10px] text-accent">
               <Download className="w-6 h-6" />
             </div>
-            <h1 className="text-3xl font-bold tracking-tight text-slate-100">Importador do Lichess</h1>
+            <h1 className="font-display font-extrabold text-[28px] tracking-tight text-ink-900">Importador do Lichess</h1>
           </div>
 
-          <p className="text-slate-400 mb-8 ml-14">
+          <p className="text-ink-500 text-[14px] mb-8 ml-[68px] leading-relaxed">
             Cole a URL de um estudo do Lichess para gerar lições interativas, análise tática e os comentários do Mestre Gambito.
           </p>
 
-          <form onSubmit={handleSubmit} className="space-y-6 ml-14">
+          <form onSubmit={handleSubmit} className="space-y-5 ml-[68px]">
             <div>
-              <label className="block text-sm font-medium text-slate-300 mb-1.5">
+              <label className="block text-[13px] font-semibold text-ink-700 mb-1.5">
                 URL do estudo do Lichess *
               </label>
               <input
                 type="url"
                 required
                 placeholder="https://lichess.org/study/xxxxxx"
-                className={`w-full bg-slate-950 border rounded-xl p-3.5 text-slate-100 placeholder:text-slate-600 focus:ring-2 focus:ring-violet-500 focus:border-transparent outline-none transition-all ${
-                  urlError ? 'border-rose-500' : 'border-slate-800'
-                }`}
+                className={`${inputClass} ${urlError ? 'border-danger ring-2 ring-danger/20' : ''}`}
                 value={url}
                 onChange={e => {
                   setUrl(e.target.value);
@@ -116,9 +117,9 @@ export default function ImportPage() {
                 onBlur={handleUrlBlur}
               />
               {urlError ? (
-                <p className="mt-1.5 text-xs text-rose-400 font-medium">{urlError}</p>
+                <p className="mt-1.5 text-[12px] text-danger font-medium">{urlError}</p>
               ) : (
-                <div className="flex items-center gap-1.5 mt-2 text-xs text-slate-400">
+                <div className="flex items-center gap-1.5 mt-2 text-[12px] text-ink-400">
                   <Info className="w-3.5 h-3.5" />
                   <p>Deve ser uma URL de estudo público do Lichess.</p>
                 </div>
@@ -126,28 +127,28 @@ export default function ImportPage() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-slate-300 mb-1.5">
-                Nome da abertura <span className="text-slate-400 font-normal">(opcional)</span>
+              <label className="block text-[13px] font-semibold text-ink-700 mb-1.5">
+                Nome da abertura <span className="text-ink-400 font-normal">(opcional)</span>
               </label>
               <input
                 type="text"
                 placeholder="Ex.: Ruy Lopez (Variante da Troca)"
-                className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3.5 text-slate-100 placeholder:text-slate-600 focus:ring-2 focus:ring-violet-500 focus:border-transparent outline-none transition-all"
+                className={inputClass}
                 value={openingName}
                 onChange={e => setOpeningName(e.target.value)}
               />
-              <div className="flex items-center gap-1.5 mt-2 text-xs text-slate-400">
+              <div className="flex items-center gap-1.5 mt-2 text-[12px] text-ink-400">
                 <Info className="w-3.5 h-3.5" />
                 <p>Se deixar em branco, usaremos o nome do primeiro capítulo.</p>
               </div>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-slate-300 mb-1.5">
-                Tag de estilo de jogo <span className="text-slate-400 font-normal">(opcional)</span>
+              <label className="block text-[13px] font-semibold text-ink-700 mb-1.5">
+                Tag de estilo de jogo <span className="text-ink-400 font-normal">(opcional)</span>
               </label>
               <select
-                className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3.5 text-slate-100 focus:ring-2 focus:ring-violet-500 focus:border-transparent outline-none transition-all"
+                className={selectClass}
                 value={styleTag}
                 onChange={e => setStyleTag(e.target.value)}
               >
@@ -159,30 +160,30 @@ export default function ImportPage() {
               </select>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
               <div>
-                <label className="block text-sm font-medium text-slate-300 mb-1.5">
-                  Capítulo específico <span className="text-slate-400 font-normal">(opcional)</span>
+                <label className="block text-[13px] font-semibold text-ink-700 mb-1.5">
+                  Capítulo específico <span className="text-ink-400 font-normal">(opcional)</span>
                 </label>
                 <input
                   type="number"
                   min="1"
                   placeholder="Ex.: 2"
-                  className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3.5 text-slate-100 placeholder:text-slate-600 focus:ring-2 focus:ring-violet-500 focus:border-transparent outline-none transition-all"
+                  className={inputClass}
                   value={specificChapter}
                   onChange={e => setSpecificChapter(e.target.value)}
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-slate-300 mb-1.5">
-                  Limite de capítulos <span className="text-slate-400 font-normal">(opcional)</span>
+                <label className="block text-[13px] font-semibold text-ink-700 mb-1.5">
+                  Limite de capítulos <span className="text-ink-400 font-normal">(opcional)</span>
                 </label>
                 <input
                   type="number"
                   min="1"
                   placeholder="Ex.: 3"
-                  className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3.5 text-slate-100 placeholder:text-slate-600 focus:ring-2 focus:ring-violet-500 focus:border-transparent outline-none transition-all"
+                  className={inputClass}
                   value={chapterLimit}
                   onChange={e => setChapterLimit(e.target.value)}
                 />
@@ -192,11 +193,7 @@ export default function ImportPage() {
             <button
               type="submit"
               disabled={loading}
-              className={`w-full py-4 rounded-xl font-semibold text-lg transition-all duration-200 flex items-center justify-center gap-2 ${
-                loading
-                  ? 'bg-slate-800 text-slate-400 cursor-not-allowed border border-slate-700'
-                  : 'bg-violet-600 hover:bg-violet-500 text-white shadow-lg shadow-violet-500/25 active:scale-[0.98]'
-              }`}
+              className="w-full py-3.5 rounded-[8px] font-semibold text-[15px] transition-all flex items-center justify-center gap-2 bg-accent hover:bg-accent-hover text-white shadow-sm active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading ? (
                 <>
@@ -210,18 +207,18 @@ export default function ImportPage() {
           </form>
 
           {result && (
-            <div className={`mt-8 ml-14 p-5 rounded-xl border animate-in fade-in slide-in-from-bottom-2 ${
+            <div className={`mt-8 ml-[68px] p-5 rounded-[10px] border animate-in fade-in slide-in-from-bottom-2 ${
               result.success
-                ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-300'
-                : 'bg-rose-500/10 border-rose-500/20 text-rose-300'
+                ? 'bg-success-soft border-[#2EA05D]/20 text-success'
+                : 'bg-danger-soft border-[#E0483D]/20 text-danger'
             }`}>
-              <p className="font-semibold text-lg">
-                {result.success ? '✅ Sucesso!' : '❌ Ocorreu um erro'}
+              <p className="font-bold text-[16px]">
+                {result.success ? 'Sucesso!' : 'Ocorreu um erro'}
               </p>
-              <p className="mt-2 text-slate-300">{result.message || result.error}</p>
+              <p className="mt-2 text-ink-700 text-[14px]">{result.message || result.error}</p>
               {result.success && (
-                <div className="mt-4 flex gap-4">
-                  <Link href="/openings" className="text-sm font-medium text-emerald-400 hover:text-emerald-300 underline underline-offset-4">
+                <div className="mt-4">
+                  <Link href="/openings" className="text-[13px] font-semibold text-accent hover:underline underline-offset-4">
                     &larr; Voltar à galeria
                   </Link>
                 </div>

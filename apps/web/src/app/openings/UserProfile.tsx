@@ -13,7 +13,6 @@ export default function UserProfile({ sessionArchetype }: { sessionArchetype?: s
         // eslint-disable-next-line react-hooks/set-state-in-effect
         setMounted(true);
 
-        // If we already have it from the server, sync it to localStorage; otherwise read it back.
         if (sessionArchetype) {
             localStorage.setItem('chess_style_archetype', sessionArchetype);
         } else {
@@ -29,14 +28,14 @@ export default function UserProfile({ sessionArchetype }: { sessionArchetype?: s
     return (
         <div className="flex items-center gap-3">
             {name ? (
-                <div className="hidden md:flex items-center gap-2 px-3 py-1.5 bg-violet-500/10 border border-violet-500/20 rounded-lg text-violet-400 text-sm font-bold">
+                <div className="hidden md:flex items-center gap-2 px-3 py-1.5 bg-accent-soft border border-accent/20 rounded-lg text-accent text-[13px] font-bold">
                     <Sparkles className="w-4 h-4" />
                     {name}
                 </div>
             ) : (
-                <Link 
+                <Link
                     href="/style-quiz"
-                    className="hidden md:flex items-center gap-2 px-3 py-1.5 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-lg text-slate-300 hover:text-white text-sm font-bold transition-colors"
+                    className="hidden md:flex items-center gap-2 px-3 py-1.5 bg-surface-sunken hover:bg-surface-app border border-border-default rounded-lg text-ink-600 hover:text-ink-900 text-[13px] font-bold transition-colors"
                 >
                     <User className="w-4 h-4" />
                     Descubra seu estilo

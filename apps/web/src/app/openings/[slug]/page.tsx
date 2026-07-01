@@ -12,7 +12,6 @@ export default async function OpeningTrackPage({ params }: { params: Promise<{ s
 
   const sortedLessons = [...opening.lessons].sort((a, b) => a.order - b.order);
 
-  // Determinar quais lições estão completas com base no UserProgress real
   const completedLessonIds = new Set<string>();
   const session = await getSession();
 
@@ -21,40 +20,38 @@ export default async function OpeningTrackPage({ params }: { params: Promise<{ s
     completed.forEach(id => completedLessonIds.add(id));
   }
 
-  // XP total desta abertura (lições completas × 10)
   const xpEarned = completedLessonIds.size * 10;
+  const allDone = completedLessonIds.size === sortedLessons.length && sortedLessons.length > 0;
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-50 font-sans selection:bg-violet-500/30">
+    <div className="min-h-screen bg-surface-app text-ink-900 font-body">
 
-      {/* Header Fixo */}
-      <header className="border-b border-white/5 bg-slate-950/80 backdrop-blur-md sticky top-0 z-20">
+      <header className="border-b border-border-subtle bg-surface-card/90 backdrop-blur-md sticky top-0 z-20">
         <div className="max-w-3xl mx-auto px-4 h-16 flex items-center justify-between">
           <Link
             href="/openings"
-            className="inline-flex items-center gap-2 text-sm font-medium text-slate-400 hover:text-slate-200 transition-colors"
+            className="inline-flex items-center gap-2 text-[13px] font-semibold text-ink-500 hover:text-ink-900 transition-colors"
           >
             <ChevronLeft className="w-5 h-5" />
             <span className="hidden sm:inline">Galeria</span>
           </Link>
 
-          <h1 className="font-bold tracking-tight text-slate-100 truncate px-4">
+          <h1 className="font-display font-bold text-[15px] tracking-tight text-ink-900 truncate px-4">
             {opening.name}
           </h1>
 
-          <div className="flex items-center gap-1.5 px-3 py-1.5 bg-violet-500/10 text-violet-400 rounded-lg font-bold text-sm">
-            <Star className="w-4 h-4 fill-violet-400" />
+          <div className="flex items-center gap-1.5 px-3 py-1.5 bg-reward-soft border border-reward/20 rounded-lg font-bold text-[13px] text-reward-strong">
+            <Star className="w-4 h-4 fill-reward-strong" />
             <span>{xpEarned} XP</span>
           </div>
         </div>
       </header>
 
-      {/* Trilha (Path) */}
       <main className="max-w-3xl mx-auto px-4 py-16 flex flex-col items-center">
 
-        <div className="text-center mb-16">
-          <h2 className="text-3xl font-extrabold tracking-tight mb-3">Sua trilha</h2>
-          <p className="text-slate-400 max-w-md mx-auto">
+        <div className="text-center mb-14">
+          <h2 className="font-display font-extrabold text-[30px] tracking-tight mb-3 text-ink-900">Sua trilha</h2>
+          <p className="text-ink-500 max-w-md mx-auto text-[14px] leading-relaxed">
             {opening.description || "Conclua as lições em ordem para dominar esta abertura."}
           </p>
         </div>
@@ -76,23 +73,14 @@ export default async function OpeningTrackPage({ params }: { params: Promise<{ s
             return (
               <div key={lesson.id} className={`relative flex flex-col items-center w-full ${translateX} mb-12`}>
 
-                {/* Título Flutuante acima do botão */}
-                <div className="absolute -top-10 whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity">
-                  <div className="bg-slate-800 text-slate-200 text-sm font-bold py-1.5 px-4 rounded-xl shadow-xl border border-white/10 relative">
-                    {lesson.title}
-                    <div className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 w-3 h-3 bg-slate-800 border-b border-r border-white/10 rotate-45"></div>
-                  </div>
-                </div>
-
-                {/* Nó/Botão da Lição */}
                 <Link
                   href={isUnlocked || isCompleted ? `/lessons/${lesson.id}` : '#'}
-                  className={`group relative z-10 flex items-center justify-center w-20 h-20 rounded-full border-b-8 active:border-b-0 active:translate-y-2 transition-all duration-150 ${
+                  className={`group relative z-10 flex items-center justify-center w-20 h-20 rounded-full border-b-[6px] active:border-b-0 active:translate-y-1.5 transition-all duration-150 ${
                     isCompleted
-                      ? 'bg-emerald-500 border-emerald-700 text-white shadow-[0_0_20px_rgba(16,185,129,0.3)]'
+                      ? 'bg-success border-[#217A46] text-white shadow-[0_0_20px_rgba(46,160,93,0.25)]'
                       : isUnlocked
-                      ? 'bg-violet-500 border-violet-700 text-white shadow-[0_0_20px_rgba(139,92,246,0.3)] hover:bg-violet-400'
-                      : 'bg-slate-800 border-slate-900 text-slate-500 cursor-not-allowed'
+                      ? 'bg-accent border-[#1A5BC4] text-white shadow-[0_0_20px_rgba(47,123,246,0.25)] hover:bg-accent-hover'
+                      : 'bg-surface-card border-border-default text-ink-400 cursor-not-allowed'
                   }`}
                 >
                   {isCompleted ? (
@@ -104,19 +92,18 @@ export default async function OpeningTrackPage({ params }: { params: Promise<{ s
                   )}
 
                   {isUnlocked && !isCompleted && (
-                    <div className="absolute -top-2 -right-2 bg-white text-violet-600 text-xs font-black w-7 h-7 flex items-center justify-center rounded-full shadow-lg border-2 border-violet-500">
+                    <div className="absolute -top-2 -right-2 bg-white text-accent text-[11px] font-black w-7 h-7 flex items-center justify-center rounded-full shadow border-2 border-accent">
                       {lesson.order}
                     </div>
                   )}
                 </Link>
 
-                <span className="mt-4 text-sm font-bold text-slate-300 text-center max-w-[150px] leading-tight">
+                <span className="mt-4 text-[13px] font-bold text-ink-700 text-center max-w-[150px] leading-tight">
                   {lesson.title}
                 </span>
 
-                {/* Linha Conectora SVG */}
                 {hasNext && (
-                  <div className="absolute top-20 -z-10 h-28 w-full flex justify-center pointer-events-none opacity-20">
+                  <div className="absolute top-20 -z-10 h-28 w-full flex justify-center pointer-events-none opacity-15">
                     <svg className="w-full h-full" preserveAspectRatio="none" viewBox="0 0 100 100">
                       {cycle === 0 && nextCycle === 1 && (
                         <path d="M 50,0 Q 50,50 75,50 T 100,100" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeDasharray="10 10" />
@@ -137,21 +124,16 @@ export default async function OpeningTrackPage({ params }: { params: Promise<{ s
             );
           })}
 
-          {/* Troféu Final */}
           <div className="relative flex flex-col items-center mt-8">
-            <div className={`w-24 h-24 rounded-full flex items-center justify-center shadow-2xl border-4 ${
-              completedLessonIds.size === sortedLessons.length && sortedLessons.length > 0
-                ? 'bg-amber-500/20 border-amber-500 shadow-amber-500/20'
-                : 'bg-slate-900 border-slate-800'
+            <div className={`w-24 h-24 rounded-full flex items-center justify-center shadow-lg border-4 ${
+              allDone
+                ? 'bg-reward-soft border-reward shadow-reward/20'
+                : 'bg-surface-card border-border-default'
             }`}>
-              <Star className={`w-10 h-10 ${
-                completedLessonIds.size === sortedLessons.length && sortedLessons.length > 0
-                  ? 'text-amber-400 fill-amber-400'
-                  : 'text-slate-600'
-              }`} />
+              <Star className={`w-10 h-10 ${allDone ? 'text-reward fill-reward' : 'text-ink-300'}`} />
             </div>
-            {completedLessonIds.size === sortedLessons.length && sortedLessons.length > 0 && (
-              <p className="mt-3 text-sm font-bold text-amber-400">Abertura dominada!</p>
+            {allDone && (
+              <p className="mt-3 text-[13px] font-bold text-reward-strong">Abertura dominada!</p>
             )}
           </div>
 

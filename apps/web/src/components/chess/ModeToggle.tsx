@@ -16,13 +16,13 @@ export default function ModeToggle({ currentMode, hasTheory, hasPractice }: Mode
     if (!hasTheory || !hasPractice) return null
 
     return (
-        <div className="flex items-center gap-1 bg-slate-900 border border-slate-800 rounded-xl p-1">
+        <div className="flex items-center gap-1 bg-surface-sunken border border-border-subtle rounded-[10px] p-1">
             <button
                 onClick={() => router.push(`${pathname}?mode=theory`)}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-bold transition-all ${
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-[7px] text-[13px] font-bold transition-all ${
                     currentMode === 'THEORY'
-                        ? 'bg-violet-600 text-white shadow-sm'
-                        : 'text-slate-400 hover:text-slate-200'
+                        ? 'bg-accent text-white shadow-sm'
+                        : 'text-ink-500 hover:text-ink-900'
                 }`}
             >
                 <BookOpen className="w-3.5 h-3.5" />
@@ -30,10 +30,10 @@ export default function ModeToggle({ currentMode, hasTheory, hasPractice }: Mode
             </button>
             <button
                 onClick={() => router.push(`${pathname}?mode=practice`)}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-bold transition-all ${
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-[7px] text-[13px] font-bold transition-all ${
                     currentMode === 'PRACTICE'
-                        ? 'bg-violet-600 text-white shadow-sm'
-                        : 'text-slate-400 hover:text-slate-200'
+                        ? 'bg-accent text-white shadow-sm'
+                        : 'text-ink-500 hover:text-ink-900'
                 }`}
             >
                 <Swords className="w-3.5 h-3.5" />

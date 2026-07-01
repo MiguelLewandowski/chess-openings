@@ -11,11 +11,9 @@ import { toBoardShapes } from '@/lib/board-shapes'
 export default function Board() {
   const { fen, status, playerColor, currentNodeId, exerciseMoves } = useGameStore()
   const boardRef = useRef<HTMLDivElement>(null)
-  // Keep the Chessground instance in a ref so we can drive it imperatively
-  // without triggering React re-renders.
+
   const cgRef = useRef<Api | null>(null)
 
-  // Instantiate the board once, when the div mounts.
   useEffect(() => {
     if (!boardRef.current || cgRef.current) return
 
@@ -31,7 +29,6 @@ export default function Board() {
         move: (orig, dest) => {
           const ok = useGameStore.getState().handlePlayerMove(orig, dest)
           if (ok) return
-          // Illegal or off-theory: snap the board back to the store's position.
           const { fen: storeFen, playerColor: storeColor } = useGameStore.getState()
           cgRef.current?.set({
             fen: storeFen,
@@ -48,7 +45,7 @@ export default function Board() {
     }
   }, [])
 
-  // Sync position, turn and annotations whenever the store changes.
+
   useEffect(() => {
     if (!cgRef.current) return
 
@@ -71,7 +68,7 @@ export default function Board() {
   }, [fen, status, playerColor, currentNodeId, exerciseMoves])
 
   return (
-    <div className="flex flex-col items-center w-full h-full bg-slate-900">
+    <div className="flex flex-col items-center w-full h-full bg-surface-card">
       <div ref={boardRef} className="w-full h-full mx-auto" />
     </div>
   )

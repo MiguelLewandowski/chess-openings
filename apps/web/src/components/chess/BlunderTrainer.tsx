@@ -41,34 +41,34 @@ interface StatusConfig {
 
 function getStatusConfig(status: GameStatus, currentNodeId: string | null, openingName: string): StatusConfig {
     if (status === 'completed') return {
-        border: 'border-emerald-500/40', headerBg: 'bg-emerald-500/5',
-        icon: <CheckCircle2 className="w-5 h-5 text-emerald-400" />, iconBg: 'bg-emerald-500/20',
-        label: 'Sequência concluída!', labelColor: 'text-emerald-300',
+        border: 'border-[#2EA05D]/30', headerBg: 'bg-success-soft',
+        icon: <CheckCircle2 className="w-5 h-5 text-success" />, iconBg: 'bg-success-soft',
+        label: 'Sequência concluída!', labelColor: 'text-success',
         message: 'Brilhante! Indo para o próximo puzzle...',
-        messageBg: 'bg-emerald-500/5 border-emerald-500/20', messageColor: 'text-emerald-300',
+        messageBg: 'bg-success-soft border-[#2EA05D]/20', messageColor: 'text-success',
     }
     if (status === 'thinking' || status === 'waiting') return {
-        border: 'border-sky-500/30', headerBg: 'bg-sky-500/5',
-        icon: <Brain className="w-5 h-5 text-sky-400 animate-pulse" />, iconBg: 'bg-sky-500/20',
-        label: 'Adversário jogando', labelColor: 'text-sky-300',
+        border: 'border-accent/20', headerBg: 'bg-accent-soft',
+        icon: <Brain className="w-5 h-5 text-accent animate-pulse" />, iconBg: 'bg-accent-soft',
+        label: 'Adversário jogando', labelColor: 'text-accent',
         message: currentNodeId === null
             ? 'Seu adversário está prestes a errar...'
             : 'Bom lance! O adversário está respondendo...',
-        messageBg: 'bg-sky-500/5 border-sky-500/20', messageColor: 'text-sky-300',
+        messageBg: 'bg-accent-soft border-accent/20', messageColor: 'text-accent',
     }
     if (status === 'error') return {
-        border: 'border-rose-500/30', headerBg: 'bg-rose-500/5',
-        icon: <AlertTriangle className="w-5 h-5 text-rose-400" />, iconBg: 'bg-rose-500/20',
-        label: 'Lance errado!', labelColor: 'text-rose-300',
+        border: 'border-danger/20', headerBg: 'bg-danger-soft',
+        icon: <AlertTriangle className="w-5 h-5 text-danger" />, iconBg: 'bg-danger-soft',
+        label: 'Lance errado!', labelColor: 'text-danger',
         message: 'Esse não é o lance certo — tente de novo!',
-        messageBg: 'bg-rose-500/5 border-rose-500/20', messageColor: 'text-rose-400',
+        messageBg: 'bg-danger-soft border-danger/20', messageColor: 'text-danger',
     }
     return {
-        border: 'border-slate-700/50', headerBg: 'bg-slate-800/30',
-        icon: <Target className="w-5 h-5 text-violet-400" />, iconBg: 'bg-violet-500/20',
-        label: 'Encontre o melhor lance', labelColor: 'text-slate-200',
+        border: 'border-border-default', headerBg: 'bg-surface-sunken',
+        icon: <Target className="w-5 h-5 text-accent" />, iconBg: 'bg-accent-soft',
+        label: 'Encontre o melhor lance', labelColor: 'text-ink-900',
         message: `Seu adversário errou na ${openingName}. Puna o erro!`,
-        messageBg: 'bg-slate-800/50 border-slate-700/50', messageColor: 'text-slate-300',
+        messageBg: 'bg-surface-sunken border-border-subtle', messageColor: 'text-ink-700',
     }
 }
 
@@ -133,16 +133,16 @@ export default function BlunderTrainer({ puzzles }: Props) {
     if (puzzles.length === 0) {
         return (
             <EmptyState
-                icon={<BookOpen className="w-10 h-10 text-slate-500" />}
+                icon={<BookOpen className="w-10 h-10 text-ink-400" />}
                 title="Nenhum puzzle disponível ainda"
                 description={
                     <>
                         Importe primeiro a base de puzzles do Lichess com{' '}
-                        <code className="text-violet-400 bg-slate-800 px-1.5 py-0.5 rounded text-sm">pnpm import-puzzles</code>.
+                        <code className="text-accent bg-accent-soft px-1.5 py-0.5 rounded text-sm font-mono">pnpm import-puzzles</code>.
                     </>
                 }
                 action={
-                    <Link href="/openings" className="text-sm text-violet-400 hover:text-violet-300 transition-colors">
+                    <Link href="/openings" className="text-sm text-accent font-semibold hover:underline underline-offset-4">
                         ← Voltar ao painel
                     </Link>
                 }
@@ -154,27 +154,25 @@ export default function BlunderTrainer({ puzzles }: Props) {
         const accuracy = solvedCount > 0 ? Math.round((firstTryCount / solvedCount) * 100) : 0
         return (
             <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center px-4">
-                <Card className="max-w-lg w-full border-violet-500/30 rounded-3xl p-10 text-center shadow-violet-500/10 relative overflow-hidden">
-                    <div className="absolute inset-0 bg-gradient-to-br from-violet-500/10 via-transparent to-fuchsia-500/5 pointer-events-none" />
-                    <div className="relative z-10">
-                        <div className="w-20 h-20 bg-violet-500/20 rounded-full flex items-center justify-center mx-auto mb-6 animate-pulse">
-                            <Trophy className="w-10 h-10 text-violet-400" />
-                        </div>
-                        <h2 className="text-3xl font-extrabold tracking-tight text-white mb-3">Sessão concluída!</h2>
-                        <p className="text-slate-400 text-lg mb-8">
-                            Você puniu {puzzles.length} {puzzles.length === 1 ? 'erro' : 'erros'} de abertura.
-                        </p>
+                <Card className="max-w-lg w-full p-10 text-center">
+                    <div className="w-20 h-20 bg-success-soft rounded-full flex items-center justify-center mx-auto mb-6">
+                        <Trophy className="w-10 h-10 text-success" />
+                    </div>
+                    <h2 className="font-display font-extrabold text-[28px] tracking-tight text-ink-900 mb-3">Sessão concluída!</h2>
+                    <p className="text-ink-500 text-[16px] mb-8">
+                        Você puniu {puzzles.length} {puzzles.length === 1 ? 'erro' : 'erros'} de abertura.
+                    </p>
 
-                        <div className="grid grid-cols-2 gap-3 mb-8 text-left">
-                            <div className="bg-slate-800/60 rounded-2xl p-4">
-                                <p className="text-xs text-slate-500 uppercase tracking-wider mb-1">Primeira tentativa</p>
-                                <p className="text-2xl font-bold text-white">{firstTryCount}/{solvedCount}</p>
-                            </div>
-                            <div className="bg-slate-800/60 rounded-2xl p-4">
-                                <p className="text-xs text-slate-500 uppercase tracking-wider mb-1">Precisão</p>
-                                <p className="text-2xl font-bold text-white">{accuracy}%</p>
-                            </div>
+                    <div className="grid grid-cols-2 gap-3 mb-8 text-left">
+                        <div className="bg-surface-sunken border border-border-subtle rounded-[10px] p-4">
+                            <p className="text-[11px] text-ink-400 uppercase tracking-wider mb-1">Primeira tentativa</p>
+                            <p className="text-[22px] font-bold text-ink-900">{firstTryCount}/{solvedCount}</p>
                         </div>
+                        <div className="bg-surface-sunken border border-border-subtle rounded-[10px] p-4">
+                            <p className="text-[11px] text-ink-400 uppercase tracking-wider mb-1">Precisão</p>
+                            <p className="text-[22px] font-bold text-ink-900">{accuracy}%</p>
+                        </div>
+                    </div>
 
                         <div className="flex flex-col sm:flex-row gap-3 justify-center">
                             <Button
@@ -194,7 +192,6 @@ export default function BlunderTrainer({ puzzles }: Props) {
                                 <ChevronRight className="w-4 h-4" />
                             </Link>
                         </div>
-                    </div>
                 </Card>
             </div>
         )
@@ -207,12 +204,12 @@ export default function BlunderTrainer({ puzzles }: Props) {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-start">
 
             <div className="lg:col-span-7 flex flex-col items-center justify-center">
-                <div className="w-full max-w-[500px] aspect-square rounded-2xl overflow-hidden ring-1 ring-white/10 shadow-2xl shadow-black/50 bg-slate-900">
+                <div className="w-full max-w-[500px] aspect-square rounded-[16px] overflow-hidden ring-1 ring-border-default shadow-xl bg-surface-card">
                     <Board />
                 </div>
-                <p className="mt-3 text-sm text-slate-600">
+                <p className="mt-3 text-[13px] text-ink-400">
                     Jogando de{' '}
-                    <span className="font-semibold text-slate-400">
+                    <span className="font-semibold text-ink-600">
                         {puzzle.playerColor === 'white' ? '♔ Brancas' : '♚ Pretas'}
                     </span>
                 </p>
@@ -226,25 +223,25 @@ export default function BlunderTrainer({ puzzles }: Props) {
                             key={i}
                             className={cn(
                                 'h-2 flex-1 rounded-full transition-all duration-500',
-                                i < idx ? 'bg-emerald-500'
-                                    : i === idx ? (status === 'completed' ? 'bg-emerald-500' : 'bg-rose-500')
-                                    : 'bg-slate-800',
+                                i < idx ? 'bg-success'
+                                    : i === idx ? (status === 'completed' ? 'bg-success' : 'bg-danger')
+                                    : 'bg-surface-sunken border border-border-subtle',
                             )}
                         />
                     ))}
-                    <span className="text-xs text-slate-500 ml-1 flex-shrink-0 tabular-nums">{idx + 1}/{puzzles.length}</span>
+                    <span className="text-[12px] text-ink-400 ml-1 flex-shrink-0 tabular-nums">{idx + 1}/{puzzles.length}</span>
                 </div>
 
-                <div className={cn('bg-slate-900 border rounded-2xl overflow-hidden shadow-xl transition-all duration-300', config.border)}>
+                <div className={cn('bg-surface-card border rounded-[12px] overflow-hidden shadow-sm transition-all duration-300', config.border)}>
 
-                    <div className={cn('px-5 py-4 border-b border-slate-800/80 flex items-center justify-between gap-3', config.headerBg)}>
+                    <div className={cn('px-5 py-4 border-b border-border-subtle flex items-center justify-between gap-3', config.headerBg)}>
                         <div className="flex items-center gap-3 min-w-0">
                             <div className={cn('w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0', config.iconBg)}>
                                 {config.icon}
                             </div>
                             <div className="min-w-0">
                                 <p className={cn('font-bold text-sm', config.labelColor)}>{config.label}</p>
-                                <p className="text-slate-500 text-xs mt-0.5 truncate">{puzzle.openingName}</p>
+                                <p className="text-ink-400 text-[12px] mt-0.5 truncate">{puzzle.openingName}</p>
                             </div>
                         </div>
                         <RatingBadge rating={puzzle.rating} />
@@ -278,11 +275,11 @@ export default function BlunderTrainer({ puzzles }: Props) {
                 </div>
 
                 <div className="flex items-center justify-between px-1">
-                    <span className="text-xs text-slate-700">Puzzle #{idx + 1}</span>
-                    <div className="flex items-center gap-1.5 text-xs text-slate-500">
+                    <span className="text-[12px] text-ink-400">Puzzle #{idx + 1}</span>
+                    <div className="flex items-center gap-1.5 text-[12px] text-ink-400">
                         <Zap className="w-3.5 h-3.5" />
                         Rating:{' '}
-                        <span className="font-semibold text-slate-400">{puzzle.rating}</span>
+                        <span className="font-semibold text-ink-600">{puzzle.rating}</span>
                     </div>
                 </div>
             </div>
