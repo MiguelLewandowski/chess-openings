@@ -19,15 +19,15 @@ const firstChild = (moves: ExerciseMove[], parentId: string | null) =>
 const findNode = (moves: ExerciseMove[], id: string | null) =>
   moves.find((m) => m.id === id)
 
-// Status once the board lands on `nodeId` and control returns to the player.
+// Status quando o tabuleiro chega em `nodeId` e o controle volta para o jogador.
 function nextStatus(moves: ExerciseMove[], nodeId: string): GameStatus {
   const next = firstChild(moves, nodeId)
   if (!next) return 'completed'
   return next.isOpponentResponse ? 'waiting' : 'idle'
 }
 
-// Narration for a landed move: the completion line, the coach's own comment, or
-// a generic fallback.
+// Narração de um lance jogado: a mensagem de conclusão, o comentário do coach, ou
+// um texto genérico de fallback.
 function landingComment(status: GameStatus, node: ExerciseMove, fallback: string): string {
   return status === 'completed' ? gameCopy.lessonCompleted : coachComment(node) ?? fallback
 }
@@ -133,14 +133,14 @@ export const useGameStore = create<GameState>((set, get) => ({
     const next = firstChild(s.exerciseMoves, s.currentNodeId)
     if (!next) return
 
-    // Waiting on the opponent: enter the thinking phase. The reply is applied by
-    // commitOpponentMove() once the UI think-delay elapses.
+    // Esperando o adversário: entra na fase "thinking". A resposta é aplicada pelo
+    // commitOpponentMove() quando o atraso de "pensar" da UI termina.
     if (s.status === 'waiting') {
       if (next.isOpponentResponse) set({ status: 'thinking' })
       return
     }
 
-    // Theory stepping: reveal the next player move.
+    // Avanço na teoria: revela o próximo lance do jogador.
     if (next.isOpponentResponse) return
     const status = nextStatus(s.exerciseMoves, next.id)
     set({
