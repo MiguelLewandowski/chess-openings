@@ -49,9 +49,13 @@ export class PgnParserService implements IPgnParser {
     const playResult = ChessWrapper.playMove(startFen, san)
     if (!playResult) return []
 
-    const fullComment = `${moveObj.commentDiag?.comment ?? ''} ${moveObj.commentAfter ?? ''}`
-    const cleanComment = fullComment.replace(/\[%(cal|csl)\s+[^\]]+\]/g, '').trim()
-    const visualMarkers = this.extractMarkers(moveObj, fullComment)
+    // @mliebelt/pgn-parser surfaces the same comment in both commentDiag.comment
+    // and commentAfter, so concatenating them duplicated the text. Use one field
+    // for the prose (prefer commentDiag), but keep both when scanning for markers.
+    const rawComment = moveObj.commentDiag?.comment ?? moveObj.commentAfter ?? ''
+    const markerSource = `${moveObj.commentDiag?.comment ?? ''} ${moveObj.commentAfter ?? ''}`
+    const cleanComment = rawComment.replace(/\[%(cal|csl)\s+[^\]]+\]/g, '').trim()
+    const visualMarkers = this.extractMarkers(moveObj, markerSource)
 
     const node: ParsedNode = {
       id: Math.random().toString(36).substring(7),
