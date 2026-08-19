@@ -1,5 +1,6 @@
 import { Controller, Post, Body, UseGuards } from '@nestjs/common'
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger'
+import { Throttle } from '@nestjs/throttler'
 import { IngestorService } from './ingestor.service'
 import { IngestStudyDto } from './dto/ingest-study.dto'
 import { JwtAuthGuard } from '../auth/jwt-auth.guard'
@@ -11,7 +12,10 @@ import { Roles } from '../auth/roles.decorator'
 export class IngestorController {
   constructor(private readonly ingestorService: IngestorService) {}
 
+  // Each import burns Lichess and Gemini quota, so it is capped well below the global rate
+  // even though only admins can reach it.
   @Post('study')
+  @Throttle({ default: { ttl: 60_000, limit: 3 } })
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('ADMIN')
   @ApiBearerAuth()

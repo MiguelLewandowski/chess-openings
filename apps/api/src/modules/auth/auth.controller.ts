@@ -1,5 +1,6 @@
 import { Controller, Post, Patch, Get, Body, HttpCode, HttpStatus, UseGuards, Request } from '@nestjs/common'
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger'
+import { Throttle } from '@nestjs/throttler'
 import { AuthService } from './auth.service'
 import { RegisterDto } from './dto/register.dto'
 import { LoginDto } from './dto/login.dto'
@@ -16,7 +17,9 @@ interface AuthenticatedRequest extends Request {
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
+  // Credential endpoints are the brute-force surface: 5 attempts per minute per IP.
   @Post('register')
+  @Throttle({ default: { ttl: 60_000, limit: 5 } })
   @ApiOperation({ summary: 'Register a new student account' })
   @ApiResponse({ status: 201, description: 'Returns a JWT token and the created user.', type: AuthResponseDto })
   @ApiResponse({ status: 409, description: 'Email already in use.' })
@@ -25,6 +28,7 @@ export class AuthController {
   }
 
   @Post('login')
+  @Throttle({ default: { ttl: 60_000, limit: 5 } })
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Authenticate and get a JWT token' })
   @ApiResponse({ status: 200, description: 'Returns a JWT token and the user.', type: AuthResponseDto })
