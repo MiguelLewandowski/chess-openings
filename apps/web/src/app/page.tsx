@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { BookOpen, Target, Sparkles, ChevronRight, BrainCircuit, Lock } from "lucide-react";
+import { BookOpen, Target, Sparkles, ChevronRight, Lock } from "lucide-react";
 import { getSession } from "@/lib/session";
 import { logoutAction } from "@/app/actions/auth.actions";
 import DemoSection from "@/components/chess/DemoSection";
@@ -87,10 +87,6 @@ export default async function Home() {
           <Link href="/openings" className={buttonClasses({ variant: 'primary', size: 'lg' })}>
             Começar a treinar
             <ChevronRight className="w-5 h-5" />
-          </Link>
-          <Link href="/style-quiz" className={buttonClasses({ variant: 'secondary', size: 'lg' })}>
-            <BrainCircuit className="w-5 h-5 text-accent" />
-            Teste de estilo
           </Link>
           <Link href="/admin/import" className={buttonClasses({ variant: 'ghost', size: 'lg' })}>
             <BookOpen className="w-5 h-5" />

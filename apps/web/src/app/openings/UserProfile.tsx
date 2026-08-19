@@ -1,8 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import Link from 'next/link';
-import { User, Sparkles } from 'lucide-react';
+import { Sparkles } from 'lucide-react';
 import { ARCHETYPES, isStyleArchetype } from '@/lib/archetypes';
 
 export default function UserProfile({ sessionArchetype }: { sessionArchetype?: string | null }) {
@@ -27,19 +26,13 @@ export default function UserProfile({ sessionArchetype }: { sessionArchetype?: s
 
     return (
         <div className="flex items-center gap-3">
-            {name ? (
+            {/* The "descubra seu estilo" prompt pointed at /style-quiz, which is out of the
+                TCC1 scope and now 404s. The badge still shows an archetype already saved. */}
+            {name && (
                 <div className="hidden md:flex items-center gap-2 px-3 py-1.5 bg-accent-soft border border-accent/20 rounded-lg text-accent text-[13px] font-bold">
                     <Sparkles className="w-4 h-4" />
                     {name}
                 </div>
-            ) : (
-                <Link
-                    href="/style-quiz"
-                    className="hidden md:flex items-center gap-2 px-3 py-1.5 bg-surface-sunken hover:bg-surface-app border border-border-default rounded-lg text-ink-600 hover:text-ink-900 text-[13px] font-bold transition-colors"
-                >
-                    <User className="w-4 h-4" />
-                    Descubra seu estilo
-                </Link>
             )}
         </div>
     );
