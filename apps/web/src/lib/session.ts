@@ -1,8 +1,25 @@
 import { SignJWT, jwtVerify, type JWTPayload } from 'jose';
 import { cookies } from 'next/headers';
 
-const secretKey = process.env.SESSION_SECRET || 'chess-openings-super-secret-key-in-dev';
-const key = new TextEncoder().encode(secretKey);
+// Resolved per call, never at module load: `next build` imports this file without a
+// populated environment, so throwing at the top level would break the build instead of the
+// misconfigured deploy. In production a missing secret is fatal — falling back to a literal
+// published in the repository would make every session cookie forgeable.
+function getKey(): Uint8Array {
+  const secret = process.env.SESSION_SECRET;
+
+  if (!secret) {
+    if (process.env.NODE_ENV === 'production') {
+      throw new Error(
+        'Missing required environment variable SESSION_SECRET. ' +
+          'It must match the value used by the API.',
+      );
+    }
+    return new TextEncoder().encode('chess-dev-secret');
+  }
+
+  return new TextEncoder().encode(secret);
+}
 
 export interface SessionPayload {
   userId: string;
@@ -18,11 +35,11 @@ export async function encrypt(payload: SessionPayload) {
     .setProtectedHeader({ alg: 'HS256' })
     .setIssuedAt()
     .setExpirationTime('7d')
-    .sign(key);
+    .sign(getKey());
 }
 
 export async function decrypt(input: string): Promise<SessionPayload> {
-  const { payload } = await jwtVerify(input, key, {
+  const { payload } = await jwtVerify(input, getKey(), {
     algorithms: ['HS256'],
   });
   return payload as unknown as SessionPayload;
