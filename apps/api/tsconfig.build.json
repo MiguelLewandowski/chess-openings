@@ -1,0 +1,8 @@
+{
+  "extends": "./tsconfig.json",
+  // Without this the e2e specs are part of the compilation, which pushes the inferred
+  // rootDir up to the package root and emits dist/src/main.js instead of dist/main.js —
+  // breaking both `pnpm start` and the Dockerfile CMD. Tests are still type-checked, by
+  // ts-jest when the suite runs.
+  "exclude": ["node_modules", "dist", "test", "**/*spec.ts"]
+}
