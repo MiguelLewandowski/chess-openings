@@ -15,10 +15,15 @@
     },
     "lint": {},
     "test": {
-      "dependsOn": ["^build"]
+      "dependsOn": ["^build"],
+      // The API's e2e suite boots the real app against a real database. Turbo hides any
+      // variable a task does not declare, so without this the suite sees no DATABASE_URL
+      // in CI and every test fails on connection.
+      "env": ["DATABASE_URL", "SESSION_SECRET", "WEB_ORIGIN"]
     },
     "test:e2e": {
       "dependsOn": ["^build"],
+      "env": ["DATABASE_URL", "SESSION_SECRET", "WEB_ORIGIN"],
       "cache": false
     }
   }
