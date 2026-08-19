@@ -13,9 +13,9 @@
     "test": "turbo test",
     "test:e2e": "turbo test:e2e",
     "test:domain": "turbo run test --filter=@chess-openings/domain",
-    "import-puzzles": "tsx scripts/import-puzzles.ts",
-    "make-admin": "tsx scripts/make-admin.ts",
+    "db:migrate": "prisma migrate deploy",
     "db:seed": "tsx prisma/seed.ts",
+    "db:seed:reviews": "tsx prisma/seed-reviews.ts",
     "postinstall": "prisma generate"
   },
   "prisma": {

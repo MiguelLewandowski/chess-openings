@@ -8,6 +8,5 @@
     "esModuleInterop": true,
     "resolveJsonModule": true,
     "noEmit": true
-  },
-  "include": ["scripts/**/*.ts"]
+  }
 }
