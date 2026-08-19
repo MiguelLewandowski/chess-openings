@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from "react";
+import { useState, useSyncExternalStore } from "react";
 import Link from "next/link";
 import { BookOpen, Trash2, Loader2, ChevronRight } from "lucide-react";
 import { deleteOpening } from "@/app/actions/opening.actions";
@@ -15,16 +15,18 @@ interface Opening {
     lessons: { id: string }[];
 }
 
+// The archetype lives in localStorage, which exists only in the browser. Reading it through
+// useSyncExternalStore lets the server render `null` and the client render the stored value
+// without a setState inside an effect — which would queue a second render on every card.
+// Nothing writes the key while this page is mounted, so `subscribe` has nothing to observe.
+const NEVER_CHANGES = () => () => {};
+const readStoredStyle = () => localStorage.getItem('chess_style_archetype');
+const noStyleOnServer = () => null;
+
 export default function OpeningCard({ opening }: { opening: Opening }) {
     const [isDeleting, setIsDeleting] = useState(false);
-    const [userStyle, setUserStyle] = useState<StyleArchetype | null>(null);
-    const [mounted, setMounted] = useState(false);
-
-    useEffect(() => {
-        setMounted(true);
-        const saved = localStorage.getItem('chess_style_archetype');
-        if (isStyleArchetype(saved)) setUserStyle(saved);
-    }, []);
+    const saved = useSyncExternalStore(NEVER_CHANGES, readStoredStyle, noStyleOnServer);
+    const userStyle: StyleArchetype | null = isStyleArchetype(saved) ? saved : null;
 
     const isMatch = userStyle && opening.styleTags?.includes(userStyle);
 
@@ -47,9 +49,9 @@ export default function OpeningCard({ opening }: { opening: Opening }) {
     return (
         <Link
             href={`/openings/${opening.slug}`}
-            className={`group relative flex flex-col justify-between bg-surface-card border rounded-[12px] p-6 shadow-sm hover:shadow-md transition-all duration-200 hover:-translate-y-0.5 overflow-hidden ${mounted && isMatch ? 'border-[#2EA05D]/40' : 'border-border-subtle'}`}
+            className={`group relative flex flex-col justify-between bg-surface-card border rounded-[12px] p-6 shadow-sm hover:shadow-md transition-all duration-200 hover:-translate-y-0.5 overflow-hidden ${isMatch ? 'border-[#2EA05D]/40' : 'border-border-subtle'}`}
         >
-            {mounted && isMatch && (
+            {isMatch && (
                 <div className="absolute top-0 right-0 bg-success text-white text-[10px] font-black px-3 py-1 rounded-bl-[10px] z-20">
                     COMBINA COM VOCÊ
                 </div>

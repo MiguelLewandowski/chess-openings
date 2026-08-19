@@ -45,6 +45,10 @@ export default function DueToday({ reviews, streak, xp }: DueTodayProps) {
     const VISIBLE = 3;
     const visible = reviews.slice(0, VISIBLE);
     const hidden = dueCount - VISIBLE;
+    // This is a Server Component: it renders once per request, so reading the clock here is
+    // deterministic within a render and never causes a hydration mismatch. The rule targets
+    // impure calls in client render, which does not apply.
+    // eslint-disable-next-line react-hooks/purity
     const now = Date.now();
 
     return (
