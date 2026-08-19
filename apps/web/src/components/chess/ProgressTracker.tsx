@@ -21,8 +21,17 @@ export default function ProgressTracker() {
 
         hasTracked.current = true;
 
-        // quality 5 = perfect, 4 = good, 3 = with errors
-        const quality = errorCount === 0 ? 5 : errorCount <= 2 ? 4 : 3;
+        // Map errors to the SM-2 0-5 quality scale. Anything below 3 is a
+        // failure: SM-2 resets repetitions and schedules the card for the next
+        // day instead of pushing it 6+ days out, so slips resurface soon.
+        //   5 perfect · 4 one slip · 3 minor errors (still a pass)
+        //   2 struggled · 1 barely · 0 blackout (fails → review tomorrow)
+        const quality = errorCount === 0 ? 5
+            : errorCount === 1 ? 4
+            : errorCount === 2 ? 3
+            : errorCount === 3 ? 2
+            : errorCount === 4 ? 1
+            : 0;
         completeExerciseAction(exerciseId, quality);
     }, [status, exerciseId, errorCount]);
 

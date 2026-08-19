@@ -37,7 +37,9 @@ export class ProgressService {
       where: {
         userId,
         nextReview: { lte: new Date() },
-        repetitions: { gt: 0 },
+        // No repetitions filter: a lapsed card (SM-2 resets repetitions to 0 on
+        // a failure) must still resurface once its 1-day interval elapses. Rows
+        // only exist after a real attempt, so there are no untouched cards to leak.
         exercise: { type: 'PRACTICE' },
       },
       select: {
