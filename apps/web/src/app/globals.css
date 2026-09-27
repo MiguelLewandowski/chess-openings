@@ -46,6 +46,10 @@
   --board-light: #EAD9BC;
   --board-dark:  #946540;
   --board-frame: #5C3E27;
+  --piece-white:      #FBFAF6;
+  --piece-white-edge: rgba(20,16,10,.55);
+  --piece-black:      #25201A;
+  --piece-black-edge: rgba(255,255,255,.14);
   --move-from:   rgba(47,123,246,.30);
   --move-to:     rgba(47,123,246,.40);
   --move-good:   rgba(46,160,93,.45);

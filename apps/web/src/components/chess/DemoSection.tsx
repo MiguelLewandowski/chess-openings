@@ -57,12 +57,12 @@ export default function DemoSection() {
   }, [setupExercise])
 
   return (
-    <section className="max-w-6xl mx-auto px-6 py-24 border-t border-border-subtle">
+    <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-24 border-t border-border-subtle">
       <div className="text-center mb-12">
         <p className="text-[12px] font-bold tracking-widest text-accent uppercase mb-3">
           Experimente agora — sem precisar de conta
         </p>
-        <h2 className="font-display font-extrabold text-[32px] md:text-[42px] tracking-tight text-ink-900">
+        <h2 className="font-display font-extrabold text-[28px] sm:text-[32px] md:text-[42px] tracking-tight text-ink-900">
           Aprenda a Abertura Italiana em 3 lances
         </h2>
         <p className="text-ink-500 mt-3 max-w-md mx-auto text-[15px] leading-relaxed">

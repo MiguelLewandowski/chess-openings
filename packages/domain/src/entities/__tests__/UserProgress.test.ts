@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { applySM2, calcStreak } from '../UserProgress'
+import { applySM2, calcStreak, currentStreak } from '../UserProgress'
 
 describe('applySM2', () => {
   it('should reset interval and repetitions when quality < 3', () => {
@@ -56,5 +56,25 @@ describe('calcStreak', () => {
     const twoDaysAgo = new Date()
     twoDaysAgo.setDate(twoDaysAgo.getDate() - 2)
     expect(calcStreak(twoDaysAgo, 5)).toBe(1)
+  })
+})
+
+describe('currentStreak', () => {
+  const now = new Date(2026, 8, 26, 9, 0)
+
+  it('should return 0 when the user never studied', () => {
+    expect(currentStreak(null, 0, now)).toBe(0)
+  })
+
+  it('should keep the stored streak when the user studied today', () => {
+    expect(currentStreak(new Date(2026, 8, 26, 8, 0), 4, now)).toBe(4)
+  })
+
+  it('should keep the stored streak while the user still has today to study', () => {
+    expect(currentStreak(new Date(2026, 8, 25, 23, 59), 4, now)).toBe(4)
+  })
+
+  it('should return 0 once a whole day was missed', () => {
+    expect(currentStreak(new Date(2026, 8, 24, 23, 59), 4, now)).toBe(0)
   })
 })

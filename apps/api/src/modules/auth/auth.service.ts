@@ -2,6 +2,7 @@ import { Injectable, UnauthorizedException, ConflictException } from '@nestjs/co
 import { JwtService } from '@nestjs/jwt'
 import { PrismaService } from '../../infrastructure/prisma.service'
 import * as bcrypt from 'bcryptjs'
+import { currentStreak } from '@chess-openings/domain'
 import type { RegisterDto } from './dto/register.dto'
 import type { LoginDto } from './dto/login.dto'
 import type { AuthResponseDto, UserDto } from './dto/auth-response.dto'
@@ -14,6 +15,7 @@ type UserRecord = {
   styleArchetype: string | null
   xp: number
   streak: number
+  lastStudyDate: Date | null
 }
 
 @Injectable()
@@ -72,7 +74,8 @@ export class AuthService {
       role: user.role,
       styleArchetype: user.styleArchetype,
       xp: user.xp,
-      streak: user.streak,
+      // The stored value goes stale after a missed day; expose the one the user actually has.
+      streak: currentStreak(user.lastStudyDate, user.streak),
     }
   }
 }

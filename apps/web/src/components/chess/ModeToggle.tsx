@@ -16,9 +16,11 @@ export default function ModeToggle({ currentMode, hasTheory, hasPractice }: Mode
     if (!hasTheory || !hasPractice) return null
 
     return (
-        <div className="flex items-center gap-1 bg-surface-sunken border border-border-subtle rounded-[10px] p-1">
+        <div className="flex items-center gap-1 shrink-0 bg-surface-sunken border border-border-subtle rounded-[10px] p-1">
             <button
                 onClick={() => router.push(`${pathname}?mode=theory`)}
+                aria-label="Modo teoria"
+                aria-pressed={currentMode === 'THEORY'}
                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-[7px] text-[13px] font-bold transition-all ${
                     currentMode === 'THEORY'
                         ? 'bg-accent text-white shadow-sm'
@@ -26,10 +28,12 @@ export default function ModeToggle({ currentMode, hasTheory, hasPractice }: Mode
                 }`}
             >
                 <BookOpen className="w-3.5 h-3.5" />
-                Teoria
+                <span className="hidden min-[420px]:inline">Teoria</span>
             </button>
             <button
                 onClick={() => router.push(`${pathname}?mode=practice`)}
+                aria-label="Modo prática"
+                aria-pressed={currentMode === 'PRACTICE'}
                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-[7px] text-[13px] font-bold transition-all ${
                     currentMode === 'PRACTICE'
                         ? 'bg-accent text-white shadow-sm'
@@ -37,7 +41,7 @@ export default function ModeToggle({ currentMode, hasTheory, hasPractice }: Mode
                 }`}
             >
                 <Swords className="w-3.5 h-3.5" />
-                Prática
+                <span className="hidden min-[420px]:inline">Prática</span>
             </button>
         </div>
     )

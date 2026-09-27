@@ -21,16 +21,16 @@ export default function Error({
   }, [error])
 
   return (
-    <div className="min-h-screen bg-surface-app flex items-center justify-center">
+    <div className="flex-1 min-h-[60vh] flex items-center justify-center px-4">
       <EmptyState
         icon={<AlertTriangle size={32} />}
         title="Algo deu errado"
         description="Não conseguimos carregar esta página. Pode ser uma instabilidade temporária na conexão com o servidor."
         action={
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center justify-center gap-3">
             <Button onClick={reset}>Tentar novamente</Button>
-            <Link href="/openings" className={buttonClasses({ variant: 'secondary' })}>
-              Voltar ao catálogo
+            <Link href="/profile" className={buttonClasses({ variant: 'secondary' })}>
+              Voltar ao início
             </Link>
           </div>
         }

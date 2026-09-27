@@ -11,26 +11,59 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U admin -d chessopenings"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
 
-  # Profile "full": roda a API em Docker. Por omissão, `docker-compose up -d`
-  # sobe apenas o banco — o fluxo de dev usa `pnpm dev:all` para a API com hot-reload.
-  # Para tudo em Docker: `docker-compose --profile full up -d`
+  # Profile "full": the production images of the API and the web app, wired the same way as
+  # on Railway. By default `docker compose up -d` starts only the database — the dev loop
+  # uses `pnpm dev:all` for hot reload. To run everything in Docker:
+  #   docker compose --profile full up -d --build
+  # Stop `pnpm dev:all` first, or move the ports with API_PORT / WEB_PORT.
   api:
     profiles: ["full"]
     build:
       context: .
       dockerfile: apps/api/Dockerfile
     container_name: chessopenings-api
-    restart: always
+    restart: unless-stopped
+    # On Railway, migrations run as the pre-deploy command; here they run before the server.
+    command: ["sh", "-c", "pnpm db:migrate && node apps/api/dist/main"]
     environment:
       DATABASE_URL: postgresql://admin:password123@db:5432/chessopenings?schema=public
       SESSION_SECRET: ${SESSION_SECRET:-chess-dev-secret}
+      WEB_ORIGIN: http://localhost:${WEB_PORT:-3000}
       GEMINI_API_KEY: ${GEMINI_API_KEY:-}
       PORT: 3001
     ports:
-      - "3001:3001"
+      - "${API_PORT:-3001}:3001"
     depends_on:
-      - db
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:3001/api/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+
+  web:
+    profiles: ["full"]
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+    container_name: chessopenings-web
+    restart: unless-stopped
+    environment:
+      # Server-side calls go container to container; the browser never calls the API.
+      API_URL: http://api:3001/api
+      SESSION_SECRET: ${SESSION_SECRET:-chess-dev-secret}
+    ports:
+      - "${WEB_PORT:-3000}:3000"
+    depends_on:
+      api:
+        condition: service_healthy
 
 volumes:
   postgres_data:

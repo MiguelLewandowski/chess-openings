@@ -5,6 +5,7 @@ import Link from "next/link";
 import { BookOpen, Trash2, Loader2, ChevronRight } from "lucide-react";
 import { deleteOpening } from "@/app/actions/opening.actions";
 import { isStyleArchetype, type StyleArchetype } from "@/lib/archetypes";
+import { styleTagLabel } from "@/lib/profile";
 
 interface Opening {
     id: string;
@@ -23,7 +24,9 @@ const NEVER_CHANGES = () => () => {};
 const readStoredStyle = () => localStorage.getItem('chess_style_archetype');
 const noStyleOnServer = () => null;
 
-export default function OpeningCard({ opening }: { opening: Opening }) {
+// Deleting is an admin action; the API enforces it too, the flag only keeps the button
+// away from students.
+export default function OpeningCard({ opening, canDelete }: { opening: Opening; canDelete: boolean }) {
     const [isDeleting, setIsDeleting] = useState(false);
     const saved = useSyncExternalStore(NEVER_CHANGES, readStoredStyle, noStyleOnServer);
     const userStyle: StyleArchetype | null = isStyleArchetype(saved) ? saved : null;
@@ -68,24 +71,26 @@ export default function OpeningCard({ opening }: { opening: Opening }) {
                         </h2>
                         {opening.styleTags && opening.styleTags.length > 0 && (
                             <span className="inline-block mt-1 text-[10px] uppercase font-bold tracking-wider text-accent bg-accent-soft px-2 py-0.5 rounded border border-accent/20">
-                                {opening.styleTags[0]}
+                                {styleTagLabel(opening.styleTags[0])}
                             </span>
                         )}
                     </div>
                 </div>
 
-                <button
-                    onClick={handleDelete}
-                    disabled={isDeleting}
-                    className="p-2 text-ink-400 hover:text-danger hover:bg-danger-soft rounded-[6px] transition-colors z-20"
-                    title="Excluir abertura"
-                >
-                    {isDeleting ? (
-                        <Loader2 className="w-4 h-4 animate-spin" />
-                    ) : (
-                        <Trash2 className="w-4 h-4" />
-                    )}
-                </button>
+                {canDelete && (
+                    <button
+                        onClick={handleDelete}
+                        disabled={isDeleting}
+                        className="p-2 text-ink-400 hover:text-danger hover:bg-danger-soft rounded-[6px] transition-colors z-20"
+                        title="Excluir abertura"
+                    >
+                        {isDeleting ? (
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                        ) : (
+                            <Trash2 className="w-4 h-4" />
+                        )}
+                    </button>
+                )}
             </div>
 
             <div className="relative z-10 flex-1">

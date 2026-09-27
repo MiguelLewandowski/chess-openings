@@ -1,24 +1,25 @@
 import Link from "next/link";
-import { BookOpen, Target, Sparkles, ChevronRight, Lock } from "lucide-react";
+import { redirect } from "next/navigation";
+import { BookOpen, Target, Sparkles, ChevronRight } from "lucide-react";
 import { getSession } from "@/lib/session";
-import { logoutAction } from "@/app/actions/auth.actions";
 import DemoSection from "@/components/chess/DemoSection";
 import { buttonClasses } from "@/components/ui";
 
 export default async function Home() {
-  const session = await getSession();
+  // The landing page is for visitors; a signed-in user goes straight to the app.
+  if (await getSession()) redirect("/profile");
 
   return (
     <div className="min-h-screen bg-surface-app text-ink-900 font-body">
 
       {/* Navegação Superior */}
       <header className="border-b border-border-subtle bg-surface-card/90 backdrop-blur-md sticky top-0 z-10">
-        <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-3">
           <div className="flex items-center gap-2.5">
             <div className="w-8 h-8 bg-ink-900 rounded-[9px] flex items-center justify-center text-[20px]">
               ♞
             </div>
-            <span className="font-display font-extrabold text-[17px] tracking-tight text-ink-900">
+            <span className="font-display font-extrabold text-[15px] sm:text-[17px] tracking-tight text-ink-900">
               Chess Openings
               <span className="block text-[10px] font-semibold tracking-[0.14em] uppercase text-ink-400 leading-none">
                 Aprenda jogando
@@ -26,45 +27,19 @@ export default async function Home() {
             </span>
           </div>
 
-          <nav className="flex items-center gap-4">
-            <Link
-              href="/admin/import"
-              className="hidden sm:inline-flex items-center gap-1.5 text-[13px] font-medium text-ink-500 hover:text-ink-900 transition-colors"
-            >
-              <Lock className="w-3.5 h-3.5" />
-              Administração
+          <nav className="flex items-center gap-2">
+            <Link href="/login" className={buttonClasses({ variant: 'ghost', size: 'sm' })}>
+              Entrar
             </Link>
-
-            {session ? (
-              <div className="flex items-center gap-3">
-                <span className="hidden sm:inline-block text-[13px] font-semibold text-ink-700">
-                  {session.name || session.email}
-                </span>
-                <Link href="/openings" className={buttonClasses({ variant: 'primary', size: 'sm' })}>
-                  Painel
-                </Link>
-                <form action={logoutAction} className="inline">
-                  <button type="submit" className={buttonClasses({ variant: 'ghost', size: 'sm' })}>
-                    Sair
-                  </button>
-                </form>
-              </div>
-            ) : (
-              <div className="flex items-center gap-2">
-                <Link href="/login" className={buttonClasses({ variant: 'ghost', size: 'sm' })}>
-                  Entrar
-                </Link>
-                <Link href="/register" className={buttonClasses({ variant: 'secondary', size: 'sm' })}>
-                  Criar conta
-                </Link>
-              </div>
-            )}
+            <Link href="/register" className={buttonClasses({ variant: 'secondary', size: 'sm' })}>
+              Criar conta
+            </Link>
           </nav>
         </div>
       </header>
 
       {/* Hero */}
-      <main className="max-w-6xl mx-auto px-6 pt-24 pb-32 flex flex-col items-center text-center">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-14 sm:pt-24 pb-20 sm:pb-32 flex flex-col items-center text-center">
 
         <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-accent-soft border border-accent/20 text-accent text-[13px] font-semibold mb-8">
           <span className="relative flex h-2 w-2">
@@ -74,28 +49,27 @@ export default async function Home() {
           Seu treinador de aberturas inteligente
         </div>
 
-        <h1 className="font-display font-extrabold text-5xl md:text-[68px] tracking-tight text-ink-900 max-w-4xl leading-[1.05] mb-6">
+        <h1 className="font-display font-extrabold text-[38px] sm:text-5xl md:text-[68px] tracking-tight text-ink-900 max-w-4xl leading-[1.05] mb-6">
           Domine o tabuleiro com{' '}
           <span className="text-accent">Master Gambito</span>
         </h1>
 
-        <p className="text-[17px] text-ink-500 max-w-2xl mb-10 leading-relaxed">
-          Treine aberturas de forma interativa. Importe seus estudos do Lichess e aprenda os conceitos por trás de cada lance com feedback pedagógico personalizado.
+        <p className="text-[15px] sm:text-[17px] text-ink-500 max-w-2xl mb-8 sm:mb-10 leading-relaxed">
+          Treine aberturas de forma interativa e aprenda os conceitos por trás de cada lance, com feedback pedagógico personalizado e revisões no momento certo.
         </p>
 
-        <div className="flex flex-col sm:flex-row items-center gap-3">
-          <Link href="/openings" className={buttonClasses({ variant: 'primary', size: 'lg' })}>
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full sm:w-auto">
+          <Link href="/register" className={buttonClasses({ variant: 'primary', size: 'lg' })}>
             Começar a treinar
             <ChevronRight className="w-5 h-5" />
           </Link>
-          <Link href="/admin/import" className={buttonClasses({ variant: 'ghost', size: 'lg' })}>
-            <BookOpen className="w-5 h-5" />
-            Importar estudo
+          <Link href="/login" className={buttonClasses({ variant: 'ghost', size: 'lg' })}>
+            Já tenho conta
           </Link>
         </div>
 
         {/* Feature Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mt-28 text-left w-full">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-5 mt-16 sm:mt-28 text-left w-full">
           <div className="bg-surface-card border border-border-subtle rounded-[12px] p-7 shadow-sm">
             <div className="w-11 h-11 bg-success-soft rounded-[8px] flex items-center justify-center mb-5">
               <Target className="w-5 h-5 text-success" />

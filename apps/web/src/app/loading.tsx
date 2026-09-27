@@ -3,7 +3,7 @@
 // feedback that anything is happening.
 export default function Loading() {
   return (
-    <div className="min-h-screen bg-surface-app flex flex-col items-center justify-center gap-4">
+    <div className="flex-1 min-h-[60vh] flex flex-col items-center justify-center gap-4">
       <div
         className="w-10 h-10 rounded-full border-[3px] border-border-default border-t-accent animate-spin"
         role="status"

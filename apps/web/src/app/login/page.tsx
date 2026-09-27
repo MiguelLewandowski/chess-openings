@@ -47,14 +47,14 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-surface-app flex flex-col items-center justify-center p-6">
+    <div className="min-h-screen bg-surface-app flex flex-col items-center justify-center px-4 py-8 sm:p-6">
       <Link href="/" className="mb-8 flex items-center gap-2.5 no-underline hover:no-underline">
         <div className="w-8 h-8 bg-ink-900 rounded-[9px] flex items-center justify-center text-[20px]">♞</div>
         <span className="font-display font-extrabold text-[17px] tracking-tight text-ink-900">Chess Openings</span>
       </Link>
 
-      <div className="bg-surface-card border border-border-default rounded-[16px] p-8 max-w-md w-full shadow-lg">
-        <h1 className="font-display font-extrabold text-[28px] tracking-tight text-ink-900 mb-1">Bem-vindo de volta</h1>
+      <div className="bg-surface-card border border-border-default rounded-[16px] p-6 sm:p-8 max-w-md w-full shadow-lg">
+        <h1 className="font-display font-extrabold text-[24px] sm:text-[28px] tracking-tight text-ink-900 mb-1">Bem-vindo de volta</h1>
         <p className="text-ink-500 text-[14px] mb-7">Entre na sua conta para continuar seu treino.</p>
 
         {error && (

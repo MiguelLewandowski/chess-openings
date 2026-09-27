@@ -35,7 +35,7 @@ export async function registerAction(formData: FormData) {
     return { error: 'Não foi possível criar a conta.' };
   }
 
-  redirect('/');
+  redirect('/profile');
 }
 
 export async function loginAction(formData: FormData) {
@@ -57,7 +57,7 @@ export async function loginAction(formData: FormData) {
     return { error: 'Não foi possível entrar.' };
   }
 
-  redirect('/');
+  redirect('/profile');
 }
 
 export async function logoutAction() {

@@ -10,6 +10,7 @@ import { AuthModule } from './modules/auth/auth.module'
 import { MoveModule } from './modules/move/move.module'
 import { PuzzleModule } from './modules/puzzle/puzzle.module'
 import { LiveModule } from './modules/live/live.module'
+import { HealthModule } from './modules/health/health.module'
 import { PrismaModule } from './infrastructure/prisma.module'
 
 @Module({
@@ -27,6 +28,7 @@ import { PrismaModule } from './infrastructure/prisma.module'
     MoveModule,
     PuzzleModule,
     LiveModule,
+    HealthModule,
   ],
   providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }],
 })

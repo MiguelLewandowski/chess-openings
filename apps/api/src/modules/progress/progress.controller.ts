@@ -3,6 +3,7 @@ import { ApiTags, ApiOperation, ApiParam, ApiResponse, ApiBearerAuth } from '@ne
 import { ProgressService } from './progress.service'
 import { CompleteExerciseDto } from './dto/complete-exercise.dto'
 import { DueReviewDto } from './dto/due-review.dto'
+import { UserProfileDto } from './dto/user-profile.dto'
 import { JwtAuthGuard } from '../auth/jwt-auth.guard'
 
 interface AuthenticatedRequest extends Request {
@@ -41,6 +42,17 @@ export class ProgressController {
   @ApiResponse({ status: 401, description: 'Unauthorized.' })
   dueReviews(@Request() req: AuthenticatedRequest) {
     return this.progressService.findDueReviews(req.user.userId)
+  }
+
+  @Get('profile')
+  @ApiOperation({
+    summary: 'Get the gamified profile of the authenticated user',
+    description: 'XP, effective streak, study style and aggregates of the SM-2 progress.',
+  })
+  @ApiResponse({ status: 200, description: 'User profile.', type: UserProfileDto })
+  @ApiResponse({ status: 401, description: 'Unauthorized.' })
+  profile(@Request() req: AuthenticatedRequest) {
+    return this.progressService.findProfile(req.user.userId)
   }
 
   @Get('openings/:openingId/completed-lessons')
