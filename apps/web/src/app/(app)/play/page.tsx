@@ -1,8 +1,11 @@
+import type { Metadata } from "next"
 import Link from "next/link"
 import { ChevronLeft } from "lucide-react"
 import SparringBoard from "@/components/chess/SparringBoard"
 import { PageBody, PageHeader, PageTitle } from "@/components/layout/Page"
 import { ChessWrapper } from "@/lib/chess"
+
+export const metadata: Metadata = { title: "Jogar contra o Stockfish" }
 
 export default async function PlayPage({
     searchParams,

@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { apiClient, type DueReview } from "@/lib/api-client"
 import Link from "next/link";
 import { PlusCircle, BookOpen } from "lucide-react";
@@ -7,6 +8,8 @@ import DueToday from "@/components/DueToday";
 import { getSession } from "@/lib/session";
 import { buttonClasses } from "@/components/ui";
 import { PageBody, PageHeader, PageTitle } from "@/components/layout/Page";
+
+export const metadata: Metadata = { title: "Aberturas" };
 
 export default async function OpeningsCatalogPage() {
     const [openings, session] = await Promise.all([

@@ -24,7 +24,11 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Chess Openings — aberturas de xadrez com repetição espaçada",
+  // Pages that set their own title show "<page> · Chess Openings" in the tab.
+  title: {
+    default: "Chess Openings · Aberturas de xadrez que ficam na memória",
+    template: "%s · Chess Openings",
+  },
   description:
     "Veja cada linha comentada, jogue de memória e revise no dia certo: a repetição espaçada (SM-2) agenda cada linha pelo seu desempenho.",
 };

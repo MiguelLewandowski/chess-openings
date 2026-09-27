@@ -1,3 +1,5 @@
+import type { Metadata } from "next"
+import { cache } from "react"
 import Board from "@/components/chess/Board"
 import LessonSession from "@/components/chess/LessonSession"
 import { apiClient } from "@/lib/api-client"
@@ -10,6 +12,16 @@ import { PageBody, PageHeader } from "@/components/layout/Page"
 import { CARD_KIND_LABEL, LessonCards } from "@/components/chess/LessonCards"
 import { Badge } from "@/components/ui"
 import { lessonShortTitle } from "@/lib/profile"
+
+// The tab title and the page need the same lesson: cache() makes it one request.
+const findLesson = cache((id: string, token: string) => apiClient.lessons.findById(id, token))
+
+export async function generateMetadata({ params }: { params: Promise<{ lessonId: string }> }): Promise<Metadata> {
+    const session = await getSession()
+    if (!session) return {}
+    const lesson = await findLesson((await params).lessonId, session.apiToken)
+    return { title: lesson ? lessonShortTitle(lesson.title, lesson.opening.name) : "Lição" }
+}
 
 export default async function LessonPage({
     params,
@@ -25,7 +37,7 @@ export default async function LessonPage({
     // Protected route: send anonymous users to login instead of a raw 404.
     if (!session) redirect('/login')
 
-    const lesson = await apiClient.lessons.findById(resolvedParams.lessonId, session.apiToken)
+    const lesson = await findLesson(resolvedParams.lessonId, session.apiToken)
     if (!lesson) notFound()
 
     const theoryExercise = lesson.exercises.find(e => e.type === 'THEORY' && !e.cardKind)

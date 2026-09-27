@@ -1,3 +1,5 @@
+import type { Metadata } from "next";
+import { cache } from "react";
 import { getSession } from "@/lib/session";
 import { apiClient } from "@/lib/api-client";
 import Link from "next/link";
@@ -18,10 +20,18 @@ const MAX_XP_PER_LESSON = practiceXp(5);
 // (happens when a later lesson was completed first) · locked: previous lesson not completed.
 type StepState = "done" | "current" | "open" | "locked";
 
+// The tab title and the page need the same opening: cache() makes it one request.
+const findOpening = cache((slug: string) => apiClient.openings.findBySlug(slug));
+
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+  const opening = await findOpening((await params).slug);
+  return { title: opening?.name ?? "Abertura" };
+}
+
 export default async function OpeningTrackPage({ params }: { params: Promise<{ slug: string }> }) {
   const resolvedParams = await params;
 
-  const opening = await apiClient.openings.findBySlug(resolvedParams.slug);
+  const opening = await findOpening(resolvedParams.slug);
   if (!opening) notFound();
 
   const sortedLessons = [...opening.lessons].sort((a, b) => a.order - b.order);

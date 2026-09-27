@@ -1,3 +1,4 @@
+import type { Metadata } from 'next'
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { BookOpen, Brain, CalendarClock, Check, Clock, Flame, Play, Sparkles, Star, Trophy } from 'lucide-react'
@@ -27,6 +28,8 @@ const STREAK_HINT: Record<StreakStatus, { text: string; className: string }> = {
   'at-risk': { text: 'Estude hoje para não perder a sequência.', className: 'text-warning' },
   active: { text: 'Você já estudou hoje. Volte amanhã!', className: 'text-success' },
 }
+
+export const metadata: Metadata = { title: 'Perfil' }
 
 export default async function ProfilePage() {
   const session = await getSession()
