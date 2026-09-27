@@ -29,7 +29,7 @@ export class EngineService implements IEngineService {
 
   private async getEvaluation(fen: string): Promise<EngineEvaluation | null> {
     try {
-      const url = `https://lichess.org/api/cloud/eval?fen=${encodeURIComponent(fen)}&multiPv=1`
+      const url = `https://lichess.org/api/cloud-eval?fen=${encodeURIComponent(fen)}&multiPv=1`
       const response = await fetch(url)
       if (!response.ok) return null
 

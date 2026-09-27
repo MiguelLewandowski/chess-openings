@@ -43,3 +43,6 @@ docs
 .claude/
 CLAUDE.md
 CLAUDE.local.md
+
+# lesson-author: engine/explorer cache (drafts go to /out/, already ignored above)
+/.cache/

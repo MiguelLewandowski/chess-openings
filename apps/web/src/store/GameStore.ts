@@ -26,10 +26,13 @@ function nextStatus(moves: ExerciseMove[], nodeId: string): GameStatus {
   return next.isOpponentResponse ? 'waiting' : 'idle'
 }
 
-// Narração de um lance jogado: a mensagem de conclusão, o comentário do coach, ou
-// um texto genérico de fallback.
+// Narração de um lance jogado: o comentário do coach ou um texto genérico. Ao concluir,
+// o comentário do último lance ainda vence a mensagem de conclusão: num cartão de um lance
+// só, ele é a explicação da resposta e não pode se perder.
 function landingComment(status: GameStatus, node: ExerciseMove, fallback: string): string {
-  return status === 'completed' ? gameCopy.lessonCompleted : coachComment(node) ?? fallback
+  const comment = coachComment(node)
+  if (status === 'completed') return comment ?? gameCopy.lessonCompleted
+  return comment ?? fallback
 }
 
 interface GameState {
@@ -44,12 +47,16 @@ interface GameState {
   exerciseId: string | null
   errorCount: number
   autoPlayFirst: boolean
+  // A card's question. Shown instead of the first move's comment, which on a card explains
+  // the answer and would give it away.
+  intro: string | null
   setupExercise: (
     initialFen: string,
     movesTree: ExerciseMove[],
     exerciseId?: string,
     playerColor?: 'white' | 'black',
     autoPlayFirst?: boolean,
+    intro?: string | null,
   ) => void
   restartExercise: () => void
   handlePlayerMove: (orig: string, dest: string) => boolean
@@ -70,16 +77,24 @@ export const useGameStore = create<GameState>((set, get) => ({
   exerciseId: null,
   errorCount: 0,
   autoPlayFirst: false,
+  intro: null,
 
-  setupExercise: (initialFen, movesTree, exerciseId, forcedPlayerColor, autoPlayFirst = false) => {
+  setupExercise: (initialFen, movesTree, exerciseId, forcedPlayerColor, autoPlayFirst = false, intro = null) => {
     const firstMove = firstChild(movesTree, null)
-    const playerColor = forcedPlayerColor ?? (firstMove?.isOpponentResponse ? 'black' : 'white')
-    const hint = firstMove ? coachComment(firstMove) : null
+    // The side to move plays the first move: that is the student unless the first move is
+    // flagged as the opponent's. Reading it from the FEN covers exercises that start
+    // mid-game with Black to move (cards of a Black repertoire).
+    const sideToMove = initialFen.split(' ')[1] === 'b' ? 'black' : 'white'
+    const otherSide = sideToMove === 'white' ? 'black' : 'white'
+    const playerColor = forcedPlayerColor ?? (firstMove?.isOpponentResponse ? otherSide : sideToMove)
+    const hint = !intro && firstMove ? coachComment(firstMove) : null
     const initialComment = autoPlayFirst
       ? gameCopy.watchBlunder
-      : hint
-        ? gameCopy.hint(hint)
-        : gameCopy.yourTurn
+      : intro
+        ? intro
+        : hint
+          ? gameCopy.hint(hint)
+          : gameCopy.yourTurn
 
     set({
       fen: initialFen,
@@ -93,12 +108,13 @@ export const useGameStore = create<GameState>((set, get) => ({
       exerciseId: exerciseId ?? null,
       errorCount: 0,
       autoPlayFirst,
+      intro,
     })
   },
 
   restartExercise: () => {
     const s = get()
-    s.setupExercise(s.initialFen, s.exerciseMoves, s.exerciseId ?? undefined, s.playerColor, s.autoPlayFirst)
+    s.setupExercise(s.initialFen, s.exerciseMoves, s.exerciseId ?? undefined, s.playerColor, s.autoPlayFirst, s.intro)
   },
 
   handlePlayerMove: (orig, dest) => {

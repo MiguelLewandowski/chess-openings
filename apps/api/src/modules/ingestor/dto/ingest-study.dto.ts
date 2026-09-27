@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger'
-import { IsString, IsUrl, IsOptional, IsInt, IsArray, Min } from 'class-validator'
+import { IsString, IsUrl, IsOptional, IsInt, IsArray, IsBoolean, Min } from 'class-validator'
 import { Type } from 'class-transformer'
 
 export class IngestStudyDto {
@@ -31,4 +31,13 @@ export class IngestStudyDto {
   @IsArray()
   @IsString({ each: true })
   styleTags?: string[]
+
+  @ApiProperty({
+    description: 'Store the study comments as they are (written or reviewed by a person) instead of rewriting them with the AI coach',
+    required: false,
+    default: false,
+  })
+  @IsOptional()
+  @IsBoolean()
+  useAuthorComments?: boolean
 }

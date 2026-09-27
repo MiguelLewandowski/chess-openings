@@ -73,7 +73,7 @@ PORT=3001
 
 `apps/web/.env`:
 ```env
-NEXT_PUBLIC_API_URL="http://localhost:3001/api"
+API_URL="http://localhost:3001/api"   # lida em runtime pelo servidor do Next (opcional em dev)
 SESSION_SECRET="um-segredo-compartilhado"
 ```
 
@@ -101,7 +101,15 @@ pnpm test:domain          # só o domínio — ciclo rápido para regra de negó
 pnpm db:migrate           # aplica as migrations (prisma migrate deploy)
 pnpm db:seed              # recria as contas de demonstração
 pnpm db:seed:reviews      # gera revisões SM-2 vencidas para o aluno demo
+pnpm lessons:generate --source <estudo-lichess> --dry-run   # rascunho de lições com IA
 ```
+
+### Geração de lições com IA (POC)
+
+`tools/lesson-author` transforma um estudo da Lichess num rascunho anotado (comentários,
+setas, "por que não", plano e cartões de treino), com cada afirmação conferida por engine,
+explorer e chess.js. Você revisa na Lichess e importa com "Usar os comentários do estudo como
+estão". Passo a passo em [`tools/lesson-author/README.md`](tools/lesson-author/README.md).
 
 ## Estrutura
 
@@ -129,23 +137,30 @@ O código continua no repositório, em pastas privadas do App Router (`app/_blun
 `app/_style-quiz/`) — o prefixo `_` remove a rota sem remover o código. Cada pasta tem um
 `README.md` com o passo para reativá-la.
 
-## Deploy (Railway)
+## Docker
 
-Três serviços: **Postgres** (plugin), **api** e **web** (ambos por Dockerfile).
+As imagens de produção ficam em `apps/api/Dockerfile` e `apps/web/Dockerfile` (build a partir
+da raiz do monorepo). Para rodar tudo em Docker, igual à produção:
 
 ```bash
-# imagens (build a partir da raiz do monorepo)
-docker build -f apps/api/Dockerfile -t chess-api .
-docker build -f apps/web/Dockerfile --build-arg NEXT_PUBLIC_API_URL=https://SUA-API/api -t chess-web .
+docker compose --profile full up -d --build   # banco + API + web
 ```
+
+Sem o profile, `docker compose up -d` sobe só o banco (fluxo de dev com `pnpm dev:all`).
+
+## Deploy (Railway)
+
+Três serviços: **Postgres** (banco da Railway), **api** e **web** (ambos por Dockerfile). A
+configuração de cada serviço está em `apps/api/railway.json` e `apps/web/railway.json`
+(Dockerfile, migrations no pre-deploy, healthcheck e watch paths).
 
 | Serviço | Variáveis |
 |---|---|
-| `api` | `DATABASE_URL`, `SESSION_SECRET`, `WEB_ORIGIN` (URL do web), `GEMINI_API_KEY`, `PORT`, `NODE_ENV=production` |
-| `web` | `NEXT_PUBLIC_API_URL` (**em build time**), `SESSION_SECRET` (igual ao da api), `NODE_ENV=production` |
+| `api` | `DATABASE_URL`, `SESSION_SECRET`, `WEB_ORIGIN` (URL do web), `GEMINI_API_KEY`, `PORT=3001` |
+| `web` | `API_URL` (URL da API + `/api`), `SESSION_SECRET` (igual ao da api), `PORT=3000` |
 
-- **Release command da api:** `pnpm db:migrate`
-- `NEXT_PUBLIC_API_URL` é embutida no bundle **durante o build** — passar só como variável de
-  runtime deixa o navegador apontando para `localhost:3001`.
-- Depois do primeiro deploy: rode `pnpm db:seed` com `SEED_ADMIN_PASSWORD` definido, entre com
-  a conta admin e importe os estudos em `/admin/import` — o catálogo nasce vazio.
+- `NODE_ENV=production` já vem das imagens.
+- As migrations rodam sozinhas antes de cada deploy da API (`pnpm db:migrate`).
+- A API expõe `GET /api/health` (checa o banco), usado como healthcheck.
+- Depois do primeiro deploy: rode `pnpm db:seed` com `SEED_ADMIN_PASSWORD` definido e importe
+  os estudos em `/admin/import` — o catálogo nasce vazio.

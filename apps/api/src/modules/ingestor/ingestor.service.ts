@@ -1,5 +1,5 @@
-import { Injectable } from '@nestjs/common'
-import { IngestStudy } from '@chess-openings/domain'
+import { BadRequestException, Injectable } from '@nestjs/common'
+import { ContentNotReviewedError, IngestStudy } from '@chess-openings/domain'
 import { PgnParserService } from '../../infrastructure/services/pgn-parser.service'
 import { EngineService } from '../../infrastructure/services/engine.service'
 import { CoachService } from '../../infrastructure/services/coach.service'
@@ -27,11 +27,20 @@ export class IngestorService {
       this.contentRepo,
     )
 
-    return useCase.execute(pgn, {
-      openingName: dto.openingName,
-      chapterLimit: dto.chapterLimit,
-      specificChapter: dto.specificChapter,
-      styleTags: dto.styleTags,
-    })
+    try {
+      return await useCase.execute(pgn, {
+        openingName: dto.openingName,
+        chapterLimit: dto.chapterLimit,
+        specificChapter: dto.specificChapter,
+        styleTags: dto.styleTags,
+        useAuthorComments: dto.useAuthorComments,
+      })
+    } catch (error) {
+      // Unreviewed content is the admin's to fix, not a server failure.
+      if (error instanceof ContentNotReviewedError) {
+        throw new BadRequestException({ message: error.message, pending: error.pending.slice(0, 20) })
+      }
+      throw error
+    }
   }
 }

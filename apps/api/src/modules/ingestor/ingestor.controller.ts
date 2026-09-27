@@ -21,10 +21,11 @@ export class IngestorController {
   @ApiBearerAuth()
   @ApiOperation({
     summary: 'Import a Lichess study',
-    description: 'Fetches PGN from Lichess, enriches with engine evaluations and AI coach narration, then persists to the database.',
+    description:
+      'Fetches PGN from Lichess, enriches with engine evaluations and AI coach narration (or keeps the study comments with useAuthorComments), then persists to the database. Re-importing an opening replaces its lessons.',
   })
   @ApiResponse({ status: 201, description: 'Study imported successfully.' })
-  @ApiResponse({ status: 400, description: 'Invalid Lichess URL or study not found.' })
+  @ApiResponse({ status: 400, description: 'Invalid Lichess URL, study not found, or content still marked [REVISAR].' })
   @ApiResponse({ status: 401, description: 'Unauthorized — missing or invalid token.' })
   @ApiResponse({ status: 403, description: 'Forbidden — ADMIN role required.' })
   ingestStudy(@Body() dto: IngestStudyDto) {

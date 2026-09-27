@@ -25,7 +25,8 @@ export class LichessImporterService {
     const studyId = urlOrId.includes('lichess.org') ? this.extractStudyId(urlOrId) : urlOrId
     if (!studyId) throw new BadRequestException('Invalid Lichess study URL or ID.')
 
-    const endpoint = `https://lichess.org/api/study/${studyId}.pgn?source=true`
+    // orientation=true adds the [Orientation] tag, which tells whether the student plays Black.
+    const endpoint = `https://lichess.org/api/study/${studyId}.pgn?source=true&orientation=true`
     const response = await fetch(endpoint)
 
     if (!response.ok) throw new BadRequestException(`Failed to fetch study. Status: ${response.status}`)

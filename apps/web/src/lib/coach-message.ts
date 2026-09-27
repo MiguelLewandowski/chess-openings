@@ -4,7 +4,7 @@ import type { MoveSummary } from '@chess-openings/domain'
 export const gameCopy = {
   yourTurn: 'Sua vez! Encontre o melhor lance.',
   illegalMove: 'Lance ilegal!',
-  lessonCompleted: 'Parabéns! Você concluiu a teoria desta lição!',
+  lessonCompleted: 'Parabéns! Você concluiu este exercício.',
   watchBlunder: 'Observe — o adversário está prestes a errar feio!',
   hint: (comment: string) => `Dica: ${comment}`,
   goodMove: (san: string) => `Bom lance: ${san}`,

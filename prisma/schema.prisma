@@ -59,11 +59,19 @@ enum ExerciseType {
   PRACTICE // Modo ativo: o usuário deve acertar o lance
 }
 
+// Cartões de treino curtos ligados a uma lição (sempre do tipo PRACTICE). Cada um é um item
+// próprio da repetição espaçada. Null = a teoria ou a prática principal da lição.
+enum CardKind {
+  CRITICAL // posição crítica da linha: o lance do repertório que amadores mais erram
+  TRAP     // armadilha: o adversário comete um erro comum e o aluno pune
+}
+
 model Exercise {
   id          String       @id @default(cuid())
   title       String
   description String?
   type        ExerciseType @default(PRACTICE)
+  cardKind    CardKind?
   initialFen  String?      // FEN da posição inicial (antes do primeiro lance)
   lessonId    String
   lesson      Lesson       @relation(fields: [lessonId], references: [id], onDelete: Cascade)

@@ -12,9 +12,14 @@ export interface IngestMoveNode {
   children: IngestMoveNode[]
 }
 
+export type CardKind = 'CRITICAL' | 'TRAP'
+
 export interface IngestExerciseData {
   title: string
   type: 'THEORY' | 'PRACTICE'
+  // Set on the short drills attached to a lesson; null for its theory and main practice.
+  cardKind: CardKind | null
+  description: string | null
   initialFen: string
   moves: IngestMoveNode[]
 }

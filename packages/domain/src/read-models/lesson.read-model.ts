@@ -12,6 +12,10 @@ export interface ExerciseSummary {
   id: string
   title: string
   type: 'THEORY' | 'PRACTICE'
+  // Short drills attached to the lesson; null for its theory and main practice.
+  cardKind: 'CRITICAL' | 'TRAP' | null
+  // For a card, the question shown before the student moves.
+  description: string | null
   initialFen: string | null
   moves: MoveSummary[]
 }

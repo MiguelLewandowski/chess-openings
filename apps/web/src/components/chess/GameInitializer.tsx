@@ -3,11 +3,12 @@
 import { useGameStore, ExerciseMove } from "@/store/GameStore";
 import { useEffect, useRef } from "react"
 
-export default function GameInitializer({ initialFen, movesTree, exerciseId, playerColor }: {
+export default function GameInitializer({ initialFen, movesTree, exerciseId, playerColor, intro }: {
     initialFen: string
     movesTree: ExerciseMove[]
     exerciseId?: string
     playerColor?: 'white' | 'black'
+    intro?: string | null
 }){
     const setupExercise = useGameStore(state => state.setupExercise);
     const initializedFor = useRef<string | undefined>(undefined);
@@ -21,8 +22,8 @@ export default function GameInitializer({ initialFen, movesTree, exerciseId, pla
         const key = exerciseId ?? initialFen;
         if (initializedFor.current === key) return;
         initializedFor.current = key;
-        setupExercise(initialFen, movesTree, exerciseId, playerColor);
-    }, [exerciseId, initialFen, movesTree, playerColor, setupExercise]);
+        setupExercise(initialFen, movesTree, exerciseId, playerColor, false, intro);
+    }, [exerciseId, initialFen, movesTree, playerColor, intro, setupExercise]);
 
     return null;
 }

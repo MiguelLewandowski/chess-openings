@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { Flame, Zap, ChevronRight, CheckCircle2, Clock } from 'lucide-react';
 import type { DueReview } from '@/lib/api-client';
+import { CARD_KIND_LABEL } from '@/components/chess/LessonCards';
 
 interface DueTodayProps {
     reviews: DueReview[];
@@ -27,7 +28,7 @@ export default function DueToday({ reviews, streak, xp }: DueTodayProps) {
 
     if (dueCount === 0) {
         return (
-            <div className="mb-8 bg-success-soft border border-[#2EA05D]/20 rounded-[12px] p-5 flex items-center justify-between gap-4">
+            <div className="mb-6 sm:mb-8 bg-success-soft border border-[#2EA05D]/20 rounded-[12px] p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div className="flex items-center gap-3">
                     <div className="w-10 h-10 bg-[#2EA05D]/10 rounded-full flex items-center justify-center">
                         <CheckCircle2 className="w-5 h-5 text-success" />
@@ -52,8 +53,8 @@ export default function DueToday({ reviews, streak, xp }: DueTodayProps) {
     const now = Date.now();
 
     return (
-        <div className="mb-8 bg-surface-card border border-reward/30 rounded-[12px] overflow-hidden shadow-sm">
-            <div className="px-5 py-4 border-b border-border-subtle flex items-center justify-between gap-4">
+        <div className="mb-6 sm:mb-8 bg-surface-card border border-reward/30 rounded-[12px] overflow-hidden shadow-sm">
+            <div className="px-4 sm:px-5 py-4 border-b border-border-subtle flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
                 <div className="flex items-center gap-3">
                     <div className="relative">
                         <div className="w-9 h-9 bg-reward-soft rounded-full flex items-center justify-center">
@@ -83,8 +84,8 @@ export default function DueToday({ reviews, streak, xp }: DueTodayProps) {
                     return (
                         <Link
                             key={review.exercise.id}
-                            href={`/lessons/${review.exercise.lesson.id}?mode=practice`}
-                            className="flex items-center justify-between px-5 py-3.5 hover:bg-surface-sunken transition-colors group"
+                            href={`/lessons/${review.exercise.lesson.id}?exercise=${review.exercise.id}`}
+                            className="flex items-center justify-between px-4 sm:px-5 py-3.5 hover:bg-surface-sunken transition-colors group"
                         >
                             <div className="flex items-center gap-3 min-w-0">
                                 <div className="w-2 h-2 rounded-full bg-reward flex-shrink-0" />
@@ -94,6 +95,7 @@ export default function DueToday({ reviews, streak, xp }: DueTodayProps) {
                                     </p>
                                     <p className="text-[12px] text-ink-500 truncate">
                                         Lição {review.exercise.lesson.order}: {review.exercise.lesson.title}
+                                        {review.exercise.cardKind && ` · ${CARD_KIND_LABEL[review.exercise.cardKind]}`}
                                     </p>
                                 </div>
                             </div>
@@ -118,7 +120,7 @@ export default function DueToday({ reviews, streak, xp }: DueTodayProps) {
 
             <div className="px-5 py-4 border-t border-border-subtle bg-surface-sunken">
                 <Link
-                    href={`/lessons/${firstReview.exercise.lesson.id}?mode=practice`}
+                    href={`/lessons/${firstReview.exercise.lesson.id}?exercise=${firstReview.exercise.id}`}
                     className="flex items-center justify-center gap-2 w-full py-3 bg-reward hover:bg-reward-strong text-ink-900 rounded-[8px] text-[14px] font-bold transition-all active:scale-[0.98] shadow-sm"
                 >
                     <Zap className="w-4 h-4" />

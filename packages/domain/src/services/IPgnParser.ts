@@ -19,6 +19,12 @@ export interface ParsedNode {
 
 export interface ParsedChapter {
   title: string
+  // Study name, when the PGN carries it (Lichess exports do).
+  studyName?: string
+  // The side the student plays: the chapter's board orientation on Lichess.
+  studentColor: 'WHITE' | 'BLACK'
+  // Comment before the first move; for a card, the question shown to the student.
+  intro: string
   initialFen: string
   rootNodes: ParsedNode[]
 }

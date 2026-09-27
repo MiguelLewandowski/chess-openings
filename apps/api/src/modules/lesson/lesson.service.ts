@@ -16,6 +16,8 @@ export class LessonService {
           },
         },
         exercises: {
+          // Scalars (including cardKind and description) come with include; cards sort after
+          // the lesson's theory and main practice.
           include: {
             moves: {
               select: {
@@ -25,7 +27,7 @@ export class LessonService {
               orderBy: { id: 'asc' },
             },
           },
-          orderBy: { type: 'asc' },
+          orderBy: [{ type: 'asc' }, { id: 'asc' }],
         },
       },
     })

@@ -20,6 +20,7 @@ interface PgnMove {
 
 interface PgnGame {
   tags?: Record<string, string>
+  gameComment?: { comment?: string }
   moves: PgnMove[]
 }
 
@@ -29,11 +30,28 @@ export class PgnParserService implements IPgnParser {
     const games = parse(pgnString, { startRule: 'games' }) as PgnGame[]
 
     return games.map((game, index) => {
-      const title = game.tags?.Event || `Chapter ${index + 1}`
-      const setupFen = game.tags?.FEN || ChessWrapper.STARTING_FEN
+      const tags = game.tags ?? {}
+      const setupFen = tags.FEN || ChessWrapper.STARTING_FEN
       const initialFen = ChessWrapper.isValidFen(setupFen) ? setupFen : ChessWrapper.STARTING_FEN
-      return { title, initialFen, rootNodes: this.buildTree(game.moves, initialFen) }
+      return {
+        // Lichess exports "Study: Chapter" as Event and the chapter alone as ChapterName.
+        title: tags.ChapterName || tags.Event || `Chapter ${index + 1}`,
+        studyName: tags.StudyName || undefined,
+        studentColor: this.studentColor(tags.Orientation, initialFen),
+        intro: game.gameComment?.comment?.trim() ?? '',
+        initialFen,
+        rootNodes: this.buildTree(game.moves, initialFen),
+      }
     })
+  }
+
+  // The board orientation the author chose on Lichess is the side the student plays.
+  // Without it, the student is whoever moves first (true for cards, which start on the
+  // student's move, and for White repertoires from the initial position).
+  private studentColor(orientation: string | undefined, initialFen: string): 'WHITE' | 'BLACK' {
+    if (orientation?.toLowerCase() === 'black') return 'BLACK'
+    if (orientation?.toLowerCase() === 'white') return 'WHITE'
+    return initialFen.split(' ')[1] === 'b' ? 'BLACK' : 'WHITE'
   }
 
   private buildTree(movesAst: PgnMove[], currentFen: string, isMainLine = true): ParsedNode[] {

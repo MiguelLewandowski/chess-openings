@@ -16,6 +16,7 @@
     "db:migrate": "prisma migrate deploy",
     "db:seed": "tsx prisma/seed.ts",
     "db:seed:reviews": "tsx prisma/seed-reviews.ts",
+    "lessons:generate": "pnpm --filter @chess-openings/lesson-author generate",
     "postinstall": "prisma generate"
   },
   "prisma": {

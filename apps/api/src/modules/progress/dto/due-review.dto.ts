@@ -14,6 +14,9 @@ class ReviewLessonDto {
 
 class ReviewExerciseDto {
   @ApiProperty() id: string
+  @ApiProperty() title: string
+  @ApiProperty({ enum: ['CRITICAL', 'TRAP'], nullable: true, description: 'Set for the short drills attached to a lesson.' })
+  cardKind: 'CRITICAL' | 'TRAP' | null
   @ApiProperty({ type: ReviewLessonDto }) lesson: ReviewLessonDto
 }
 

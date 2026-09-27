@@ -31,6 +31,33 @@ describe('setupExercise', () => {
     store().setupExercise(START, [{ ...LINE[0], isOpponentResponse: true }])
     expect(store().playerColor).toBe('black')
   })
+
+  it('plays Black when the exercise starts with Black to move on the student move', () => {
+    const blackToMove = 'rnbqkb1r/pp2pppp/3p1n2/8/3NP3/2N5/PPP2PPP/R1BQKB1R b KQkq - 2 5'
+    const card: ExerciseMove[] = [
+      { id: 'k1', san: 'a6', fen: 'rnbqkb1r/1p2pppp/p2p1n2/8/3NP3/2N5/PPP2PPP/R1BQKB1R w KQkq - 0 6', parentId: null, isOpponentResponse: false, coachInsights: null, visualMarkers: null },
+    ]
+    store().setupExercise(blackToMove, card)
+    expect(store().playerColor).toBe('black')
+  })
+
+  it('keeps the last move explanation on completion when there is one', () => {
+    const line = [{ ...LINE[0], coachInsights: { comment: 'e4 ocupa o centro.' } }]
+    store().setupExercise(START, line, 'card', 'white', false, 'Como ocupamos o centro?')
+    store().handlePlayerMove('e2', 'e4')
+    expect(store().status).toBe('completed')
+    expect(store().comment).toBe('e4 ocupa o centro.')
+  })
+
+  it('shows a card question instead of the first move comment, and keeps it on restart', () => {
+    const commented = [{ ...LINE[0], coachInsights: { comment: 'e4 ocupa o centro.' } }, ...LINE.slice(1)]
+    store().setupExercise(START, commented, 'card', 'white', false, 'Como ocupamos o centro?')
+    expect(store().comment).toBe('Como ocupamos o centro?')
+
+    store().handlePlayerMove('e2', 'e4')
+    store().restartExercise()
+    expect(store().comment).toBe('Como ocupamos o centro?')
+  })
 })
 
 describe('handlePlayerMove', () => {

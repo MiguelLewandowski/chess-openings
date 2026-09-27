@@ -28,7 +28,13 @@ function computeProgress(moves: ExerciseMove[], currentNodeId: string | null, st
   return totalDepth > 0 ? Math.round((currentDepth / totalDepth) * 100) : 0
 }
 
-export default function CoachConsole({ nextLessonUrl = '/openings' }: { nextLessonUrl?: string }) {
+export default function CoachConsole({
+  nextLessonUrl = '/openings',
+  nextLabel = 'Próxima lição',
+}: {
+  nextLessonUrl?: string
+  nextLabel?: string
+}) {
   const { comment, status, playNextMove, playPreviousMove, exerciseMoves, currentNodeId, restartExercise } =
     useGameStore()
 
@@ -54,7 +60,7 @@ export default function CoachConsole({ nextLessonUrl = '/openings' }: { nextLess
           </div>
 
           <div className="space-y-2">
-            <h3 className="font-display font-bold text-[22px] tracking-tight text-ink-900">Lição concluída</h3>
+            <h3 className="font-display font-bold text-[22px] tracking-tight text-ink-900">Exercício concluído</h3>
             <p className="text-ink-600 text-[16px] leading-relaxed max-w-md">{comment}</p>
           </div>
 
@@ -64,7 +70,7 @@ export default function CoachConsole({ nextLessonUrl = '/openings' }: { nextLess
               Refazer lição
             </Button>
             <Link href={nextLessonUrl} className={buttonClasses()}>
-              Próxima lição
+              {nextLabel}
               <ArrowRight className="w-4 h-4" />
             </Link>
           </div>

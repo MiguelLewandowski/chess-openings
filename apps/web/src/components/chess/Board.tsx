@@ -56,6 +56,9 @@ export default function Board() {
 
     cgRef.current.set({
       fen,
+      // Set on every change, not only at mount: moving between exercises (e.g. from a
+      // White lesson to a card, or across repertoires) reuses this board.
+      orientation: playerColor,
       turnColor: color,
       premovable: { enabled: false },
       movable: {

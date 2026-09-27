@@ -1,4 +1,4 @@
-import type { OpeningSummary, LessonDetail, MoveSummary } from '@chess-openings/domain'
+import type { OpeningSummary, LessonDetail, MoveSummary, UserProfile } from '@chess-openings/domain'
 
 export interface ApiUser {
   id: string
@@ -19,6 +19,8 @@ export interface DueReview {
   nextReview: string
   exercise: {
     id: string
+    title: string
+    cardKind: 'CRITICAL' | 'TRAP' | null
     lesson: {
       id: string
       title: string
@@ -28,7 +30,19 @@ export interface DueReview {
   }
 }
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001/api'
+// Read at request time, on the server only (every caller is a Server Component or a Server
+// Action). A runtime variable, unlike NEXT_PUBLIC_*, is not baked into the build: the same
+// image works against any API address, including a private network hostname. In production
+// a missing value throws instead of silently calling localhost.
+function apiBase(): string {
+  const url = process.env.API_URL
+  if (url) return url
+
+  if (process.env.NODE_ENV === 'production') {
+    throw new Error('Missing required environment variable API_URL (e.g. https://api.example.com/api).')
+  }
+  return 'http://localhost:3001/api'
+}
 
 type FetchOptions = Omit<RequestInit, 'body'> & { token?: string; body?: string }
 
@@ -38,7 +52,7 @@ async function apiFetch<T>(path: string, options: FetchOptions = {}): Promise<T>
   headers.set('Content-Type', 'application/json')
   if (token) headers.set('Authorization', `Bearer ${token}`)
 
-  const res = await fetch(`${API_BASE}${path}`, { ...init, headers, cache: 'no-store' })
+  const res = await fetch(`${apiBase()}${path}`, { ...init, headers, cache: 'no-store' })
   if (!res.ok) throw new Error(`API error ${res.status}: ${await res.text()}`)
 
   const text = await res.text()
@@ -81,6 +95,7 @@ export const apiClient = {
     dueReviews: (token: string) => apiFetch<DueReview[]>('/progress/reviews/due', { token }),
     completedLessons: (openingId: string, token: string) =>
       apiFetch<string[]>(`/progress/openings/${openingId}/completed-lessons`, { token }),
+    profile: (token: string) => apiFetch<UserProfile>('/progress/profile', { token }),
   },
   auth: {
     register: (email: string, password: string, name?: string) =>
@@ -116,6 +131,7 @@ export interface IngestStudyInput {
   openingName?: string
   chapterLimit?: number
   specificChapter?: number
+  useAuthorComments?: boolean
   styleTags?: string[]
 }
 
