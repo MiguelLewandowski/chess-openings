@@ -46,3 +46,6 @@ CLAUDE.local.md
 
 # lesson-author: engine/explorer cache (drafts go to /out/, already ignored above)
 /.cache/
+
+# In-browser Stockfish, copied from node_modules by apps/web/scripts/copy-stockfish.mjs
+apps/web/public/stockfish/

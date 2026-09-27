@@ -5,6 +5,7 @@ import {
   ArrowRight,
   ChevronLeft,
   ChevronRight,
+  Cpu,
   Eye,
   Lightbulb,
   RefreshCcw,
@@ -14,6 +15,7 @@ import {
   XCircle,
 } from 'lucide-react'
 import Link from 'next/link'
+import { usePathname } from 'next/navigation'
 import { useEffect } from 'react'
 import type { ExerciseCompletion } from '@chess-openings/domain'
 import { Button, buttonClasses, Card, StatusPill } from '@/components/ui'
@@ -142,8 +144,32 @@ export default function CoachConsole({
         ) : (
           <PracticeControls status={status} onContinue={playNextMove} />
         )}
+
+        {/* Not during practice: a free game from the current position would reveal the line. */}
+        {watching && tracksProgress && <PlayFromHere className="mt-4 self-center" />}
       </div>
     </Card>
+  )
+}
+
+// Opens the current board in a free game against Stockfish, to try the position out.
+function PlayFromHere({ className }: { className?: string }) {
+  const fen = useGameStore((s) => s.fen)
+  const playerColor = useGameStore((s) => s.playerColor)
+  const pathname = usePathname()
+  const query = new URLSearchParams({ fen, color: playerColor, from: pathname })
+
+  return (
+    <Link
+      href={`/play?${query.toString()}`}
+      className={cn(
+        'inline-flex items-center gap-1.5 text-[13px] font-semibold text-accent hover:text-accent-hover transition-colors',
+        className,
+      )}
+    >
+      <Cpu className="w-4 h-4" />
+      Jogar desta posição contra o Stockfish
+    </Link>
   )
 }
 
@@ -348,6 +374,8 @@ function PracticeResult({
             <ArrowRight className="w-4 h-4" />
           </Link>
         </div>
+
+        {tracksProgress && <PlayFromHere />}
       </div>
     </Card>
   )

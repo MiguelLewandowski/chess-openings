@@ -9,7 +9,7 @@ comentada, joga-a de memória contra a máquina e revê no tempo certo (algoritm
 - **Frontend:** Next.js 16 (App Router) · React 19 · TypeScript · Zustand · Tailwind CSS v4 — porta **3000**
 - **Backend:** NestJS 10 · Prisma 6 · PostgreSQL · Swagger — porta **3001**
 - **Domínio compartilhado:** `@chess-openings/domain` (regras de negócio e tipos, sem framework)
-- **Extras:** chess.js + chessground (tabuleiro) · Google Gemini (explicações) · WebSocket (feed ao vivo do Lichess)
+- **Extras:** chess.js + chessground (tabuleiro) · Stockfish.js (engine no navegador) · Google Gemini (explicações) · WebSocket (feed ao vivo do Lichess)
 
 ## Funcionalidades
 
@@ -18,6 +18,8 @@ comentada, joga-a de memória contra a máquina e revê no tempo certo (algoritm
   depois o lance)
 - **Repetição espaçada (SM-2):** erros e dicas viram a nota da revisão e o XP ganho — quem
   precisou de ajuda demais revê a linha no dia seguinte
+- **Jogar contra o Stockfish** a partir de qualquer posição da lição, direto no navegador
+  (Stockfish 19 lite em WebAssembly, num Web Worker — sem servidor)
 - **Autenticação** JWT com papéis (`STUDENT` / `ADMIN`)
 - **Importação de estudos** do Lichess (admin) — gera as lições automaticamente
 - **Feed ao vivo** das partidas em destaque do Lichess via WebSocket (`/live`)

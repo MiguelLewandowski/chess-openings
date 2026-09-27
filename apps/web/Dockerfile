@@ -28,10 +28,11 @@ FROM node:20-alpine AS runner
 WORKDIR /repo
 ENV NODE_ENV=production
 # `output: standalone` produces a minimal server plus the traced dependencies; static/ is
-# not included in it and must be copied alongside. There is no public/ directory in this
-# app — add a COPY for it if one is ever created.
+# not included in it and must be copied alongside, and so is public/ (the in-browser
+# Stockfish, copied there by the build script).
 COPY --from=builder /repo/apps/web/.next/standalone ./
 COPY --from=builder /repo/apps/web/.next/static ./apps/web/.next/static
+COPY --from=builder /repo/apps/web/public ./apps/web/public
 EXPOSE 3000
 # The platform may override PORT; HOSTNAME makes the server listen on every interface
 # instead of only the container's loopback.
