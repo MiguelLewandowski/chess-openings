@@ -1,8 +1,14 @@
 {
   "extends": "./tsconfig.json",
-  // Without this the e2e specs are part of the compilation, which pushes the inferred
-  // rootDir up to the package root and emits dist/src/main.js instead of dist/main.js —
-  // breaking both `pnpm start` and the Dockerfile CMD. Tests are still type-checked, by
-  // ts-jest when the suite runs.
-  "exclude": ["node_modules", "dist", "test", "**/*spec.ts"]
+  // The build must emit dist/main.js: `pnpm start` and the Dockerfile CMD run it. Pinning
+  // rootDir makes any file outside src/ a compile error, instead of silently moving the output
+  // to dist/src/main.js (which happened with the e2e specs and with scripts/). Tests are still
+  // type-checked by ts-jest, and scripts run through tsx.
+  "compilerOptions": {
+    "rootDir": "./src",
+    // Kept inside dist/ so that deleting dist/ also resets the incremental build; next to the
+    // config file it would survive and make the next build emit nothing.
+    "tsBuildInfoFile": "./dist/tsconfig.build.tsbuildinfo"
+  },
+  "exclude": ["node_modules", "dist", "test", "scripts", "**/*spec.ts"]
 }
