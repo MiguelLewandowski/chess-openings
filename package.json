@@ -17,6 +17,7 @@
     "db:seed": "tsx prisma/seed.ts",
     "db:seed:reviews": "tsx prisma/seed-reviews.ts",
     "lessons:generate": "pnpm --filter @chess-openings/lesson-author generate",
+    "lessons:draft": "pnpm --filter @chess-openings/lesson-author draft",
     "postinstall": "prisma generate"
   },
   "prisma": {

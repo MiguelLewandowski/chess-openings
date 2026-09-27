@@ -6,6 +6,7 @@
   "description": "Offline pipeline that turns a Lichess study into reviewed, AI-annotated lessons (POC).",
   "scripts": {
     "generate": "tsx src/cli.ts",
+    "draft": "tsx src/draft/cli.ts",
     "typecheck": "tsc --noEmit",
     "lint": "eslint src",
     "test": "vitest run"

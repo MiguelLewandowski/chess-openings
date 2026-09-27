@@ -75,6 +75,38 @@ cor: brancas
 
 Exemplo pronto: [`repertorios/abertura-do-bispo.txt`](repertorios/abertura-do-bispo.txt).
 
+## Gerando o repertório automaticamente (`lessons:draft`)
+
+Em vez de escrever as linhas de cabeça, o `lessons:draft` monta o `.txt` a partir de dados:
+
+```powershell
+pnpm lessons:draft --inicio "1.e4 e5 2.Bc4" --nome "Abertura do Bispo" --licoes 15 --rating 1000-1600 --base tools\lesson-author\repertorios\abertura-do-bispo.txt
+epertoriosbertura-do-bispo.txt
+```
+
+- **Respostas do adversário:** o que os jogadores da faixa `--rating` jogam de verdade
+  (explorer da Lichess), a partir de 5% das partidas, até 4 por posição.
+- **Lances ruins que pegam iniciantes:** uma resposta que a engine pune em 1,5 peão ou mais
+  vira uma linha de punição (capítulo "Armadilha: ..."), seguida até a vantagem ficar clara.
+- **Nossos lances:** os do `--base` quando a posição aparece nele (mantém o sistema que você
+  escolheu); fora dele, o melhor da engine, preferindo o mais jogado por mestres entre os que
+  estão a até 0,30 do melhor.
+- **Capítulos:** a árvore é dividida pelos desvios do adversário até chegar a `--licoes`,
+  com nomes da base de aberturas da Lichess.
+- Nenhuma IA escolhe lances; cada linha vem comentada (`//`) com frequência e avaliação para
+  você revisar. Precisa de `LICHESS_TOKEN`; Stockfish local é muito recomendado.
+
+`pnpm lessons:draft --help` lista as opções (profundidade, frequência mínima etc.).
+
+### Skill do Claude Code: `/gerar-repertorio`
+
+A skill conduz o processo inteiro — escolhe os parâmetros, roda o `lessons:draft`, revisa o
+rascunho como treinador (coerência do sistema, armadilhas, nomes em português), valida com
+`--dry-run` e mostra o custo, sem rodar a geração paga sem a sua aprovação. Ela fica em
+`.claude/skills/gerar-repertorio/` (pasta local, fora do git); a cópia versionada está em
+[`skill/gerar-repertorio/SKILL.md`](skill/gerar-repertorio/SKILL.md) — para instalar numa
+máquina nova, copie a pasta para `.claude/skills/`.
+
 ## Fluxo completo (para cada abertura)
 
 1. **Monte o esqueleto** num `.txt` (acima) ou num estudo da Lichess. Um estudo por repertório e por cor (a orientação do

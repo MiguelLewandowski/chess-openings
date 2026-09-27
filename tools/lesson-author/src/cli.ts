@@ -1,10 +1,7 @@
-import { existsSync } from 'node:fs'
 import { mkdir, readFile, writeFile } from 'node:fs/promises'
 import path from 'node:path'
-import { fileURLToPath } from 'node:url'
 import { parseArgs } from 'node:util'
 import Anthropic from '@anthropic-ai/sdk'
-import { config as loadEnv } from 'dotenv'
 import { DEFAULT_CARDS } from './cards'
 import { DEFAULT_ENRICH, Enricher } from './enrich'
 import { UsageTracker, type Effort } from './author/claude'
@@ -13,18 +10,7 @@ import { readRepertoireText } from './pgn/lines'
 import { loadPgnSource, readChapters } from './pgn/read'
 import { writePgn, type ChapterOutput } from './pgn/write'
 import { renderReport } from './report'
-import { DiskCache } from './sources/cache'
-import { CachedEngine, LichessCloudEngine, StockfishEngine, type Engine } from './sources/engine'
-import { LichessExplorer } from './sources/explorer'
-
-const packageDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
-const repoRoot = path.resolve(packageDir, '..', '..')
-// pnpm runs the script from the package directory; resolve user paths from where the
-// command was typed instead.
-const userCwd = process.env.INIT_CWD ?? process.cwd()
-
-loadEnv({ path: path.join(packageDir, '.env'), quiet: true })
-loadEnv({ path: path.join(repoRoot, '.env'), quiet: true })
+import { createEngine, createExplorer, packageDir, repoRoot, userCwd } from './setup'
 
 const HELP = `
 Gera o rascunho anotado de um repertório a partir de um estudo da Lichess.
@@ -85,22 +71,8 @@ async function main(): Promise<void> {
   }
 
   const lichessToken = process.env.LICHESS_TOKEN
-  const cache = new DiskCache(path.join(repoRoot, '.cache', 'lesson-author'))
-  const engines: Engine[] = []
-  const stockfishPath = values.stockfish ?? process.env.STOCKFISH_PATH
-  if (stockfishPath && !existsSync(stockfishPath)) {
-    throw new Error(
-      `O Stockfish não foi encontrado em "${stockfishPath}". Confira STOCKFISH_PATH: o nome do .exe muda ` +
-        'conforme a versão baixada (ex.: stockfish-windows-x86-64-avx2.exe ou ...-universal.exe).',
-    )
-  }
-  if (stockfishPath) engines.push(new StockfishEngine(stockfishPath, Number(values.depth)))
-  engines.push(new LichessCloudEngine())
-  const engine = new CachedEngine(engines, cache)
-  const explorer = new LichessExplorer(lichessToken, cache)
-
-  if (!stockfishPath) log('Aviso: sem Stockfish local, só a avaliação em nuvem da Lichess (cobre bem teoria popular; armadilhas raras ficam de fora).')
-  if (!explorer.available) log('Aviso: sem LICHESS_TOKEN, sem estatísticas de partidas e sem cartões.')
+  const engine = createEngine({ stockfish: values.stockfish, depth: Number(values.depth), log })
+  const explorer = createExplorer(log)
 
   const source = /lichess\.org/.test(values.source) ? values.source : path.resolve(userCwd, values.source)
   log(`Lendo ${source}...`)
