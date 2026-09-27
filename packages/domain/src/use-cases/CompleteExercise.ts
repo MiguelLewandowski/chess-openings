@@ -1,4 +1,4 @@
-import { applySM2, calcStreak } from '../entities/UserProgress'
+import { INITIAL_SM2_STATE, applySM2, calcStreak } from '../entities/UserProgress'
 import type { SM2Result } from '../entities/UserProgress'
 import { practiceQuality, practiceXp, type PracticeAttempt } from '../entities/PracticeScore'
 import type { IUserProgressRepository } from '../repositories/IUserProgressRepository'
@@ -32,7 +32,7 @@ export class CompleteExercise {
     ])
 
     const quality = practiceQuality(attempt)
-    const base = existing ?? { easinessFactor: 2.5, interval: 0, repetitions: 0 }
+    const base = existing ?? INITIAL_SM2_STATE
     const sm2Result = applySM2(base, quality)
     const newStreak = calcStreak(user?.lastStudyDate ?? null, user?.streak ?? 0)
 

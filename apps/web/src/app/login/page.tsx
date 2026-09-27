@@ -4,6 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { loginAction } from '@/app/actions/auth.actions';
 import { Loader2, ArrowRight } from 'lucide-react';
+import { BrandMark } from '@/components/ui';
 
 function validateEmail(email: string) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) ? '' : 'Informe um e-mail válido.';
@@ -49,7 +50,7 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen bg-surface-app flex flex-col items-center justify-center px-4 py-8 sm:p-6">
       <Link href="/" className="mb-8 flex items-center gap-2.5 no-underline hover:no-underline">
-        <div className="w-8 h-8 bg-ink-900 rounded-[9px] flex items-center justify-center text-[20px]">♞</div>
+        <BrandMark />
         <span className="font-display font-extrabold text-[17px] tracking-tight text-ink-900">Chess Openings</span>
       </Link>
 

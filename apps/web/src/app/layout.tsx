@@ -24,9 +24,9 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Chess Openings — Treine aberturas com o Mestre Gambito",
+  title: "Chess Openings — aberturas de xadrez com repetição espaçada",
   description:
-    "Treine aberturas de xadrez de forma interativa, com repetição espaçada e comentários pedagógicos do Mestre Gambito.",
+    "Veja cada linha comentada, jogue de memória e revise no dia certo: a repetição espaçada (SM-2) agenda cada linha pelo seu desempenho.",
 };
 
 export default function RootLayout({

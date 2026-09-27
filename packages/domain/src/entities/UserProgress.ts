@@ -4,6 +4,9 @@ export interface SM2State {
   repetitions: number
 }
 
+// State of an item never practised: SM-2's standard starting easiness, no interval yet.
+export const INITIAL_SM2_STATE: SM2State = { easinessFactor: 2.5, interval: 0, repetitions: 0 }
+
 // Anki's convention for a "mature" card: once the interval reaches three weeks, the item is
 // considered consolidated in long-term memory.
 export const MATURE_INTERVAL_DAYS = 21

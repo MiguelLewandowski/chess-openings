@@ -6,6 +6,7 @@ import { usePathname } from 'next/navigation'
 import { BookOpen, Download, LogOut, Menu, Radio, UserRound, X, type LucideIcon } from 'lucide-react'
 import { logoutAction } from '@/app/actions/auth.actions'
 import { cn } from '@/lib/cn'
+import { BrandMark } from '@/components/ui'
 
 export interface ShellUser {
   name: string | null
@@ -38,9 +39,7 @@ function isActive(pathname: string, href: string): boolean {
 function Logo() {
   return (
     <Link href="/profile" className="flex items-center gap-2.5 no-underline">
-      <div className="w-8 h-8 bg-ink-900 rounded-[9px] flex items-center justify-center text-[20px] text-surface-card">
-        ♞
-      </div>
+      <BrandMark />
       <span className="font-display font-extrabold text-[17px] tracking-tight text-ink-900 leading-none">
         Chess Openings
         <span className="block text-[10px] font-semibold tracking-[0.14em] uppercase text-ink-400 mt-1">

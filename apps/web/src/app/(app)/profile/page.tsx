@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { BookOpen, Brain, CalendarClock, Check, Clock, Flame, Play, Sparkles, Star, Trophy } from 'lucide-react'
-import type { ContinueLesson, OpeningProgress, UserProfile } from '@chess-openings/domain'
+import { practiceXp, type ContinueLesson, type OpeningProgress, type UserProfile } from '@chess-openings/domain'
 import { apiClient } from '@/lib/api-client'
 import { getSession } from '@/lib/session'
 import { ARCHETYPES, isStyleArchetype } from '@/lib/archetypes'
@@ -129,7 +129,7 @@ function ContinueCard({ lesson }: { lesson: ContinueLesson | null }) {
             </Link>
             <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-[6px] bg-reward-soft text-reward-strong text-[12px] font-bold">
               <Star className="w-3.5 h-3.5 fill-current" />
-              +10 XP por exercício
+              Até {practiceXp(5)} XP por lição
             </span>
           </div>
         </div>
