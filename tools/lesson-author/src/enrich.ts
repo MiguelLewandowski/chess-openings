@@ -44,7 +44,10 @@ export interface EnrichOptions {
   minOpponentShare: number
 }
 
-export const DEFAULT_ENRICH: EnrichOptions = { engineLines: 3, maxAlternatives: 3, minAlternativePly: 5, minOpponentShare: 0.1 }
+// maxAlternatives 0 turns off the "why not X?" notes: the lessons comment only the line that is
+// played. To bring them back, raise it (3 was the old value) and restore the whyNot rule in
+// AUTHOR_SYSTEM_PROMPT.
+export const DEFAULT_ENRICH: EnrichOptions = { engineLines: 3, maxAlternatives: 0, minAlternativePly: 5, minOpponentShare: 0.1 }
 
 export class Enricher {
   constructor(
@@ -79,7 +82,7 @@ export class Enricher {
       : { masters: null, amateurs: null }
 
     const alternatives =
-      isMainline && mover === 'student' && node.ply >= this.options.minAlternativePly
+      this.options.maxAlternatives > 0 && isMainline && mover === 'student' && node.ply >= this.options.minAlternativePly
         ? await this.alternatives(node, student, evalStudentCp, explorerBefore)
         : []
 

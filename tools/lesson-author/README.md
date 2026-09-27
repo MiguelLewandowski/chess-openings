@@ -2,8 +2,13 @@
 
 Ferramenta **offline** que transforma um estudo da Lichess (o esqueleto do repertório) num
 rascunho de curso anotado: comentários em português para cada lance, setas e casas
-destacadas, "por que não X?", o plano do capítulo e **cartões de treino** (posições críticas e
-armadilhas) que viram itens próprios da repetição espaçada no app.
+destacadas, o plano do capítulo e **cartões de treino** (posições críticas e armadilhas) que
+viram itens próprios da repetição espaçada no app.
+
+> **"Por que não X?" está desligado nesta versão.** As lições comentam só a linha que o aluno
+> joga; explicar alternativas deixava o texto longo demais e às vezes enganoso (a "refutação"
+> incluía lances da própria engine pelo nosso lado). Para religar, suba `maxAlternatives` em
+> `DEFAULT_ENRICH` (`src/enrich.ts`) e devolva a regra do `whyNot` ao `AUTHOR_SYSTEM_PROMPT`.
 
 Ela roda na sua máquina, não na API: é demorada, custa dinheiro e tem você no meio do
 processo. O app só importa o resultado depois que você revisa.
@@ -27,7 +32,7 @@ Tudo isso vira um **dossiê** por capítulo. O Claude escreve o capítulo inteir
 - todo lance citado existe no dossiê daquele lance (linha, engine, explorer, alternativas);
 - toda peça citada está na casa dita; toda casa "controlada" é mesmo alcançada;
 - "ataca"/"defende" apontam para peça inimiga/própria de verdade;
-- avaliações batem com a engine; "por que não X" só onde a engine confirma que X é pior;
+- avaliações batem com a engine; "por que não X" (quando ligado) só onde a engine confirma que X é pior;
 - a pergunta de um cartão não entrega a resposta; nada de citar engine ou números.
 
 O que falhar volta para o Claude corrigir (na mesma conversa, com a lista de erros). O que
@@ -81,7 +86,6 @@ Em vez de escrever as linhas de cabeça, o `lessons:draft` monta o `.txt` a part
 
 ```powershell
 pnpm lessons:draft --inicio "1.e4 e5 2.Bc4" --nome "Abertura do Bispo" --licoes 15 --rating 1000-1600 --base tools\lesson-author\repertorios\abertura-do-bispo.txt
-epertoriosbertura-do-bispo.txt
 ```
 
 - **Respostas do adversário:** o que os jogadores da faixa `--rating` jogam de verdade
