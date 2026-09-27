@@ -170,6 +170,11 @@ O primeiro teste real (Claude Opus 5, capítulo 1 da Abertura do Bispo), as melh
 depois dele e o plano para testar o Claude Sonnet 5 na Batch API estão em
 [`docs/teste-opus5-e-plano-sonnet5-batch.md`](docs/teste-opus5-e-plano-sonnet5-batch.md).
 
+O repertório completo gerado com `lessons:draft`, o teste com o Claude Sonnet 5 (e por que ele
+não saiu mais barato), como gastar menos, como desligar e religar a revisão automática e o
+plano da Batch API estão em
+[`docs/repertorio-completo-teste-sonnet5-e-custos.md`](docs/repertorio-completo-teste-sonnet5-e-custos.md).
+
 ## Custo
 
 A simulação estima o custo; a geração real mede e mostra no relatório. Com `claude-opus-5`,
