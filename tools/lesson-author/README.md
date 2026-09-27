@@ -135,9 +135,28 @@ máquina nova, copie a pasta para `.claude/skills/`.
 4. **Revise na Lichess.** Crie um estudo novo e importe o PGN (cada partida vira um capítulo;
    escolha a orientação da cor do repertório). Procure por `[REVISAR`, corrija e apague as
    marcas. Leia os cartões: o título e a pergunta fazem sentido?
-5. **Importe no app.** Em *Importar estudo*, cole a URL do estudo revisado com "Usar os
-   comentários do estudo como estão" marcado. Reimportar a mesma abertura substitui as
-   lições (e zera o progresso dos alunos nelas).
+5. **Importe no app** pela linha de comando, com todos os capítulos da abertura juntos:
+
+   ```bash
+   pnpm lessons:import out/lesson-author/bispo-cap1.revisado.pgn out/lesson-author/bispo-cap14.revisado.pgn
+   ```
+
+   Ele usa o banco do `DATABASE_URL` (mostra qual antes de gravar) e recusa PGN com
+   `[REVISAR`. Para produção, rode com o `DATABASE_URL` apontando para a URL pública do banco.
+   Reimportar a mesma abertura substitui as lições (e zera o progresso dos alunos nelas).
+
+## Tutorial "Primeiros passos"
+
+O tutorial de como as peças se movem não usa IA: está escrito em
+[`src/tutorial/primeiros-passos.ts`](src/tutorial/primeiros-passos.ts). Cada lição tem uma
+demonstração e um capítulo `<lição> | Prática: ...` com tarefas; no último passo, todas as
+respostas em `accept` valem (viram variações). O gerador joga cada lance no chess.js antes de
+escrever o PGN — o importador corta a linha em silêncio no primeiro lance inválido.
+
+```bash
+pnpm --filter @chess-openings/lesson-author tutorial     # gera content/primeiros-passos.pgn
+pnpm lessons:import content/primeiros-passos.pgn --tutorial
+```
 
 ## Opções úteis
 

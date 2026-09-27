@@ -131,6 +131,7 @@ export default async function LessonPage({
                         practice={toSession(selectedExercise)}
                         nextUrl={next.url}
                         nextLabel={next.label}
+                        reviewable={!lesson.opening.isTutorial}
                     />
                     <LessonCards lessonId={lesson.id} cards={cards} activeId={selectedExercise.id} />
                 </div>

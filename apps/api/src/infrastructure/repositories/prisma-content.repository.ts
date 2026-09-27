@@ -15,8 +15,14 @@ export class PrismaContentRepository implements IContentRepository {
       async (tx) => {
         const opening = await tx.opening.upsert({
           where: { slug: data.openingSlug },
-          create: { name: data.openingName, slug: data.openingSlug, description: 'Auto-imported', styleTags: data.styleTags },
-          update: { name: data.openingName, styleTags: data.styleTags },
+          create: {
+            name: data.openingName,
+            slug: data.openingSlug,
+            description: 'Auto-imported',
+            styleTags: data.styleTags,
+            isTutorial: data.isTutorial,
+          },
+          update: { name: data.openingName, styleTags: data.styleTags, isTutorial: data.isTutorial },
         })
 
         // Re-importing an opening (e.g. after reviewing it on Lichess) replaces its lessons

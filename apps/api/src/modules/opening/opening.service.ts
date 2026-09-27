@@ -11,7 +11,8 @@ export class OpeningService {
       include: {
         lessons: { select: { id: true, title: true, order: true }, orderBy: { order: 'asc' } },
       },
-      orderBy: { name: 'asc' },
+      // A tutorial (how the pieces move) is where a beginner starts, so it leads the catalog.
+      orderBy: [{ isTutorial: 'desc' }, { name: 'asc' }],
     })
   }
 

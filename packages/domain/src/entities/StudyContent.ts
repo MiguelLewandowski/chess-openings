@@ -35,5 +35,6 @@ export interface IngestStudyData {
   openingName: string
   openingSlug: string
   styleTags: string[]
+  isTutorial: boolean
   lessons: IngestLessonData[]
 }

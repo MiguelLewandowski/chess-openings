@@ -42,6 +42,8 @@ model Opening {
   slug        String   @unique
   description String?
   styleTags   String[] // Tags para o sistema de recomendação
+  // Tutorial (ex.: como as peças se movem): aparece no catálogo, mas fica fora das revisões
+  isTutorial  Boolean  @default(false)
   lessons     Lesson[]
 }
 

@@ -203,4 +203,36 @@ describe('ProgressController (e2e)', () => {
     expect(due.body).toHaveLength(1)
     expect(due.body[0].exercise).toMatchObject({ id: card.id, cardKind: 'CRITICAL', title: 'Crítica: após 1...e5' })
   })
+
+  it('A tutorial pays XP and completes its lesson, but never comes back as a review', async () => {
+    const http = app.getHttpServer()
+    const auth = `Bearer ${token}`
+    const tutorial = await ctx.prisma.opening.create({
+      data: {
+        name: 'Primeiros passos',
+        slug: 'primeiros-passos',
+        styleTags: [],
+        isTutorial: true,
+        lessons: { create: { title: 'A torre', order: 1, exercises: { create: { title: 'Practice', type: 'PRACTICE' } } } },
+      },
+      include: { lessons: { include: { exercises: true } } },
+    })
+    const lesson = tutorial.lessons[0]
+
+    const res = await request(http).post(`/api/progress/${lesson.exercises[0].id}`).set('Authorization', auth).send(PERFECT_RUN)
+    expect(res.body).toMatchObject({ quality: 5, xpEarned: 15, intervalDays: null, nextReview: null })
+
+    const completed = await request(http).get(`/api/progress/openings/${tutorial.id}/completed-lessons`).set('Authorization', auth)
+    expect(completed.body).toEqual([lesson.id])
+
+    await ctx.prisma.userProgress.updateMany({ data: { nextReview: new Date(Date.now() - 60_000) } })
+    const due = await request(http).get('/api/progress/reviews/due').set('Authorization', auth)
+    expect(due.body).toEqual([])
+
+    const catalog = await request(http).get('/api/openings')
+    expect(catalog.body.map((o: { slug: string; isTutorial: boolean }) => [o.slug, o.isTutorial])).toEqual([
+      ['primeiros-passos', true],
+      ['italian-game', false],
+    ])
+  })
 })

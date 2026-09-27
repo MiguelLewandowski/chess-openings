@@ -30,9 +30,9 @@ export class ExerciseCompletionDto {
   @ApiProperty({ description: 'XP added to the user.', example: 8 })
   xpEarned: number
 
-  @ApiProperty({ description: 'Days until the next review.', example: 6 })
-  intervalDays: number
+  @ApiProperty({ description: 'Days until the next review; null for a tutorial, which is never reviewed.', example: 6, nullable: true, type: Number })
+  intervalDays: number | null
 
-  @ApiProperty({ description: 'Next review date (ISO 8601).', example: '2026-10-03T12:00:00.000Z' })
-  nextReview: string
+  @ApiProperty({ description: 'Next review date (ISO 8601); null for a tutorial.', example: '2026-10-03T12:00:00.000Z', nullable: true, type: String })
+  nextReview: string | null
 }

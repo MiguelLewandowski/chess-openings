@@ -12,5 +12,6 @@ export class OpeningResponseDto {
   @ApiProperty() slug: string
   @ApiProperty({ nullable: true }) description: string | null
   @ApiProperty({ type: [String] }) styleTags: string[]
+  @ApiProperty({ description: 'Tutorial: listed like an opening, but its lessons are never reviewed.' }) isTutorial: boolean
   @ApiProperty({ type: [LessonSummaryDto] }) lessons: LessonSummaryDto[]
 }

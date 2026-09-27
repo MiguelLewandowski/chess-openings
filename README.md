@@ -13,6 +13,9 @@ comentada, joga-a de memória contra a máquina e revê no tempo certo (algoritm
 
 ## Funcionalidades
 
+- **Primeiros passos:** tutorial de como as peças se movem (uma lição por peça, mais roque,
+  en passant, promoção e xeque-mate), com tarefas que aceitam qualquer lance certo. Aparece
+  primeiro no catálogo, dá XP e fica fora das revisões
 - Catálogo de aberturas com uma **trilha de lições**: cada lição mostra a linha comentada e
   depois pede que você a jogue de memória, com um botão de **dica** em dois níveis (a peça,
   depois o lance)
@@ -107,6 +110,8 @@ pnpm db:migrate           # aplica as migrations (prisma migrate deploy)
 pnpm db:seed              # recria as contas de demonstração
 pnpm db:seed:reviews      # gera revisões SM-2 vencidas para o aluno demo
 pnpm lessons:generate --source <estudo-lichess> --dry-run   # rascunho de lições com IA
+pnpm lessons:import <arquivo.pgn>... [--tutorial]           # importa PGNs revisados no banco do DATABASE_URL
+pnpm --filter @chess-openings/lesson-author tutorial         # gera content/primeiros-passos.pgn
 ```
 
 ### Geração de lições com IA (POC)

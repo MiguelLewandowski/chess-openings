@@ -39,6 +39,8 @@ export default async function OpeningTrackPage({ params }: { params: Promise<{ s
   const allDone = done === total && total > 0;
   const nextLesson = sortedLessons.find((lesson) => !completedLessonIds.has(lesson.id));
 
+  const tutorial = opening.isTutorial;
+
   const stateOf = (lesson: LessonSummary, index: number): StepState => {
     if (completedLessonIds.has(lesson.id)) return "done";
     if (lesson.id === nextLesson?.id) return "current";
@@ -56,7 +58,7 @@ export default async function OpeningTrackPage({ params }: { params: Promise<{ s
           >
             <ChevronLeft className="w-5 h-5" />
           </Link>
-          <PageTitle subtitle="Trilha da abertura">{opening.name}</PageTitle>
+          <PageTitle subtitle={tutorial ? "Tutorial" : "Trilha da abertura"}>{opening.name}</PageTitle>
         </div>
       </PageHeader>
 
@@ -69,7 +71,7 @@ export default async function OpeningTrackPage({ params }: { params: Promise<{ s
           />
         ) : (
           <>
-            <TrackSummary done={done} total={total} allDone={allDone} />
+            <TrackSummary done={done} total={total} allDone={allDone} tutorial={tutorial} />
 
             <ol aria-label="Lições" className="mt-8 sm:mt-10">
               {sortedLessons.map((lesson, index) => {
@@ -83,10 +85,11 @@ export default async function OpeningTrackPage({ params }: { params: Promise<{ s
                     state={state}
                     // The segment below a node is "walked" once that lesson is done.
                     walked={state === "done"}
+                    tutorial={tutorial}
                   />
                 );
               })}
-              <TrackGoal allDone={allDone} maxXp={total * MAX_XP_PER_LESSON} />
+              <TrackGoal allDone={allDone} maxXp={total * MAX_XP_PER_LESSON} tutorial={tutorial} />
             </ol>
           </>
         )}
@@ -95,15 +98,17 @@ export default async function OpeningTrackPage({ params }: { params: Promise<{ s
   );
 }
 
-function TrackSummary({ done, total, allDone }: { done: number; total: number; allDone: boolean }) {
+function TrackSummary({ done, total, allDone, tutorial }: { done: number; total: number; allDone: boolean; tutorial: boolean }) {
   const left = total - done;
   const headline = allDone
-    ? "Abertura dominada"
+    ? tutorial ? "Tutorial concluído" : "Abertura dominada"
     : done === 0
       ? "Sua trilha começa aqui"
       : `Falta${left === 1 ? "" : "m"} ${left} ${left === 1 ? "lição" : "lições"}`;
   const detail = allDone
-    ? "Continue revisando para manter as linhas frescas na memória."
+    ? tutorial
+      ? "Você já sabe como todas as peças se movem. Hora de escolher uma abertura!"
+      : "Continue revisando para manter as linhas frescas na memória."
     : "Conclua as lições em ordem: cada uma destrava a próxima.";
 
   return (
@@ -169,12 +174,15 @@ function TrackStep({
   number,
   state,
   walked,
+  tutorial,
 }: {
   lesson: LessonSummary;
   openingName: string;
   number: number;
   state: StepState;
   walked: boolean;
+  // A tutorial lesson is not a line or a trap: it only carries its number.
+  tutorial: boolean;
 }) {
   const { kind, name, moves } = lessonTitleParts(lesson.title, openingName);
   const href = `/lessons/${lesson.id}`;
@@ -182,11 +190,15 @@ function TrackStep({
   const eyebrow = (
     <p className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-[0.08em] text-ink-400">
       <span>Lição {number}</span>
-      <span aria-hidden>·</span>
-      <span className={cn("inline-flex items-center gap-1", kind === "trap" && state !== "locked" && "text-warning")}>
-        <KindIcon kind={kind} className="w-3 h-3" />
-        {kind === "trap" ? "Armadilha" : "Linha"}
-      </span>
+      {!tutorial && (
+        <>
+          <span aria-hidden>·</span>
+          <span className={cn("inline-flex items-center gap-1", kind === "trap" && state !== "locked" && "text-warning")}>
+            <KindIcon kind={kind} className="w-3 h-3" />
+            {kind === "trap" ? "Armadilha" : "Linha"}
+          </span>
+        </>
+      )}
     </p>
   );
 
@@ -274,7 +286,7 @@ function TrackStep({
   );
 }
 
-function TrackGoal({ allDone, maxXp }: { allDone: boolean; maxXp: number }) {
+function TrackGoal({ allDone, maxXp, tutorial }: { allDone: boolean; maxXp: number; tutorial: boolean }) {
   return (
     <li className="grid grid-cols-[48px_minmax(0,1fr)] gap-4 sm:gap-5 items-center">
       <div
@@ -287,9 +299,13 @@ function TrackGoal({ allDone, maxXp }: { allDone: boolean; maxXp: number }) {
       </div>
       <div>
         <p className={cn("font-display font-bold text-[16px] tracking-tight", allDone ? "text-reward-strong" : "text-ink-400")}>
-          {allDone ? "Abertura dominada!" : "Domine a abertura"}
+          {allDone ? (tutorial ? "Tutorial concluído!" : "Abertura dominada!") : tutorial ? "Conclua o tutorial" : "Domine a abertura"}
         </p>
-        <p className="text-[13px] text-ink-400">{allDone ? "Continue revisando para manter as linhas frescas." : `Até ${maxXp} XP ao concluir a trilha sem erros`}</p>
+        <p className="text-[13px] text-ink-400">{allDone
+            ? tutorial
+              ? "Agora escolha uma abertura no catálogo."
+              : "Continue revisando para manter as linhas frescas."
+            : `Até ${maxXp} XP ao concluir a trilha sem erros`}</p>
       </div>
     </li>
   );

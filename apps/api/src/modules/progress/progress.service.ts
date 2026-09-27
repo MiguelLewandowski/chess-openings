@@ -39,7 +39,16 @@ export class ProgressService {
   }
 
   async complete(userId: string, exerciseId: string, attempt: PracticeAttempt): Promise<ExerciseCompletion> {
-    const { quality, xpEarned, sm2Result, newStreak } = await this.completeExercise.execute({ userId, exerciseId, attempt })
+    const [{ quality, xpEarned, sm2Result, newStreak }, exercise] = await Promise.all([
+      this.completeExercise.execute({ userId, exerciseId, attempt }),
+      this.prisma.exercise.findUnique({
+        where: { id: exerciseId },
+        select: { lesson: { select: { opening: { select: { isTutorial: true } } } } },
+      }),
+    ])
+    // The SM-2 row is still written: it is what marks the lesson as completed. A tutorial just
+    // never comes back as a review (see findDueReviews), so there is no date to show.
+    const reviewable = !exercise?.lesson.opening.isTutorial
 
     await this.prisma.$transaction([
       this.prisma.userProgress.upsert({
@@ -56,8 +65,8 @@ export class ProgressService {
     return {
       quality,
       xpEarned,
-      intervalDays: sm2Result.interval,
-      nextReview: sm2Result.nextReview.toISOString(),
+      intervalDays: reviewable ? sm2Result.interval : null,
+      nextReview: reviewable ? sm2Result.nextReview.toISOString() : null,
     }
   }
 
@@ -69,7 +78,7 @@ export class ProgressService {
         // No repetitions filter: a lapsed card (SM-2 resets repetitions to 0 on
         // a failure) must still resurface once its 1-day interval elapses. Rows
         // only exist after a real attempt, so there are no untouched cards to leak.
-        exercise: { type: 'PRACTICE' },
+        exercise: { type: 'PRACTICE', lesson: { opening: { isTutorial: false } } },
       },
       select: {
         nextReview: true,
@@ -119,7 +128,8 @@ export class ProgressService {
             orderBy: { order: 'asc' },
           },
         },
-        orderBy: { name: 'asc' },
+        // Same order as the catalog: the tutorial first, so a new user is pointed to it.
+        orderBy: [{ isTutorial: 'desc' }, { name: 'asc' }],
       }),
       this.prisma.userProgress.findMany({
         where: { userId },
@@ -127,7 +137,9 @@ export class ProgressService {
           interval: true,
           nextReview: true,
           updatedAt: true,
-          exercise: { select: { type: true, lessonId: true, cardKind: true } },
+          exercise: {
+            select: { type: true, lessonId: true, cardKind: true, lesson: { select: { opening: { select: { isTutorial: true } } } } },
+          },
         },
       }),
     ])
@@ -138,10 +150,10 @@ export class ProgressService {
       progress.filter((p) => p.exercise.cardKind === null).map((p) => p.exercise.lessonId),
     )
 
-    // Completing a THEORY exercise also writes an SM-2 row, but only PRACTICE exercises are
-    // ever brought back for review, so the review stats count those alone.
+    // Only PRACTICE exercises outside a tutorial are ever brought back for review, so the
+    // review stats count those alone.
     const now = new Date()
-    const practice = progress.filter((p) => p.exercise.type === 'PRACTICE')
+    const practice = progress.filter((p) => p.exercise.type === 'PRACTICE' && !p.exercise.lesson.opening.isTutorial)
     const upcoming = practice
       .map((p) => p.nextReview)
       .filter((date) => date > now)

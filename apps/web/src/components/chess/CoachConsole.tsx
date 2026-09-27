@@ -56,6 +56,9 @@ interface CoachConsoleProps {
   onRewatch?: () => void
   // Signed-in practice: the run is recorded and the result screen shows what it earned.
   tracksProgress?: boolean
+  // False for a tutorial: it pays XP but never comes back as a review, so the copy must not
+  // promise one.
+  reviewable?: boolean
 }
 
 export default function CoachConsole({
@@ -64,6 +67,7 @@ export default function CoachConsole({
   onStartPractice,
   onRewatch,
   tracksProgress = false,
+  reviewable = true,
 }: CoachConsoleProps) {
   const { comment, status, mode, playNextMove, playPreviousMove, exerciseMoves, currentNodeId, restartExercise } =
     useGameStore()
@@ -84,6 +88,7 @@ export default function CoachConsole({
       <PracticeResult
         comment={comment}
         tracksProgress={tracksProgress}
+        reviewable={reviewable}
         nextLessonUrl={nextLessonUrl}
         nextLabel={nextLabel}
         onRestart={restartExercise}
@@ -142,7 +147,7 @@ export default function CoachConsole({
             onStartPractice={onStartPractice}
           />
         ) : (
-          <PracticeControls status={status} onContinue={playNextMove} />
+          <PracticeControls status={status} reviewable={reviewable} onContinue={playNextMove} />
         )}
 
         {/* Not during practice: a free game from the current position would reveal the line. */}
@@ -233,7 +238,15 @@ function WatchControls({
   )
 }
 
-function PracticeControls({ status, onContinue }: { status: GameStatus; onContinue: () => void }) {
+function PracticeControls({
+  status,
+  reviewable,
+  onContinue,
+}: {
+  status: GameStatus
+  reviewable: boolean
+  onContinue: () => void
+}) {
   const hintLevel = useGameStore((s) => s.hintLevel)
   const requestHint = useGameStore((s) => s.requestHint)
 
@@ -261,7 +274,7 @@ function PracticeControls({ status, onContinue }: { status: GameStatus; onContin
         {label}
       </Button>
       <p className="text-[12px] text-ink-400 text-center leading-relaxed">
-        Erros e dicas reduzem o XP e trazem a linha de volta mais cedo.
+        {reviewable ? 'Erros e dicas reduzem o XP e trazem a linha de volta mais cedo.' : 'Erros e dicas reduzem o XP.'}
       </p>
     </div>
   )
@@ -290,17 +303,19 @@ function RunCounters() {
   )
 }
 
-function resultTitle(completion: ExerciseCompletion | null): string {
-  if (!completion) return 'Linha concluída'
+function resultTitle(completion: ExerciseCompletion | null, reviewable: boolean): string {
+  const done = reviewable ? 'Linha concluída' : 'Lição concluída'
+  if (!completion) return done
   if (completion.quality === 5) return 'Perfeito!'
   if (completion.quality === 4) return 'Muito bem!'
-  if (completion.quality === 3) return 'Linha concluída'
-  return 'Vamos reforçar essa linha'
+  if (completion.quality === 3) return done
+  return reviewable ? 'Vamos reforçar essa linha' : 'Quase lá! Que tal refazer?'
 }
 
 function PracticeResult({
   comment,
   tracksProgress,
+  reviewable,
   nextLessonUrl,
   nextLabel,
   onRestart,
@@ -308,6 +323,7 @@ function PracticeResult({
 }: {
   comment: string
   tracksProgress: boolean
+  reviewable: boolean
   nextLessonUrl: string
   nextLabel: string
   onRestart: () => void
@@ -331,7 +347,7 @@ function PracticeResult({
         </div>
 
         <div className="space-y-1.5">
-          <h3 className="font-display font-bold text-[22px] tracking-tight text-ink-900">{resultTitle(completion)}</h3>
+          <h3 className="font-display font-bold text-[22px] tracking-tight text-ink-900">{resultTitle(completion, reviewable)}</h3>
           <p className="text-[13px] font-medium text-ink-500">
             {mistakes === 0 && hints === 0 ? 'Sem erros e sem dicas' : `${plural(mistakes, 'erro', 'erros')} · ${plural(hints, 'dica', 'dicas')}`}
           </p>
@@ -339,16 +355,19 @@ function PracticeResult({
 
         {tracksProgress && (
           completion ? (
-            <div className="w-full grid grid-cols-2 gap-2">
+            <div className={cn('w-full grid gap-2', completion.nextReview ? 'grid-cols-2' : 'grid-cols-1')}>
               <div className="rounded-[10px] bg-reward-subtle border border-reward/20 px-3 py-3">
                 <p className="flex items-center justify-center gap-1.5 font-display font-extrabold text-[20px] text-reward-strong">
                   <Star className="w-4 h-4 fill-reward-strong" />+{completion.xpEarned} XP
                 </p>
               </div>
-              <div className="rounded-[10px] bg-surface-sunken border border-border-subtle px-3 py-3">
-                <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-ink-400">Próxima revisão</p>
-                <p className="font-semibold text-[14px] text-ink-900">{formatNextReview(completion.nextReview)}</p>
-              </div>
+              {/* A tutorial has no next review. */}
+              {completion.nextReview && (
+                <div className="rounded-[10px] bg-surface-sunken border border-border-subtle px-3 py-3">
+                  <p className="text-[11px] font-bold uppercase tracking-[0.08em] text-ink-400">Próxima revisão</p>
+                  <p className="font-semibold text-[14px] text-ink-900">{formatNextReview(completion.nextReview)}</p>
+                </div>
+              )}
             </div>
           ) : (
             <p className="text-[13px] text-ink-400" aria-live="polite">Calculando seu XP…</p>

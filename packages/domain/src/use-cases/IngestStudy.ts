@@ -12,6 +12,9 @@ export interface IngestOptions {
   // The study's comments were written or reviewed by a person: store them as they are
   // instead of having the coach model rewrite them.
   useAuthorComments?: boolean
+  // A tutorial (e.g. how the pieces move): shown in the catalog like an opening, but its
+  // lessons stay out of the spaced-repetition reviews.
+  tutorial?: boolean
 }
 
 // Left in a comment by the lesson-authoring pipeline for everything a person still has to
@@ -24,10 +27,12 @@ export class ContentNotReviewedError extends Error {
   }
 }
 
-// A lesson and the card chapters that belong to it.
+// A lesson and the chapters that belong to it: its cards and, optionally, its own practice.
 export interface LessonChapters {
   lesson: ParsedChapter
   cards: { chapter: ParsedChapter; kind: CardKind; title: string }[]
+  // Replaces the default practice (replaying the lesson line) with tasks of its own.
+  practice?: ParsedChapter
 }
 
 export class IngestStudy {
@@ -46,7 +51,7 @@ export class IngestStudy {
     const groups = applyFilters(groupLessons(parsed), options)
     if (groups.length === 0) throw new Error('No chapters found after filtering.')
 
-    const allChapters = groups.flatMap((g) => [g.lesson, ...g.cards.map((c) => c.chapter)])
+    const allChapters = groups.flatMap((g) => [g.lesson, ...(g.practice ? [g.practice] : []), ...g.cards.map((c) => c.chapter)])
     const fensToEvaluate = allChapters.flatMap((c) => [c.initialFen, ...collectFens(c.rootNodes)])
     const coachRequests = options.useAuthorComments ? [] : groups.flatMap((g) => coachRequestsFor(g.lesson))
 
@@ -61,8 +66,9 @@ export class IngestStudy {
 }
 
 // Cards are exported as chapters named "<lesson title> | Crítica: ..." or
-// "<lesson title> | Armadilha: ...". They attach to the lesson with that title; anything
-// else (including a card whose lesson is missing) is a lesson of its own.
+// "<lesson title> | Armadilha: ...", and a lesson's own practice as
+// "<lesson title> | Prática: ...". They attach to the lesson with that title; anything else
+// (including a card whose lesson is missing) is a lesson of its own.
 export function groupLessons(chapters: ParsedChapter[]): LessonChapters[] {
   const groups: LessonChapters[] = []
   const byTitle = new Map<string, LessonChapters>()
@@ -76,6 +82,10 @@ export function groupLessons(chapters: ParsedChapter[]): LessonChapters[] {
 
     if (owner && kind) {
       owner.cards.push({ chapter, kind, title: cardTitle })
+      continue
+    }
+    if (owner && !owner.practice && /^pr[aá]tica\b/i.test(cardTitle)) {
+      owner.practice = chapter
       continue
     }
     const group: LessonChapters = { lesson: chapter, cards: [] }
@@ -171,6 +181,7 @@ function buildStudyData(
     openingName,
     openingSlug: slugify(openingName),
     styleTags: options.styleTags ?? [],
+    isTutorial: options.tutorial ?? false,
     lessons: groups.map((group, i) => buildLesson(group, i, evaluations, insights)),
   }
 }
@@ -188,7 +199,9 @@ function buildLesson(
     initialFen: lesson.initialFen,
     exercises: [
       buildExercise(lesson, `${lesson.title} - Theory`, 'THEORY', null, evaluations, insights),
-      buildExercise(lesson, `${lesson.title} - Practice`, 'PRACTICE', null, evaluations, insights),
+      group.practice
+        ? buildTaskPractice(group.practice, `${lesson.title} - Practice`, evaluations, insights)
+        : buildExercise(lesson, `${lesson.title} - Practice`, 'PRACTICE', null, evaluations, insights),
       ...group.cards.map((card) => buildExercise(card.chapter, card.title, 'PRACTICE', card.kind, evaluations, insights)),
     ],
   }
@@ -212,6 +225,25 @@ function buildExercise(
     description: cardKind ? chapter.intro || null : null,
     initialFen: chapter.initialFen,
     moves: buildMoveNodes(chapter.rootNodes, chapter.studentColor, evaluations, insights, type === 'PRACTICE', withComments),
+  }
+}
+
+// A practice chapter of its own is a set of tasks, not a line to replay: every variation is
+// another accepted answer, the intro is the first instruction, and the comments carry the
+// feedback and the next instruction (each shown only after the move it follows).
+function buildTaskPractice(
+  chapter: ParsedChapter,
+  title: string,
+  evaluations: Record<string, EngineEvaluation | null>,
+  insights: Record<string, CoachInsight>,
+): IngestExerciseData {
+  return {
+    title,
+    type: 'PRACTICE',
+    cardKind: null,
+    description: chapter.intro || null,
+    initialFen: chapter.initialFen,
+    moves: buildMoveNodes(chapter.rootNodes, chapter.studentColor, evaluations, insights, false, true),
   }
 }
 

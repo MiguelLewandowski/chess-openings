@@ -1,0 +1,219 @@
+[Event "Primeiros passos: como as peças se movem: O peão"]
+[Site "?"]
+[Result "*"]
+[StudyName "Primeiros passos: como as peças se movem"]
+[ChapterName "O peão"]
+[Orientation "white"]
+[SetUp "1"]
+[FEN "7k/8/3p4/8/8/8/4P3/4K3 w - - 0 1"]
+
+1. e4 {No primeiro lance, o peão pode avançar uma ou duas casas. Aqui ele avançou duas. [%cal Ge2e4]} Kg7 {No xadrez cada lado joga uma vez: agora o rei preto se mexe.} 2. e5 {Depois do primeiro lance, o peão anda só uma casa por vez, sempre para a frente. Ele nunca volta. [%cal Ge4e5]} Kf7 {O rei preto anda de novo.} 3. exd6 {O peão anda reto, mas captura na diagonal: uma casa à frente, para o lado. [%cal Ge5d6]} *
+
+[Event "Primeiros passos: como as peças se movem: O peão | Prática: avance e capture"]
+[Site "?"]
+[Result "*"]
+[StudyName "Primeiros passos: como as peças se movem"]
+[ChapterName "O peão | Prática: avance e capture"]
+[Orientation "white"]
+[SetUp "1"]
+[FEN "7k/8/4p3/8/8/8/3P4/4K3 w - - 0 1"]
+
+{Seu peão ainda não saiu do lugar. Avance-o duas casas de uma vez.} 1. d4 {Isso! No primeiro lance o peão pode andar duas casas.} 1... Kg8 {O rei preto andou. Agora avance o peão só uma casa.} 2. d5 {Muito bem: uma casa de cada vez.} 2... Kh8 {O peão preto de e6 está na diagonal do seu peão. Capture-o!} 3. dxe6 {Perfeito: o peão anda para a frente, mas captura na diagonal.} *
+
+[Event "Primeiros passos: como as peças se movem: A torre"]
+[Site "?"]
+[Result "*"]
+[StudyName "Primeiros passos: como as peças se movem"]
+[ChapterName "A torre"]
+[Orientation "white"]
+[SetUp "1"]
+[FEN "7k/8/8/8/8/8/8/R3K3 w - - 0 1"]
+
+1. Ra5 {A torre anda em linha reta, para cima e para baixo, quantas casas quiser. [%cal Ga1a5]} Kg7 {O rei preto se mexe.} 2. Rf5 {Ela também anda para os lados, desde que o caminho esteja livre. [%cal Ga5f5]} Kg6 {O rei preto chega perto da torre para tentar capturá-la.} 3. Rf1 {Como anda longe, a torre escapa numa jogada só, para o outro lado do tabuleiro. [%cal Gf5f1]} *
+
+[Event "Primeiros passos: como as peças se movem: A torre | Prática: capture e mova"]
+[Site "?"]
+[Result "*"]
+[StudyName "Primeiros passos: como as peças se movem"]
+[ChapterName "A torre | Prática: capture e mova"]
+[Orientation "white"]
+[SetUp "1"]
+[FEN "6k1/p7/8/8/8/8/8/R3K3 w - - 0 1"]
+
+{Capture o peão de a7 com a sua torre.} 1. Rxa7 {Isso! A torre subiu a coluna inteira de uma vez.} 1... Kf8 {Agora mova a torre para o lado: qualquer casa da mesma fileira, à direita dela.} 2. Rb7 {Isso! A torre anda em linha reta quantas casas quiser.} (2. Rc7 {Isso! A torre anda em linha reta quantas casas quiser.}) (2. Rd7 {Isso! A torre anda em linha reta quantas casas quiser.}) (2. Re7 {Isso! A torre anda em linha reta quantas casas quiser.}) (2. Rf7+ {Isso! A torre anda em linha reta quantas casas quiser.}) (2. Rg7 {Isso! A torre anda em linha reta quantas casas quiser.}) (2. Rh7 {Isso! A torre anda em linha reta quantas casas quiser.}) *
+
+[Event "Primeiros passos: como as peças se movem: O bispo"]
+[Site "?"]
+[Result "*"]
+[StudyName "Primeiros passos: como as peças se movem"]
+[ChapterName "O bispo"]
+[Orientation "white"]
+[SetUp "1"]
+[FEN "7k/8/8/8/8/8/8/2B1K3 w - - 0 1"]
+
+1. Bf4 {O bispo anda na diagonal, quantas casas quiser. [%cal Gc1f4]} Kg7 {O rei preto se mexe.} 2. Bb8 {A cada jogada ele pode trocar de diagonal. [%cal Gf4b8]} Kf6 {O rei preto anda de novo.} 3. Bh2 {Repare: este bispo começou numa casa escura e só pisa em casas escuras. Cada bispo fica a partida inteira na mesma cor. [%cal Gb8h2]} *
+
+[Event "Primeiros passos: como as peças se movem: O bispo | Prática: capture e mova"]
+[Site "?"]
+[Result "*"]
+[StudyName "Primeiros passos: como as peças se movem"]
+[ChapterName "O bispo | Prática: capture e mova"]
+[Orientation "white"]
+[SetUp "1"]
+[FEN "7k/8/8/6p1/8/8/8/2B1K3 w - - 0 1"]
+
+{Capture o peão de g5 com o bispo.} 1. Bxg5 {Isso! Pela diagonal.} 1... Kg7 {Agora mova o bispo para qualquer casa aonde ele consiga ir.} 2. Bf4 {Isso! O bispo sempre anda na diagonal.} (2. Be3 {Isso! O bispo sempre anda na diagonal.}) (2. Bd2 {Isso! O bispo sempre anda na diagonal.}) (2. Bc1 {Isso! O bispo sempre anda na diagonal.}) (2. Bh4 {Isso! O bispo sempre anda na diagonal.}) (2. Bh6+ {Isso! O bispo sempre anda na diagonal.}) (2. Bf6+ {Isso! O bispo sempre anda na diagonal.}) (2. Be7 {Isso! O bispo sempre anda na diagonal.}) (2. Bd8 {Isso! O bispo sempre anda na diagonal.}) *
+
+[Event "Primeiros passos: como as peças se movem: A dama"]
+[Site "?"]
+[Result "*"]
+[StudyName "Primeiros passos: como as peças se movem"]
+[ChapterName "A dama"]
+[Orientation "white"]
+[SetUp "1"]
+[FEN "7k/8/8/8/8/8/8/3QK3 w - - 0 1"]
+
+1. Qd5 {A dama junta a torre e o bispo: anda em linha reta... [%cal Gd1d5]} Kg7 {O rei preto se mexe.} 2. Qa8 {...e também na diagonal, quantas casas quiser. [%cal Gd5a8]} Kf6 {O rei preto anda de novo.} 3. Qh1 {Por andar em todas as direções, a dama é a peça mais forte do tabuleiro. [%cal Ga8h1]} *
+
+[Event "Primeiros passos: como as peças se movem: A dama | Prática: capture os peões"]
+[Site "?"]
+[Result "*"]
+[StudyName "Primeiros passos: como as peças se movem"]
+[ChapterName "A dama | Prática: capture os peões"]
+[Orientation "white"]
+[SetUp "1"]
+[FEN "7k/8/8/8/1p4p1/8/8/3QK3 w - - 0 1"]
+
+{Capture o peão de g4 com a dama, pela diagonal.} 1. Qxg4 {Isso! Na diagonal, como um bispo.} 1... Kh7 {Agora capture o peão de b4, em linha reta.} 2. Qxb4 {Perfeito: a dama anda em linha reta e na diagonal.} *
+
+[Event "Primeiros passos: como as peças se movem: O cavalo"]
+[Site "?"]
+[Result "*"]
+[StudyName "Primeiros passos: como as peças se movem"]
+[ChapterName "O cavalo"]
+[Orientation "white"]
+[SetUp "1"]
+[FEN "7k/8/8/8/8/8/5PPP/4K1N1 w - - 0 1"]
+
+1. Nf3 {O cavalo anda em "L": duas casas numa direção e uma para o lado. Ele é a única peça que pula por cima das outras. [%cal Gg1f3]} Kg7 {O rei preto se mexe.} 2. Nd4 {De novo em "L": duas casas para o lado e uma para cima. [%cal Gf3d4]} Kf6 {O rei preto anda de novo.} 3. Nb5 {O cavalo sempre troca a cor da casa: de uma casa escura vai para uma clara, e vice-versa. [%cal Gd4b5]} *
+
+[Event "Primeiros passos: como as peças se movem: O cavalo | Prática: capture e salte"]
+[Site "?"]
+[Result "*"]
+[StudyName "Primeiros passos: como as peças se movem"]
+[ChapterName "O cavalo | Prática: capture e salte"]
+[Orientation "white"]
+[SetUp "1"]
+[FEN "7k/8/2p5/8/3N4/8/8/4K3 w - - 0 1"]
+
+{Capture o peão de c6 com o cavalo.} 1. Nxc6 {Isso! Duas casas para cima e uma para o lado.} 1... Kg7 {Agora salte com o cavalo para qualquer casa possível.} 2. Nd4 {Isso! O cavalo sempre anda em "L".} (2. Nb4 {Isso! O cavalo sempre anda em "L".}) (2. Na5 {Isso! O cavalo sempre anda em "L".}) (2. Na7 {Isso! O cavalo sempre anda em "L".}) (2. Nb8 {Isso! O cavalo sempre anda em "L".}) (2. Nd8 {Isso! O cavalo sempre anda em "L".}) (2. Ne7 {Isso! O cavalo sempre anda em "L".}) (2. Ne5 {Isso! O cavalo sempre anda em "L".}) *
+
+[Event "Primeiros passos: como as peças se movem: O rei"]
+[Site "?"]
+[Result "*"]
+[StudyName "Primeiros passos: como as peças se movem"]
+[ChapterName "O rei"]
+[Orientation "white"]
+[SetUp "1"]
+[FEN "7k/8/8/8/8/8/8/4K3 w - - 0 1"]
+
+1. Ke2 {O rei anda uma casa em qualquer direção. [%cal Ge1e2]} Kg7 {O rei preto também anda uma casa.} 2. Kf3 {Na diagonal também vale. [%cal Ge2f3]} Kf6 {O rei preto se aproxima.} 3. Kf4 {Os reis nunca ficam lado a lado: o rei não pode ir para uma casa atacada pelo adversário. [%cal Gf3f4]} *
+
+[Event "Primeiros passos: como as peças se movem: O rei | Prática: capture e fuja"]
+[Site "?"]
+[Result "*"]
+[StudyName "Primeiros passos: como as peças se movem"]
+[ChapterName "O rei | Prática: capture e fuja"]
+[Orientation "white"]
+[SetUp "1"]
+[FEN "8/8/4k3/8/3pK3/8/8/8 w - - 0 1"]
+
+{O rei também captura. Tome o peão que está ao lado dele.} 1. Kxd4 {Isso! O rei captura do jeito que anda: uma casa.} 1... Kd6 {Agora mova o rei para uma casa segura. Ele não pode ficar ao lado do rei preto.} 2. Ke4 {Isso! O rei nunca pode ir para uma casa atacada.} (2. Kc4 {Isso! O rei nunca pode ir para uma casa atacada.}) (2. Kc3 {Isso! O rei nunca pode ir para uma casa atacada.}) (2. Kd3 {Isso! O rei nunca pode ir para uma casa atacada.}) (2. Ke3 {Isso! O rei nunca pode ir para uma casa atacada.}) *
+
+[Event "Primeiros passos: como as peças se movem: O roque"]
+[Site "?"]
+[Result "*"]
+[StudyName "Primeiros passos: como as peças se movem"]
+[ChapterName "O roque"]
+[Orientation "white"]
+[SetUp "1"]
+[FEN "4k3/8/8/8/8/8/5PPP/4K2R w K - 0 1"]
+
+1. O-O {O roque é um lance do rei e da torre ao mesmo tempo: o rei anda duas casas em direção à torre, e a torre pula para o outro lado dele. Assim o rei fica protegido no canto. [%cal Ge1g1,Gh1f1]} Kd7 {Para rocar, o rei e a torre não podem ter se movido antes, não pode haver peças entre eles, e o rei não pode estar em xeque nem passar por uma casa atacada.} *
+
+[Event "Primeiros passos: como as peças se movem: O roque | Prática: faça o roque"]
+[Site "?"]
+[Result "*"]
+[StudyName "Primeiros passos: como as peças se movem"]
+[ChapterName "O roque | Prática: faça o roque"]
+[Orientation "white"]
+[SetUp "1"]
+[FEN "4k3/8/8/8/8/8/PPP2PPP/R3K2R w KQ - 0 1"]
+
+{Faça o roque para qualquer um dos lados: arraste o rei duas casas em direção a uma das torres.} 1. O-O {Isso! Com o roque o rei fica seguro e a torre entra no jogo.} (1. O-O-O {Isso! Com o roque o rei fica seguro e a torre entra no jogo.}) *
+
+[Event "Primeiros passos: como as peças se movem: En passant"]
+[Site "?"]
+[Result "*"]
+[StudyName "Primeiros passos: como as peças se movem"]
+[ChapterName "En passant"]
+[Orientation "white"]
+[SetUp "1"]
+[FEN "4k3/3p4/8/4P3/8/8/8/4K3 b - - 0 1"]
+
+1... d5 {O peão preto avançou duas casas e parou ao lado do seu peão. [%cal Gd7d5]} 2. exd6 {En passant ("de passagem"): seu peão captura como se o preto tivesse andado só uma casa. Só vale no lance logo em seguida. [%cal Ge5d6]} *
+
+[Event "Primeiros passos: como as peças se movem: En passant | Prática: capture de passagem"]
+[Site "?"]
+[Result "*"]
+[StudyName "Primeiros passos: como as peças se movem"]
+[ChapterName "En passant | Prática: capture de passagem"]
+[Orientation "white"]
+[SetUp "1"]
+[FEN "4k3/5p2/8/4P3/8/8/8/4K3 b - - 0 1"]
+
+{Fique de olho no lance do adversário.} 1... f5 {O peão preto avançou duas casas ao lado do seu. Capture-o en passant!} 2. exf6 {En passant! Só dava para capturar agora: no lance seguinte esse direito acaba.} *
+
+[Event "Primeiros passos: como as peças se movem: Promoção"]
+[Site "?"]
+[Result "*"]
+[StudyName "Primeiros passos: como as peças se movem"]
+[ChapterName "Promoção"]
+[Orientation "white"]
+[SetUp "1"]
+[FEN "8/4P1k1/8/8/8/8/8/4K3 w - - 0 1"]
+
+1. e8=Q {Quando o peão chega à última fileira, ele vira outra peça. Quase sempre escolhemos a dama. [%cal Ge7e8]} Kf6 {Agora você tem uma dama nova no tabuleiro.} *
+
+[Event "Primeiros passos: como as peças se movem: Promoção | Prática: promova o peão"]
+[Site "?"]
+[Result "*"]
+[StudyName "Primeiros passos: como as peças se movem"]
+[ChapterName "Promoção | Prática: promova o peão"]
+[Orientation "white"]
+[SetUp "1"]
+[FEN "8/1P5k/8/8/8/8/8/4K3 w - - 0 1"]
+
+{Leve o peão até a última fileira para promovê-lo.} 1. b8=Q {Isso! O peão virou dama.} *
+
+[Event "Primeiros passos: como as peças se movem: Xeque e xeque-mate"]
+[Site "?"]
+[Result "*"]
+[StudyName "Primeiros passos: como as peças se movem"]
+[ChapterName "Xeque e xeque-mate"]
+[Orientation "white"]
+[SetUp "1"]
+[FEN "6k1/6pp/8/8/8/8/8/R5K1 w - - 0 1"]
+
+1. Ra8+ {Xeque: a torre ataca o rei preto. Quem está em xeque é obrigado a se defender no lance seguinte. [%cal Ga1a8]} Kf7 {O rei preto fugiu para f7. Se ele não tivesse nenhuma saída, seria xeque-mate: o rei atacado e sem defesa. O xeque-mate termina a partida.} *
+
+[Event "Primeiros passos: como as peças se movem: Xeque e xeque-mate | Prática: dê xeque-mate"]
+[Site "?"]
+[Result "*"]
+[StudyName "Primeiros passos: como as peças se movem"]
+[ChapterName "Xeque e xeque-mate | Prática: dê xeque-mate"]
+[Orientation "white"]
+[SetUp "1"]
+[FEN "6k1/5ppp/8/8/8/8/8/R5K1 w - - 0 1"]
+
+{Dê xeque-mate em um lance: ataque o rei de um jeito que ele não tenha para onde fugir.} 1. Ra8# {Xeque-mate! Os próprios peões pretos prendem o rei, e a torre o ataca pela última fileira.} *

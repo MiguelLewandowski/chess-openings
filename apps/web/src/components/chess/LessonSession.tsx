@@ -20,11 +20,14 @@ export default function LessonSession({
   practice,
   nextUrl,
   nextLabel,
+  reviewable = true,
 }: {
   watch: SessionExercise | null
   practice: SessionExercise
   nextUrl: string
   nextLabel: string
+  // False for a tutorial lesson, which never comes back as a review.
+  reviewable?: boolean
 }) {
   const [mode, setMode] = useState<SessionMode>(watch ? 'watch' : 'practice')
   const setupExercise = useGameStore((s) => s.setupExercise)
@@ -56,6 +59,7 @@ export default function LessonSession({
         nextLessonUrl={nextUrl}
         nextLabel={nextLabel}
         tracksProgress
+        reviewable={reviewable}
         onStartPractice={watch ? () => setMode('practice') : undefined}
         onRewatch={watch ? () => setMode('watch') : undefined}
       />

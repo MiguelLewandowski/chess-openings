@@ -13,5 +13,7 @@ export interface OpeningSummary {
   slug: string
   description: string | null
   styleTags: string[]
+  // Shown in the catalog like an opening, but its lessons stay out of the reviews.
+  isTutorial: boolean
   lessons: LessonSummary[]
 }

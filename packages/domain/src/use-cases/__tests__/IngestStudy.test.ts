@@ -60,6 +60,16 @@ describe('groupLessons', () => {
     ])
   })
 
+  it('should attach a practice chapter to its lesson instead of making it a lesson', () => {
+    const groups = groupLessons([
+      chapter('A torre', 'WHITE', []),
+      chapter('A torre | Prática: capture os peões', 'WHITE', []),
+    ])
+    expect(groups).toHaveLength(1)
+    expect(groups[0].practice?.title).toBe('A torre | Prática: capture os peões')
+    expect(groups[0].cards).toHaveLength(0)
+  })
+
   it('should keep a card whose lesson is missing as a lesson of its own', () => {
     const groups = groupLessons([chapter('Outra | Crítica: após 1...e5', 'WHITE', [])])
     expect(groups).toHaveLength(1)
@@ -106,6 +116,37 @@ describe('IngestStudy', () => {
     expect(exercises[2].description).toBe('Como seguimos?')
     expect(exercises[2].moves[0].coachInsights?.comment).toBe('Controla d5.')
     expect(exercises[1].moves[0].coachInsights).toBeNull() // main practice hides comments
+  })
+
+  it('should build the practice from a practice chapter: every answer, comments and intro', async () => {
+    const { useCase, saved } = setup([
+      chapter('A torre', 'WHITE', [node('d1', 'Ra5', 'WHITE', 'Anda em linha reta.')]),
+      chapter(
+        'A torre | Prática: mova a torre',
+        'WHITE',
+        [
+          { ...node('p1', 'Ra7', 'WHITE', 'Isso!'), isMainLine: true },
+          { ...node('p2', 'Ra6', 'WHITE', 'Também vale.'), isMainLine: false },
+        ],
+        'Mova a torre pela coluna a.',
+      ),
+    ])
+    await useCase.execute('pgn', { useAuthorComments: true, tutorial: true })
+
+    expect(saved().isTutorial).toBe(true)
+    const [theory, practice] = saved().lessons[0].exercises
+    expect(theory.moves[0].san).toBe('Ra5')
+    expect(practice.type).toBe('PRACTICE')
+    expect(practice.cardKind).toBeNull()
+    expect(practice.description).toBe('Mova a torre pela coluna a.')
+    expect(practice.moves.map((m) => m.san)).toEqual(['Ra7', 'Ra6'])
+    expect(practice.moves[1].coachInsights?.comment).toBe('Também vale.')
+  })
+
+  it('should not mark an opening as a tutorial by default', async () => {
+    const { useCase, saved } = setup([chapter('Linha', 'WHITE', [node('n1', 'c4', 'WHITE')])])
+    await useCase.execute('pgn', { useAuthorComments: true })
+    expect(saved().isTutorial).toBe(false)
   })
 
   it('should refuse a study that still has review markers', async () => {

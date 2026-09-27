@@ -28,16 +28,19 @@ export interface LessonDetail {
     id: string
     name: string
     slug: string
+    // A tutorial's lessons are never brought back for review.
+    isTutorial: boolean
     lessons: { id: string; title: string; order: number }[]
   }
   exercises: ExerciseSummary[]
 }
 
 // Returned when a practice run is recorded, so the completion screen can show what it earned.
-// `nextReview` is an ISO string because this shape crosses HTTP.
+// `nextReview` is an ISO string because this shape crosses HTTP; it and `intervalDays` are null
+// for a tutorial, which is never brought back for review.
 export interface ExerciseCompletion {
   quality: number
   xpEarned: number
-  intervalDays: number
-  nextReview: string
+  intervalDays: number | null
+  nextReview: string | null
 }
