@@ -107,6 +107,10 @@ async function main(): Promise<void> {
     log,
   }
 
+  const baseName = slug(chapters[0].studyName ?? (chapters[0].title.split(':')[0] || 'estudo'))
+  const outPath = values.out ? path.resolve(userCwd, values.out) : path.join(repoRoot, 'out', 'lesson-author', `${baseName}.pgn`)
+  await mkdir(path.dirname(outPath), { recursive: true })
+
   const outputs: ChapterOutput[] = []
   const reports: ChapterReport[] = []
   const dossiers: Record<string, unknown> = {}
@@ -116,15 +120,13 @@ async function main(): Promise<void> {
       outputs.push(...result.outputs)
       reports.push(result.report)
       dossiers[chapter.title] = JSON.parse(result.dossier)
+      // Saved after every chapter: if a later one fails (e.g. out of API credits), what was
+      // already paid for is kept.
+      await writeFile(outPath, writePgn(outputs))
     }
   } finally {
     await engine.close()
   }
-
-  const baseName = slug(chapters[0].studyName ?? (chapters[0].title.split(':')[0] || 'estudo'))
-  const outPath = values.out ? path.resolve(userCwd, values.out) : path.join(repoRoot, 'out', 'lesson-author', `${baseName}.pgn`)
-  await mkdir(path.dirname(outPath), { recursive: true })
-  await writeFile(outPath, writePgn(outputs))
   const reportPath = outPath.replace(/\.pgn$/, '.relatorio.md')
   await writeFile(
     reportPath,

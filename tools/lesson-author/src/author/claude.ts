@@ -139,10 +139,7 @@ async function request(
   const stream = client.beta.messages.stream({
     model,
     max_tokens: 64_000,
-    // If a safety classifier declines, Anthropic re-runs the request on its recommended
-    // fallback model instead of returning a refusal.
-    betas: ['server-side-fallback-2026-07-01'],
-    fallbacks: 'default',
+    ...fallbackParams(model),
     thinking: { type: 'adaptive' },
     output_config: { effort, format: zodOutputFormat(schema) },
     system: [{ type: 'text', text: system, cache_control: { type: 'ephemeral', ttl: '1h' } }],
@@ -153,6 +150,15 @@ async function request(
   if (message.stop_reason === 'refusal') throw new RefusalError('O modelo recusou a solicitação.')
   if (message.stop_reason === 'max_tokens') throw new Error('A resposta atingiu o limite de tokens; divida o capítulo.')
   return message
+}
+
+// If a safety classifier declines, Anthropic re-runs the request on its recommended fallback
+// model instead of returning a refusal. Only models known to allow it get the parameter:
+// elsewhere it can be rejected with a 400, and a refusal about chess is very unlikely anyway.
+const MODELS_WITH_FALLBACK = new Set(['claude-opus-5', 'claude-fable-5-1'])
+
+function fallbackParams(model: string): { betas?: string[]; fallbacks?: 'default' } {
+  return MODELS_WITH_FALLBACK.has(model) ? { betas: ['server-side-fallback-2026-07-01'], fallbacks: 'default' } : {}
 }
 
 function parseJson<T extends z.ZodType>(message: Anthropic.Beta.BetaMessage, schema: T): z.infer<T> {
