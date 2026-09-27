@@ -2,10 +2,19 @@ import { getSession } from "@/lib/session";
 import { apiClient } from "@/lib/api-client";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ChevronLeft, ChevronRight, Star, Lock, BookOpen } from "lucide-react";
-import { Card, buttonClasses } from "@/components/ui";
+import type { LessonSummary } from "@chess-openings/domain";
+import { BookOpen, Check, ChevronLeft, ChevronRight, Lock, RotateCcw, Star, Swords, Trophy } from "lucide-react";
+import { Card, EmptyState } from "@/components/ui";
 import { PageBody, PageHeader, PageTitle } from "@/components/layout/Page";
-import { lessonShortTitle, percent } from "@/lib/profile";
+import { cn } from "@/lib/cn";
+import { percent } from "@/lib/profile";
+import { lessonTitleParts, type LessonKind } from "@/lib/lesson-title";
+
+const XP_PER_LESSON = 10;
+
+// done: completed · current: the next lesson to study · open: unlocked but not the next one
+// (happens when a later lesson was completed first) · locked: previous lesson not completed.
+type StepState = "done" | "current" | "open" | "locked";
 
 export default async function OpeningTrackPage({ params }: { params: Promise<{ slug: string }> }) {
   const resolvedParams = await params;
@@ -23,15 +32,19 @@ export default async function OpeningTrackPage({ params }: { params: Promise<{ s
     completed.forEach(id => completedLessonIds.add(id));
   }
 
-  const xpEarned = completedLessonIds.size * 10;
-  const allDone = completedLessonIds.size === sortedLessons.length && sortedLessons.length > 0;
-
+  const total = sortedLessons.length;
+  const done = completedLessonIds.size;
+  const allDone = done === total && total > 0;
   const nextLesson = sortedLessons.find((lesson) => !completedLessonIds.has(lesson.id));
-  const progress = percent(completedLessonIds.size, sortedLessons.length);
+
+  const stateOf = (lesson: LessonSummary, index: number): StepState => {
+    if (completedLessonIds.has(lesson.id)) return "done";
+    if (lesson.id === nextLesson?.id) return "current";
+    return index === 0 || completedLessonIds.has(sortedLessons[index - 1].id) ? "open" : "locked";
+  };
 
   return (
     <div className="flex-1">
-
       <PageHeader>
         <div className="flex items-center gap-2 sm:gap-3 min-w-0">
           <Link
@@ -46,141 +59,241 @@ export default async function OpeningTrackPage({ params }: { params: Promise<{ s
 
         <div className="flex items-center gap-1.5 px-3 py-1.5 bg-reward-soft border border-reward/20 rounded-lg font-bold text-[13px] text-reward-strong shrink-0">
           <Star className="w-4 h-4 fill-reward-strong" />
-          <span>{xpEarned} XP</span>
+          <span>{done * XP_PER_LESSON} XP</span>
         </div>
       </PageHeader>
 
-      {/* Wide pages get a summary column next to the path; the path itself keeps a fixed
-          width, since its zigzag is drawn relative to it. */}
-      <PageBody className="grid grid-cols-1 gap-8 @4xl:grid-cols-[minmax(280px,360px)_minmax(0,1fr)] @4xl:items-start">
+      <PageBody className="mx-auto w-full max-w-2xl">
+        {total === 0 ? (
+          <EmptyState
+            icon={<BookOpen className="w-8 h-8" />}
+            title="Nenhuma lição por aqui"
+            description="Esta abertura ainda não tem lições publicadas."
+          />
+        ) : (
+          <>
+            <TrackSummary done={done} total={total} allDone={allDone} />
 
-        <aside className="@4xl:sticky @4xl:top-24">
-          <Card className="p-5 sm:p-6">
-            <h2 className="font-display font-extrabold text-[22px] sm:text-[26px] tracking-tight text-ink-900">Sua trilha</h2>
-            <p className="text-ink-500 text-[14px] leading-relaxed mt-2">
-              {opening.description || "Conclua as lições em ordem para dominar esta abertura."}
-            </p>
-
-            <div className="mt-5">
-              <div className="flex items-center justify-between text-[13px] mb-2">
-                <span className="font-semibold text-ink-700">
-                  {completedLessonIds.size} de {sortedLessons.length} {sortedLessons.length === 1 ? "lição" : "lições"}
-                </span>
-                <span className="font-mono text-ink-400">{progress}%</span>
-              </div>
-              <div
-                className="h-2 w-full rounded-full bg-surface-sunken overflow-hidden"
-                role="progressbar"
-                aria-label="Progresso na trilha"
-                aria-valuenow={progress}
-                aria-valuemin={0}
-                aria-valuemax={100}
-              >
-                <div className={`h-full rounded-full ${allDone ? "bg-reward" : "bg-accent"}`} style={{ width: `${progress}%` }} />
-              </div>
-            </div>
-
-            {sortedLessons.length > 0 && (
-              <Link
-                href={`/lessons/${(nextLesson ?? sortedLessons[0]).id}`}
-                className={buttonClasses({ className: "w-full mt-6" })}
-              >
-                {allDone ? "Revisar a trilha" : completedLessonIds.size === 0 ? "Começar a trilha" : "Continuar a trilha"}
-                <ChevronRight className="w-4 h-4" />
-              </Link>
-            )}
-          </Card>
-        </aside>
-
-        {/* The zigzag offsets and connector curves reach past the column on narrow screens;
-            clip them instead of letting the page scroll sideways. */}
-        <section aria-label="Lições" className="flex flex-col items-center min-w-0 overflow-x-clip py-2 @4xl:py-6">
-          <div className="w-full max-w-md">
-            <div className="relative w-full flex flex-col items-center pb-24">
-
+            <ol aria-label="Lições" className="mt-8 sm:mt-10">
               {sortedLessons.map((lesson, index) => {
-                const cycle = index % 4;
-                let translateX = "translate-x-0";
-                if (cycle === 1) translateX = "translate-x-12 sm:translate-x-20";
-                if (cycle === 3) translateX = "-translate-x-12 sm:-translate-x-20";
-
-                const hasNext = index < sortedLessons.length - 1;
-                const nextCycle = (index + 1) % 4;
-
-                const isCompleted = completedLessonIds.has(lesson.id);
-                const isUnlocked = index === 0 || completedLessonIds.has(sortedLessons[index - 1].id);
-
+                const state = stateOf(lesson, index);
                 return (
-                  <div key={lesson.id} className={`relative flex flex-col items-center w-full ${translateX} mb-12`}>
-
-                    <Link
-                      href={isUnlocked || isCompleted ? `/lessons/${lesson.id}` : '#'}
-                      className={`group relative z-10 flex items-center justify-center w-20 h-20 rounded-full border-b-[6px] active:border-b-0 active:translate-y-1.5 transition-all duration-150 ${
-                        isCompleted
-                          ? 'bg-success border-[#217A46] text-white shadow-[0_0_20px_rgba(46,160,93,0.25)]'
-                          : isUnlocked
-                          ? 'bg-accent border-[#1A5BC4] text-white shadow-[0_0_20px_rgba(47,123,246,0.25)] hover:bg-accent-hover'
-                          : 'bg-surface-card border-border-default text-ink-400 cursor-not-allowed'
-                      }`}
-                    >
-                      {isCompleted ? (
-                        <Star className="w-8 h-8 fill-white" />
-                      ) : isUnlocked ? (
-                        <BookOpen className="w-8 h-8" />
-                      ) : (
-                        <Lock className="w-7 h-7" />
-                      )}
-
-                      {isUnlocked && !isCompleted && (
-                        <div className="absolute -top-2 -right-2 bg-white text-accent text-[11px] font-black w-7 h-7 flex items-center justify-center rounded-full shadow border-2 border-accent">
-                          {lesson.order}
-                        </div>
-                      )}
-                    </Link>
-
-                    <span className="mt-4 text-[13px] font-bold text-ink-700 text-center max-w-[150px] leading-tight">
-                      {lessonShortTitle(lesson.title, opening.name)}
-                    </span>
-
-                    {hasNext && (
-                      <div className="absolute top-20 -z-10 h-28 w-full flex justify-center pointer-events-none opacity-15">
-                        <svg className="w-full h-full" preserveAspectRatio="none" viewBox="0 0 100 100">
-                          {cycle === 0 && nextCycle === 1 && (
-                            <path d="M 50,0 Q 50,50 75,50 T 100,100" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeDasharray="10 10" />
-                          )}
-                          {cycle === 1 && nextCycle === 2 && (
-                            <path d="M 50,0 Q 50,50 25,50 T 0,100" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeDasharray="10 10" />
-                          )}
-                          {cycle === 2 && nextCycle === 3 && (
-                            <path d="M 50,0 Q 50,50 25,50 T 0,100" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeDasharray="10 10" />
-                          )}
-                          {cycle === 3 && nextCycle === 0 && (
-                            <path d="M 50,0 Q 50,50 75,50 T 100,100" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeDasharray="10 10" />
-                          )}
-                        </svg>
-                      </div>
-                    )}
-                  </div>
+                  <TrackStep
+                    key={lesson.id}
+                    lesson={lesson}
+                    openingName={opening.name}
+                    number={index + 1}
+                    state={state}
+                    // The segment below a node is "walked" once that lesson is done.
+                    walked={state === "done"}
+                  />
                 );
               })}
-
-              <div className="relative flex flex-col items-center mt-8">
-                <div className={`w-24 h-24 rounded-full flex items-center justify-center shadow-lg border-4 ${
-                  allDone
-                    ? 'bg-reward-soft border-reward shadow-reward/20'
-                    : 'bg-surface-card border-border-default'
-                }`}>
-                  <Star className={`w-10 h-10 ${allDone ? 'text-reward fill-reward' : 'text-ink-300'}`} />
-                </div>
-                {allDone && (
-                  <p className="mt-3 text-[13px] font-bold text-reward-strong">Abertura dominada!</p>
-                )}
-              </div>
-
-            </div>
-          </div>
-        </section>
+              <TrackGoal allDone={allDone} totalXp={total * XP_PER_LESSON} />
+            </ol>
+          </>
+        )}
       </PageBody>
     </div>
+  );
+}
+
+function TrackSummary({ done, total, allDone }: { done: number; total: number; allDone: boolean }) {
+  const left = total - done;
+  const headline = allDone
+    ? "Abertura dominada"
+    : done === 0
+      ? "Sua trilha começa aqui"
+      : `Falta${left === 1 ? "" : "m"} ${left} ${left === 1 ? "lição" : "lições"}`;
+  const detail = allDone
+    ? "Continue revisando para manter as linhas frescas na memória."
+    : "Conclua as lições em ordem: cada uma destrava a próxima.";
+
+  return (
+    <Card className="p-5 sm:p-6 flex items-center gap-5">
+      <ProgressRing value={percent(done, total)} done={done} total={total} allDone={allDone} />
+      <div className="min-w-0">
+        <p className="font-display font-extrabold text-[20px] sm:text-[22px] tracking-tight text-ink-900 leading-tight">
+          {headline}
+        </p>
+        <p className="text-[14px] text-ink-500 leading-relaxed mt-1">{detail}</p>
+      </div>
+    </Card>
+  );
+}
+
+function ProgressRing({ value, done, total, allDone }: { value: number; done: number; total: number; allDone: boolean }) {
+  const radius = 26;
+  const circumference = 2 * Math.PI * radius;
+  return (
+    <div
+      className="relative w-16 h-16 shrink-0"
+      role="progressbar"
+      aria-label="Progresso na trilha"
+      aria-valuenow={value}
+      aria-valuemin={0}
+      aria-valuemax={100}
+    >
+      <svg viewBox="0 0 64 64" className="w-full h-full -rotate-90" aria-hidden>
+        <circle cx="32" cy="32" r={radius} fill="none" strokeWidth="6" className="stroke-surface-sunken" />
+        <circle
+          cx="32"
+          cy="32"
+          r={radius}
+          fill="none"
+          strokeWidth="6"
+          strokeLinecap="round"
+          strokeDasharray={circumference}
+          strokeDashoffset={circumference * (1 - value / 100)}
+          className={cn("transition-[stroke-dashoffset] duration-700", allDone ? "stroke-reward" : "stroke-success")}
+        />
+      </svg>
+      <span className="absolute inset-0 flex items-center justify-center font-display font-extrabold text-[15px] text-ink-900">
+        {done}/{total}
+      </span>
+    </div>
+  );
+}
+
+const nodeStyles: Record<StepState, string> = {
+  done: "bg-success text-white",
+  current: "bg-accent text-white ring-[6px] ring-accent-soft",
+  open: "bg-surface-card text-accent border-2 border-accent",
+  locked: "bg-surface-card text-ink-300 border-2 border-border-default",
+};
+
+function KindIcon({ kind, className }: { kind: LessonKind; className?: string }) {
+  return kind === "trap" ? <Swords className={className} /> : <BookOpen className={className} />;
+}
+
+function TrackStep({
+  lesson,
+  openingName,
+  number,
+  state,
+  walked,
+}: {
+  lesson: LessonSummary;
+  openingName: string;
+  number: number;
+  state: StepState;
+  walked: boolean;
+}) {
+  const { kind, name, moves } = lessonTitleParts(lesson.title, openingName);
+  const href = `/lessons/${lesson.id}`;
+
+  const eyebrow = (
+    <p className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-[0.08em] text-ink-400">
+      <span>Lição {number}</span>
+      <span aria-hidden>·</span>
+      <span className={cn("inline-flex items-center gap-1", kind === "trap" && state !== "locked" && "text-warning")}>
+        <KindIcon kind={kind} className="w-3 h-3" />
+        {kind === "trap" ? "Armadilha" : "Linha"}
+      </span>
+    </p>
+  );
+
+  const body = (
+    <div className="min-w-0 flex-1">
+      {eyebrow}
+      <p
+        className={cn(
+          "mt-1 font-display font-bold tracking-tight leading-snug",
+          state === "current" ? "text-[18px] sm:text-[19px] text-ink-900" : "text-[16px]",
+          state === "locked" ? "text-ink-400" : "text-ink-900",
+        )}
+      >
+        {name}
+      </p>
+      {moves && (
+        <p className={cn("mt-1.5 font-mono text-[12.5px] break-words", state === "locked" ? "text-ink-300" : "text-ink-500")}>
+          {moves}
+        </p>
+      )}
+    </div>
+  );
+
+  return (
+    <li className="relative grid grid-cols-[48px_minmax(0,1fr)] gap-4 sm:gap-5 pb-5">
+      {/* Track segment down to the next node. */}
+      <span
+        aria-hidden
+        className={cn("absolute left-[23px] top-12 bottom-0 w-0.5 rounded-full", walked ? "bg-success" : "bg-border-default")}
+      />
+
+      <div
+        className={cn(
+          "relative z-10 w-12 h-12 rounded-full flex items-center justify-center",
+          state === "current" ? "mt-4" : "mt-2",
+          nodeStyles[state],
+        )}
+      >
+        {state === "done" ? (
+          <Check className="w-6 h-6" strokeWidth={3} />
+        ) : state === "locked" ? (
+          <Lock className="w-5 h-5" />
+        ) : (
+          <KindIcon kind={kind} className="w-5 h-5" />
+        )}
+      </div>
+
+      {state === "current" ? (
+        <Link
+          href={href}
+          className="group block rounded-[14px] bg-surface-card border border-accent/30 shadow-md p-4 sm:p-5 transition-all duration-150 hover:shadow-lg hover:border-accent/60 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[var(--focus-ring)]"
+        >
+          {body}
+          <span className="mt-4 inline-flex items-center gap-2 h-10 px-5 rounded-[8px] bg-accent text-white font-semibold text-[14px] shadow-sm transition-colors group-hover:bg-accent-hover">
+            Começar lição
+            <ChevronRight className="w-4 h-4 transition-transform group-hover:translate-x-0.5" />
+          </span>
+        </Link>
+      ) : state === "locked" ? (
+        <div aria-disabled className="flex items-start gap-3 rounded-[12px] border border-dashed border-border-default px-4 py-3.5">
+          {body}
+        </div>
+      ) : (
+        <Link
+          href={href}
+          className="group flex items-start gap-3 rounded-[12px] bg-surface-card border border-border-subtle px-4 py-3.5 transition-colors hover:border-border-strong focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[var(--focus-ring)]"
+        >
+          {body}
+          <span className="shrink-0 self-center inline-flex items-center gap-1 text-[13px] font-semibold text-ink-500 group-hover:text-ink-900 transition-colors">
+            {state === "done" ? (
+              <>
+                <RotateCcw className="w-3.5 h-3.5" />
+                Revisar
+              </>
+            ) : (
+              <>
+                Abrir
+                <ChevronRight className="w-4 h-4" />
+              </>
+            )}
+          </span>
+        </Link>
+      )}
+    </li>
+  );
+}
+
+function TrackGoal({ allDone, totalXp }: { allDone: boolean; totalXp: number }) {
+  return (
+    <li className="grid grid-cols-[48px_minmax(0,1fr)] gap-4 sm:gap-5 items-center">
+      <div
+        className={cn(
+          "w-12 h-12 rounded-full flex items-center justify-center",
+          allDone ? "bg-reward text-white ring-[6px] ring-reward-soft" : "bg-surface-sunken text-ink-300",
+        )}
+      >
+        <Trophy className="w-5 h-5" />
+      </div>
+      <div>
+        <p className={cn("font-display font-bold text-[16px] tracking-tight", allDone ? "text-reward-strong" : "text-ink-400")}>
+          {allDone ? "Abertura dominada!" : "Domine a abertura"}
+        </p>
+        <p className="text-[13px] text-ink-400">{allDone ? `${totalXp} XP conquistados` : `${totalXp} XP ao concluir a trilha`}</p>
+      </div>
+    </li>
   );
 }
