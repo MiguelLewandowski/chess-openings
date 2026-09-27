@@ -3,12 +3,13 @@
 import { getSession } from '@/lib/session'
 import { revalidatePath } from 'next/cache'
 import { apiClient } from '@/lib/api-client'
+import type { ExerciseCompletion, PracticeAttempt } from '@chess-openings/domain'
 
-export async function completeExerciseAction(exerciseId: string, quality: number) {
+export async function completeExerciseAction(exerciseId: string, attempt: PracticeAttempt): Promise<ExerciseCompletion | null> {
   const session = await getSession()
-  if (!session) return { success: false }
+  if (!session) return null
 
-  await apiClient.progress.complete(exerciseId, quality, session.apiToken)
+  const completion = await apiClient.progress.complete(exerciseId, attempt, session.apiToken)
   revalidatePath('/openings')
-  return { success: true }
+  return completion
 }

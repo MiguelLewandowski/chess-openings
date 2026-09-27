@@ -96,7 +96,7 @@ function ContinueCard({ lesson }: { lesson: ContinueLesson | null }) {
   }
 
   const title = lessonShortTitle(lesson.lessonTitle, lesson.openingName)
-  const href = `/lessons/${lesson.lessonId}${lesson.hasProgress ? '' : '?mode=theory'}`
+  const href = `/lessons/${lesson.lessonId}`
 
   return (
     <Card accent elevation="raised" className="@container p-5 sm:p-6">

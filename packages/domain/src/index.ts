@@ -1,5 +1,6 @@
 export * from './entities/UserProgress'
 export * from './entities/Level'
+export * from './entities/PracticeScore'
 export * from './entities/MoveLine'
 export * from './entities/StudyContent'
 export * from './read-models/opening.read-model'

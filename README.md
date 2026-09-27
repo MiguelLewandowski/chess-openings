@@ -1,7 +1,7 @@
 # Chess Openings
 
-Plataforma para estudar aberturas de xadrez com repetição espaçada. Você aprende a
-teoria, pratica os lances contra a máquina e revê no tempo certo (algoritmo SM-2).
+Plataforma para estudar aberturas de xadrez com repetição espaçada. Você vê a linha
+comentada, joga-a de memória contra a máquina e revê no tempo certo (algoritmo SM-2).
 
 ## Stack
 
@@ -13,8 +13,11 @@ teoria, pratica os lances contra a máquina e revê no tempo certo (algoritmo SM
 
 ## Funcionalidades
 
-- Catálogo de aberturas e lições, com modos **Teoria** e **Prática**
-- **Repetição espaçada (SM-2):** agenda as revisões conforme o desempenho
+- Catálogo de aberturas com uma **trilha de lições**: cada lição mostra a linha comentada e
+  depois pede que você a jogue de memória, com um botão de **dica** em dois níveis (a peça,
+  depois o lance)
+- **Repetição espaçada (SM-2):** erros e dicas viram a nota da revisão e o XP ganho — quem
+  precisou de ajuda demais revê a linha no dia seguinte
 - **Autenticação** JWT com papéis (`STUDENT` / `ADMIN`)
 - **Importação de estudos** do Lichess (admin) — gera as lições automaticamente
 - **Feed ao vivo** das partidas em destaque do Lichess via WebSocket (`/live`)

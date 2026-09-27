@@ -6,10 +6,10 @@ import { useEffect, useRef } from 'react'
 import { Chessground } from 'chessground'
 import { Api } from 'chessground/api'
 import { ChessWrapper } from '@/lib/chess'
-import { toBoardShapes } from '@/lib/board-shapes'
+import { hintShapes, toBoardShapes } from '@/lib/board-shapes'
 
 export default function Board() {
-  const { fen, status, playerColor, currentNodeId, exerciseMoves } = useGameStore()
+  const { fen, status, mode, playerColor, currentNodeId, exerciseMoves, hintLevel } = useGameStore()
   const boardRef = useRef<HTMLDivElement>(null)
 
   const cgRef = useRef<Api | null>(null)
@@ -51,8 +51,10 @@ export default function Board() {
 
     const isWhiteTurn = fen.split(' ')[1] === 'w'
     const color = isWhiteTurn ? 'white' : 'black'
-    const canMove = color === playerColor && (status === 'idle' || status === 'error')
+    // In the demonstration the student only watches; the pieces move through the controls.
+    const canMove = mode === 'practice' && color === playerColor && (status === 'idle' || status === 'error')
     const currentMove = exerciseMoves.find((m) => m.id === currentNodeId)
+    const nextMove = exerciseMoves.find((m) => m.parentId === currentNodeId)
 
     cgRef.current.set({
       fen,
@@ -66,9 +68,13 @@ export default function Board() {
         free: false,
         dests: canMove ? ChessWrapper.getLegalMovesMap(fen) : new Map(),
       },
-      drawable: { enabled: true, visible: true, autoShapes: toBoardShapes(currentMove?.visualMarkers) },
+      drawable: {
+        enabled: true,
+        visible: true,
+        autoShapes: [...toBoardShapes(currentMove?.visualMarkers), ...hintShapes(fen, nextMove?.san, hintLevel)],
+      },
     })
-  }, [fen, status, playerColor, currentNodeId, exerciseMoves])
+  }, [fen, status, mode, playerColor, currentNodeId, exerciseMoves, hintLevel])
 
   return (
     <div className="flex flex-col items-center w-full h-full bg-surface-card">

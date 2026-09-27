@@ -32,3 +32,12 @@ export interface LessonDetail {
   }
   exercises: ExerciseSummary[]
 }
+
+// Returned when a practice run is recorded, so the completion screen can show what it earned.
+// `nextReview` is an ISO string because this shape crosses HTTP.
+export interface ExerciseCompletion {
+  quality: number
+  xpEarned: number
+  intervalDays: number
+  nextReview: string
+}

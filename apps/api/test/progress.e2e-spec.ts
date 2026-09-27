@@ -2,6 +2,8 @@ import request from 'supertest'
 import type { INestApplication } from '@nestjs/common'
 import { createTestApp, resetDatabase, type TestContext } from './setup-app'
 
+const PERFECT_RUN = { mistakes: 0, pieceHints: 0, revealedMoves: 0 }
+
 describe('ProgressController (e2e)', () => {
   let ctx: TestContext
   let app: INestApplication
@@ -42,35 +44,59 @@ describe('ProgressController (e2e)', () => {
   afterAll(() => app.close())
 
   it('POST /api/progress/:id without token → 401', async () => {
-    const res = await request(app.getHttpServer()).post(`/api/progress/${exerciseId}`).send({ quality: 5 })
+    const res = await request(app.getHttpServer()).post(`/api/progress/${exerciseId}`).send(PERFECT_RUN)
     expect(res.status).toBe(401)
   })
 
-  it('POST /api/progress/:id with quality=5 → 201 + creates UserProgress', async () => {
+  it('POST /api/progress/:id with a perfect run → 201 + creates UserProgress and pays 15 XP', async () => {
     const res = await request(app.getHttpServer())
       .post(`/api/progress/${exerciseId}`)
       .set('Authorization', `Bearer ${token}`)
-      .send({ quality: 5 })
+      .send(PERFECT_RUN)
 
     expect(res.status).toBe(201)
+    expect(res.body).toMatchObject({ quality: 5, xpEarned: 15, intervalDays: 1 })
 
     const progress = await ctx.prisma.userProgress.findFirst({ where: { exerciseId } })
     expect(progress).not.toBeNull()
     expect(progress?.repetitions).toBe(1)
   })
 
+  it('POST /api/progress/:id rejects the old quality-only body → 400', async () => {
+    const res = await request(app.getHttpServer())
+      .post(`/api/progress/${exerciseId}`)
+      .set('Authorization', `Bearer ${token}`)
+      .send({ quality: 5 })
+    expect(res.status).toBe(400)
+  })
+
   it('Second completion grows the SM-2 interval', async () => {
     const http = app.getHttpServer()
     const auth = `Bearer ${token}`
 
-    await request(http).post(`/api/progress/${exerciseId}`).set('Authorization', auth).send({ quality: 5 })
+    await request(http).post(`/api/progress/${exerciseId}`).set('Authorization', auth).send(PERFECT_RUN)
     const afterFirst = await ctx.prisma.userProgress.findFirst({ where: { exerciseId } })
 
-    await request(http).post(`/api/progress/${exerciseId}`).set('Authorization', auth).send({ quality: 5 })
+    await request(http).post(`/api/progress/${exerciseId}`).set('Authorization', auth).send(PERFECT_RUN)
     const afterSecond = await ctx.prisma.userProgress.findFirst({ where: { exerciseId } })
 
     expect(afterSecond!.interval).toBeGreaterThan(afterFirst!.interval)
     expect(afterSecond!.repetitions).toBe(2)
+  })
+
+  it('A run with too much help fails the line: review tomorrow and less XP', async () => {
+    const http = app.getHttpServer()
+    const auth = `Bearer ${token}`
+
+    const res = await request(http)
+      .post(`/api/progress/${exerciseId}`)
+      .set('Authorization', auth)
+      .send({ mistakes: 1, pieceHints: 0, revealedMoves: 1 })
+
+    expect(res.status).toBe(201)
+    expect(res.body).toMatchObject({ quality: 2, xpEarned: 4, intervalDays: 1 })
+    const progress = await ctx.prisma.userProgress.findFirst({ where: { exerciseId } })
+    expect(progress?.repetitions).toBe(0)
   })
 
   it('GET /api/progress/profile without token → 401', async () => {
@@ -82,13 +108,13 @@ describe('ProgressController (e2e)', () => {
     const http = app.getHttpServer()
     const auth = `Bearer ${token}`
 
-    await request(http).post(`/api/progress/${exerciseId}`).set('Authorization', auth).send({ quality: 5 })
+    await request(http).post(`/api/progress/${exerciseId}`).set('Authorization', auth).send(PERFECT_RUN)
     const res = await request(http).get('/api/progress/profile').set('Authorization', auth)
 
     expect(res.status).toBe(200)
     expect(res.body).toMatchObject({
       email: 'student@example.com',
-      xp: 10,
+      xp: 15,
       streak: 1,
       lessonsCompleted: 1,
       totalLessons: 1,
@@ -96,7 +122,7 @@ describe('ProgressController (e2e)', () => {
       openings: [{ slug: 'italian-game', completedLessons: 1, totalLessons: 1 }],
     })
     expect(res.body.reviews.nextReview).not.toBeNull()
-    expect(res.body.level).toEqual({ level: 1, xpIntoLevel: 10, xpForNextLevel: 100 })
+    expect(res.body.level).toEqual({ level: 1, xpIntoLevel: 15, xpForNextLevel: 100 })
     expect(res.body.lastRunLength).toBe(1)
     // Every lesson is done, so the last one studied comes back as a review.
     expect(res.body.continueLesson).toMatchObject({ openingSlug: 'italian-game', hasProgress: true, remainingLessons: 0 })
@@ -126,7 +152,7 @@ describe('ProgressController (e2e)', () => {
     const http = app.getHttpServer()
     const auth = `Bearer ${token}`
 
-    await request(http).post(`/api/progress/${theory.id}`).set('Authorization', auth).send({ quality: 5 })
+    await request(http).post(`/api/progress/${theory.id}`).set('Authorization', auth).send(PERFECT_RUN)
     const res = await request(http).get('/api/progress/profile').set('Authorization', auth)
 
     expect(res.body.lessonsCompleted).toBe(1)
@@ -150,7 +176,7 @@ describe('ProgressController (e2e)', () => {
     const auth = `Bearer ${token}`
     const practice = await ctx.prisma.exercise.findUniqueOrThrow({ where: { id: exerciseId }, include: { lesson: true } })
 
-    await request(http).post(`/api/progress/${exerciseId}`).set('Authorization', auth).send({ quality: 0 })
+    await request(http).post(`/api/progress/${exerciseId}`).set('Authorization', auth).send({ mistakes: 3, pieceHints: 0, revealedMoves: 2 })
     const res = await request(http)
       .get(`/api/progress/openings/${practice.lesson.openingId}/completed-lessons`)
       .set('Authorization', auth)
@@ -166,7 +192,7 @@ describe('ProgressController (e2e)', () => {
       data: { title: 'Crítica: após 1...e5', type: 'PRACTICE', cardKind: 'CRITICAL', lessonId: practice.lessonId },
     })
 
-    await request(http).post(`/api/progress/${card.id}`).set('Authorization', auth).send({ quality: 5 })
+    await request(http).post(`/api/progress/${card.id}`).set('Authorization', auth).send(PERFECT_RUN)
     const completed = await request(http)
       .get(`/api/progress/openings/${practice.lesson.openingId}/completed-lessons`)
       .set('Authorization', auth)

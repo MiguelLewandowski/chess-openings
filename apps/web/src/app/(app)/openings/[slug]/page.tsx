@@ -2,15 +2,17 @@ import { getSession } from "@/lib/session";
 import { apiClient } from "@/lib/api-client";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import type { LessonSummary } from "@chess-openings/domain";
-import { BookOpen, Check, ChevronLeft, ChevronRight, Lock, RotateCcw, Star, Swords, Trophy } from "lucide-react";
+import { practiceXp, type LessonSummary } from "@chess-openings/domain";
+import { BookOpen, Check, ChevronLeft, ChevronRight, Lock, RotateCcw, Swords, Trophy } from "lucide-react";
 import { Card, EmptyState } from "@/components/ui";
 import { PageBody, PageHeader, PageTitle } from "@/components/layout/Page";
 import { cn } from "@/lib/cn";
 import { percent } from "@/lib/profile";
 import { lessonTitleParts, type LessonKind } from "@/lib/lesson-title";
 
-const XP_PER_LESSON = 10;
+// The most a lesson can pay: a perfect practice run. XP depends on how each run goes, so the
+// track only promises the ceiling.
+const MAX_XP_PER_LESSON = practiceXp(5);
 
 // done: completed · current: the next lesson to study · open: unlocked but not the next one
 // (happens when a later lesson was completed first) · locked: previous lesson not completed.
@@ -56,11 +58,6 @@ export default async function OpeningTrackPage({ params }: { params: Promise<{ s
           </Link>
           <PageTitle subtitle="Trilha da abertura">{opening.name}</PageTitle>
         </div>
-
-        <div className="flex items-center gap-1.5 px-3 py-1.5 bg-reward-soft border border-reward/20 rounded-lg font-bold text-[13px] text-reward-strong shrink-0">
-          <Star className="w-4 h-4 fill-reward-strong" />
-          <span>{done * XP_PER_LESSON} XP</span>
-        </div>
       </PageHeader>
 
       <PageBody className="mx-auto w-full max-w-2xl">
@@ -89,7 +86,7 @@ export default async function OpeningTrackPage({ params }: { params: Promise<{ s
                   />
                 );
               })}
-              <TrackGoal allDone={allDone} totalXp={total * XP_PER_LESSON} />
+              <TrackGoal allDone={allDone} maxXp={total * MAX_XP_PER_LESSON} />
             </ol>
           </>
         )}
@@ -277,7 +274,7 @@ function TrackStep({
   );
 }
 
-function TrackGoal({ allDone, totalXp }: { allDone: boolean; totalXp: number }) {
+function TrackGoal({ allDone, maxXp }: { allDone: boolean; maxXp: number }) {
   return (
     <li className="grid grid-cols-[48px_minmax(0,1fr)] gap-4 sm:gap-5 items-center">
       <div
@@ -292,7 +289,7 @@ function TrackGoal({ allDone, totalXp }: { allDone: boolean; totalXp: number }) 
         <p className={cn("font-display font-bold text-[16px] tracking-tight", allDone ? "text-reward-strong" : "text-ink-400")}>
           {allDone ? "Abertura dominada!" : "Domine a abertura"}
         </p>
-        <p className="text-[13px] text-ink-400">{allDone ? `${totalXp} XP conquistados` : `${totalXp} XP ao concluir a trilha`}</p>
+        <p className="text-[13px] text-ink-400">{allDone ? "Continue revisando para manter as linhas frescas." : `Até ${maxXp} XP ao concluir a trilha sem erros`}</p>
       </div>
     </li>
   );

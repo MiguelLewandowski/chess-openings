@@ -1,6 +1,7 @@
 import type { DrawShape } from 'chessground/draw'
 import type { Key } from 'chessground/types'
 import type { MoveSummary } from '@chess-openings/domain'
+import { ChessWrapper } from './chess'
 
 const BRUSH_BY_CODE: Record<string, string> = { G: 'green', R: 'red', B: 'blue', Y: 'yellow' }
 
@@ -32,4 +33,14 @@ export function toBoardShapes(markers: MoveSummary['visualMarkers']): DrawShape[
   }
 
   return shapes
+}
+
+// Practice hint: level 1 marks the piece that moves, level 2 draws the whole move. Yellow keeps
+// it apart from the lesson's own (green/red/blue) annotations.
+export function hintShapes(fen: string, san: string | undefined, level: 0 | 1 | 2): DrawShape[] {
+  if (level === 0 || !san) return []
+  const move = ChessWrapper.playMove(fen, san)?.moveDetails
+  if (!move) return []
+  const from = move.from as Key
+  return level === 1 ? [{ orig: from, brush: 'yellow' }] : [{ orig: from, dest: move.to as Key, brush: 'yellow' }]
 }

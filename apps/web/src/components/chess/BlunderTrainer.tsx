@@ -90,7 +90,7 @@ export default function BlunderTrainer({ puzzles }: Props) {
     useEffect(() => {
         if (!puzzle) return
         const firstMove = puzzle.movesTree.find((m) => m.parentId === null)
-        setupExercise(puzzle.initialFen, puzzle.movesTree, undefined, puzzle.playerColor, firstMove?.isOpponentResponse === true)
+        setupExercise(puzzle.initialFen, puzzle.movesTree, { playerColor: puzzle.playerColor, autoPlayFirst: firstMove?.isOpponentResponse === true })
         hadErrorRef.current = false
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [idx])

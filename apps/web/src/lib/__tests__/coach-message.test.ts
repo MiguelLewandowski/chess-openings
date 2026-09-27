@@ -20,6 +20,6 @@ describe('gameCopy', () => {
   it('formats move narration in pt-BR', () => {
     expect(gameCopy.goodMove('e4')).toBe('Bom lance: e4')
     expect(gameCopy.opponentPlayed('e5')).toBe('Adversário jogou e5. Sua vez!')
-    expect(gameCopy.hint('foco em f7')).toBe('Dica: foco em f7')
+    expect(gameCopy.hintMove('Bxf7+')).toBe('O lance é Bxf7+. Jogue-o no tabuleiro.')
   })
 })

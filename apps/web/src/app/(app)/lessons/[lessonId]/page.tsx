@@ -1,8 +1,5 @@
 import Board from "@/components/chess/Board"
-import CoachConsole from "@/components/chess/CoachConsole"
-import GameInitializer from "@/components/chess/GameInitializer"
-import ModeToggle from "@/components/chess/ModeToggle"
-import ProgressTracker from "@/components/chess/ProgressTracker"
+import LessonSession from "@/components/chess/LessonSession"
 import { apiClient } from "@/lib/api-client"
 import { getSession } from "@/lib/session"
 import { ChessWrapper } from "@/lib/chess"
@@ -19,9 +16,8 @@ export default async function LessonPage({
     searchParams,
 }: {
     params: Promise<{ lessonId: string }>
-    // `exercise` opens a specific exercise (the link reviews use); `mode` switches between
-    // the lesson's theory and main practice.
-    searchParams: Promise<{ mode?: string; exercise?: string }>
+    // `exercise` opens a specific exercise (the link reviews and cards use) straight in practice.
+    searchParams: Promise<{ exercise?: string }>
 }) {
     const resolvedParams = await params
     const resolvedSearch = await searchParams
@@ -32,14 +28,14 @@ export default async function LessonPage({
     const lesson = await apiClient.lessons.findById(resolvedParams.lessonId, session.apiToken)
     if (!lesson) notFound()
 
-    const mode = resolvedSearch.mode === 'theory' ? 'THEORY' : 'PRACTICE'
-
     const theoryExercise = lesson.exercises.find(e => e.type === 'THEORY' && !e.cardKind)
     const practiceExercise = lesson.exercises.find(e => e.type === 'PRACTICE' && !e.cardKind)
     const cards = lesson.exercises.filter(e => e.cardKind)
     const requested = resolvedSearch.exercise ? lesson.exercises.find(e => e.id === resolvedSearch.exercise) : undefined
-    const selectedExercise =
-        requested ?? (mode === 'THEORY' ? (theoryExercise ?? practiceExercise) : (practiceExercise ?? theoryExercise))
+    // The lesson shows its line first (the theory, which carries the comments) and then asks
+    // for it from memory (the practice). A requested exercise is a review or a card: recall only.
+    const selectedExercise = requested ?? practiceExercise ?? theoryExercise
+    const watchExercise = !requested && practiceExercise ? theoryExercise : undefined
     const isCard = Boolean(selectedExercise?.cardKind)
 
     const currentLessonIndex = lesson.opening.lessons.findIndex(l => l.id === lesson.id)
@@ -67,18 +63,15 @@ export default async function LessonPage({
         )
     }
 
-    const initialFen = selectedExercise.initialFen ?? ChessWrapper.STARTING_FEN
+    const toSession = (exercise: typeof selectedExercise) => ({
+        id: exercise.id,
+        initialFen: exercise.initialFen ?? ChessWrapper.STARTING_FEN,
+        moves: exercise.moves,
+        intro: exercise.description,
+    })
 
     return (
         <div className="flex-1">
-            <GameInitializer
-                initialFen={initialFen}
-                movesTree={selectedExercise.moves}
-                exerciseId={selectedExercise.id}
-                intro={selectedExercise.description}
-            />
-            <ProgressTracker />
-
             <PageHeader>
                 <nav className="flex items-center gap-1.5 text-[13px] min-w-0" aria-label="Breadcrumb">
                     <Link
@@ -117,13 +110,7 @@ export default async function LessonPage({
                             Voltar à lição
                         </Link>
                     </div>
-                ) : (
-                    <ModeToggle
-                        currentMode={mode}
-                        hasTheory={!!theoryExercise}
-                        hasPractice={!!practiceExercise}
-                    />
-                )}
+                ) : null}
             </PageHeader>
 
             {/* Side by side once the page is wide enough for a useful board next to the coach.
@@ -137,7 +124,14 @@ export default async function LessonPage({
                 </div>
 
                 <div className="min-w-0 @4xl:sticky @4xl:top-24 flex flex-col gap-4">
-                    <CoachConsole nextLessonUrl={next.url} nextLabel={next.label} />
+                    {/* Keyed by exercise so moving to a card or back starts a fresh session. */}
+                    <LessonSession
+                        key={selectedExercise.id}
+                        watch={watchExercise ? toSession(watchExercise) : null}
+                        practice={toSession(selectedExercise)}
+                        nextUrl={next.url}
+                        nextLabel={next.label}
+                    />
                     <LessonCards lessonId={lesson.id} cards={cards} activeId={selectedExercise.id} />
                 </div>
             </PageBody>

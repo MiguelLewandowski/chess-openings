@@ -1,7 +1,7 @@
 import { Controller, Post, Get, Param, Body, UseGuards, Request } from '@nestjs/common'
 import { ApiTags, ApiOperation, ApiParam, ApiResponse, ApiBearerAuth } from '@nestjs/swagger'
 import { ProgressService } from './progress.service'
-import { CompleteExerciseDto } from './dto/complete-exercise.dto'
+import { CompleteExerciseDto, ExerciseCompletionDto } from './dto/complete-exercise.dto'
 import { DueReviewDto } from './dto/due-review.dto'
 import { UserProfileDto } from './dto/user-profile.dto'
 import { JwtAuthGuard } from '../auth/jwt-auth.guard'
@@ -20,17 +20,17 @@ export class ProgressController {
   @Post(':exerciseId')
   @ApiOperation({
     summary: 'Record exercise completion',
-    description: 'Updates SM-2 spaced repetition state for the authenticated user.',
+    description: 'Scores the practice run (mistakes and hints), updates the SM-2 state and adds the XP it earned.',
   })
   @ApiParam({ name: 'exerciseId', description: 'Exercise CUID identifier' })
-  @ApiResponse({ status: 201, description: 'Progress recorded.' })
+  @ApiResponse({ status: 201, description: 'Progress recorded.', type: ExerciseCompletionDto })
   @ApiResponse({ status: 401, description: 'Unauthorized.' })
   complete(
     @Param('exerciseId') exerciseId: string,
     @Body() dto: CompleteExerciseDto,
     @Request() req: AuthenticatedRequest,
   ) {
-    return this.progressService.complete(req.user.userId, exerciseId, dto.quality)
+    return this.progressService.complete(req.user.userId, exerciseId, dto)
   }
 
   @Get('reviews/due')

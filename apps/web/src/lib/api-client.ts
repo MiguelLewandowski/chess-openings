@@ -1,4 +1,4 @@
-import type { OpeningSummary, LessonDetail, MoveSummary, UserProfile } from '@chess-openings/domain'
+import type { ExerciseCompletion, OpeningSummary, LessonDetail, MoveSummary, PracticeAttempt, UserProfile } from '@chess-openings/domain'
 
 export interface ApiUser {
   id: string
@@ -86,10 +86,10 @@ export const apiClient = {
     findById: (id: string, token: string) => apiFetchNullable<LessonDetail>(`/lessons/${id}`, { token }),
   },
   progress: {
-    complete: (exerciseId: string, quality: number, token: string) =>
-      apiFetch<void>(`/progress/${exerciseId}`, {
+    complete: (exerciseId: string, attempt: PracticeAttempt, token: string) =>
+      apiFetch<ExerciseCompletion>(`/progress/${exerciseId}`, {
         method: 'POST',
-        body: JSON.stringify({ quality }),
+        body: JSON.stringify(attempt),
         token,
       }),
     dueReviews: (token: string) => apiFetch<DueReview[]>('/progress/reviews/due', { token }),

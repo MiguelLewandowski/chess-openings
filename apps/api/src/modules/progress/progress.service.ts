@@ -10,7 +10,9 @@ import {
   levelFromXp,
   mainLine,
   type ContinueLesson,
+  type ExerciseCompletion,
   type LineNode,
+  type PracticeAttempt,
   type UserProfile,
 } from '@chess-openings/domain'
 
@@ -36,8 +38,8 @@ export class ProgressService {
     this.completeExercise = new CompleteExercise(progressRepo, userRepo)
   }
 
-  async complete(userId: string, exerciseId: string, quality: number): Promise<void> {
-    const { sm2Result, newStreak } = await this.completeExercise.execute({ userId, exerciseId, quality })
+  async complete(userId: string, exerciseId: string, attempt: PracticeAttempt): Promise<ExerciseCompletion> {
+    const { quality, xpEarned, sm2Result, newStreak } = await this.completeExercise.execute({ userId, exerciseId, attempt })
 
     await this.prisma.$transaction([
       this.prisma.userProgress.upsert({
@@ -47,9 +49,16 @@ export class ProgressService {
       }),
       this.prisma.user.update({
         where: { id: userId },
-        data: { streak: newStreak, lastStudyDate: new Date(), xp: { increment: 10 } },
+        data: { streak: newStreak, lastStudyDate: new Date(), xp: { increment: xpEarned } },
       }),
     ])
+
+    return {
+      quality,
+      xpEarned,
+      intervalDays: sm2Result.interval,
+      nextReview: sm2Result.nextReview.toISOString(),
+    }
   }
 
   findDueReviews(userId: string) {

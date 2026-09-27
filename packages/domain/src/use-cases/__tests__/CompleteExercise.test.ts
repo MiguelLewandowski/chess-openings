@@ -4,6 +4,8 @@ import type { IUserProgressRepository } from '../../repositories/IUserProgressRe
 import type { IUserRepository } from '../../repositories/IUserRepository'
 import type { SM2State } from '../../entities/UserProgress'
 
+const perfect = { mistakes: 0, pieceHints: 0, revealedMoves: 0 }
+
 function makeRepos(options?: { existing?: SM2State | null; lastStudyDate?: Date | null }) {
   const progressRepo: IUserProgressRepository = {
     findByUserAndExercise: vi.fn().mockResolvedValue(options?.existing ?? null),
@@ -24,7 +26,7 @@ describe('CompleteExercise', () => {
     const { progressRepo, userRepo } = makeRepos()
     const useCase = new CompleteExercise(progressRepo, userRepo)
 
-    const result = await useCase.execute({ userId: 'user-1', exerciseId: 'ex-1', quality: 5 })
+    const result = await useCase.execute({ userId: 'user-1', exerciseId: 'ex-1', attempt: perfect })
 
     expect(result).toHaveProperty('sm2Result')
     expect(result).toHaveProperty('newStreak')
@@ -36,7 +38,7 @@ describe('CompleteExercise', () => {
     const { progressRepo, userRepo } = makeRepos({ existing: null })
     const useCase = new CompleteExercise(progressRepo, userRepo)
 
-    const { sm2Result } = await useCase.execute({ userId: 'user-1', exerciseId: 'ex-1', quality: 5 })
+    const { sm2Result } = await useCase.execute({ userId: 'user-1', exerciseId: 'ex-1', attempt: perfect })
 
     expect(sm2Result).toMatchObject({ repetitions: 1, interval: 1 })
   })
@@ -46,7 +48,7 @@ describe('CompleteExercise', () => {
     const { progressRepo, userRepo } = makeRepos({ existing })
     const useCase = new CompleteExercise(progressRepo, userRepo)
 
-    const { sm2Result } = await useCase.execute({ userId: 'user-1', exerciseId: 'ex-1', quality: 5 })
+    const { sm2Result } = await useCase.execute({ userId: 'user-1', exerciseId: 'ex-1', attempt: perfect })
 
     expect(sm2Result).toMatchObject({ repetitions: 3, interval: 15 })
   })
@@ -55,7 +57,7 @@ describe('CompleteExercise', () => {
     const { progressRepo, userRepo } = makeRepos({ lastStudyDate: null })
     const useCase = new CompleteExercise(progressRepo, userRepo)
 
-    const { newStreak } = await useCase.execute({ userId: 'user-1', exerciseId: 'ex-1', quality: 5 })
+    const { newStreak } = await useCase.execute({ userId: 'user-1', exerciseId: 'ex-1', attempt: perfect })
 
     expect(newStreak).toBe(1)
   })
@@ -68,8 +70,33 @@ describe('CompleteExercise', () => {
     ;(userRepo.findStreak as ReturnType<typeof vi.fn>).mockResolvedValue({ streak: 3, lastStudyDate: yesterday })
     const useCase = new CompleteExercise(progressRepo, userRepo)
 
-    const { newStreak } = await useCase.execute({ userId: 'user-1', exerciseId: 'ex-1', quality: 5 })
+    const { newStreak } = await useCase.execute({ userId: 'user-1', exerciseId: 'ex-1', attempt: perfect })
 
     expect(newStreak).toBe(4)
+  })
+
+  it('should score the attempt and fail the line when the student needed too much help', async () => {
+    const { progressRepo, userRepo } = makeRepos({ existing: { easinessFactor: 2.5, interval: 6, repetitions: 2 } })
+    const useCase = new CompleteExercise(progressRepo, userRepo)
+
+    const result = await useCase.execute({
+      userId: 'user-1',
+      exerciseId: 'ex-1',
+      attempt: { mistakes: 1, pieceHints: 0, revealedMoves: 2 },
+    })
+
+    expect(result.quality).toBe(0)
+    expect(result.xpEarned).toBe(0)
+    expect(result.sm2Result).toMatchObject({ repetitions: 0, interval: 1 })
+  })
+
+  it('should pay the perfect-run XP for a clean attempt', async () => {
+    const { progressRepo, userRepo } = makeRepos()
+    const useCase = new CompleteExercise(progressRepo, userRepo)
+
+    const { quality, xpEarned } = await useCase.execute({ userId: 'user-1', exerciseId: 'ex-1', attempt: perfect })
+
+    expect(quality).toBe(5)
+    expect(xpEarned).toBe(15)
   })
 })

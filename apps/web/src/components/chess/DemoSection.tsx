@@ -4,7 +4,7 @@ import { useEffect } from 'react'
 import { useGameStore } from '@/store/GameStore'
 import Board from './Board'
 import Link from 'next/link'
-import { BrainCircuit, Trophy, ArrowRight, RefreshCcw, ChevronLeft, ChevronRight } from 'lucide-react'
+import { BrainCircuit, Trophy, ArrowRight, RefreshCcw, Lightbulb } from 'lucide-react'
 import { Button, buttonClasses, Card, StatusPill } from '@/components/ui'
 import { useOpponentReveal } from '@/hooks/useOpponentReveal'
 import { cn } from '@/lib/cn'
@@ -67,7 +67,7 @@ export default function DemoSection() {
         </h2>
         <p className="text-ink-500 mt-3 max-w-md mx-auto text-[15px] leading-relaxed">
           Jogue de brancas. Encontre o lance correto no tabuleiro ou clique em{' '}
-          <span className="text-ink-700 font-medium">Revelar lance</span> para uma dica.
+          <span className="text-ink-700 font-medium">Dica</span> se travar.
         </p>
       </div>
 
@@ -87,7 +87,7 @@ export default function DemoSection() {
 }
 
 function DemoCoachPanel() {
-  const { comment, status, currentNodeId, playNextMove, playPreviousMove, restartExercise } = useGameStore()
+  const { comment, status, hintLevel, requestHint, restartExercise } = useGameStore()
 
   useOpponentReveal()
 
@@ -116,8 +116,6 @@ function DemoCoachPanel() {
     )
   }
 
-  const isWaiting = status === 'waiting'
-
   return (
     <Card className="flex flex-col overflow-hidden">
       <div className="p-5 border-b border-border-subtle flex items-center gap-2">
@@ -143,25 +141,10 @@ function DemoCoachPanel() {
           </p>
         </div>
 
-        <div className="flex items-center gap-2">
-          <button
-            onClick={playPreviousMove}
-            disabled={!currentNodeId}
-            className="p-3 bg-surface-sunken hover:bg-surface-app border border-border-subtle disabled:opacity-40 disabled:cursor-not-allowed text-ink-600 rounded-[8px] transition-all active:scale-95"
-            title="Lance anterior"
-          >
-            <ChevronLeft className="w-5 h-5" />
-          </button>
-          <Button
-            variant={isWaiting ? 'primary' : 'secondary'}
-            onClick={playNextMove}
-            disabled={status === 'thinking'}
-            className="flex-1"
-          >
-            {isWaiting ? 'Continuar' : 'Revelar lance'}
-            <ChevronRight className="w-5 h-5" />
-          </Button>
-        </div>
+        <Button variant="secondary" onClick={requestHint} disabled={hintLevel === 2 || status === 'thinking'} className="w-full">
+          <Lightbulb className="w-4 h-4" />
+          {hintLevel === 0 ? 'Dica: qual peça?' : hintLevel === 1 ? 'Mostrar o lance' : 'Lance mostrado'}
+        </Button>
       </div>
     </Card>
   )
