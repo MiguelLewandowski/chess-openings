@@ -7,6 +7,31 @@ export interface LessonSummary {
   id: string
   title: string
   order: number
+  // The opponent move that opens the lesson's branch of the trail ("2...Cf6"); null when the
+  // opening's lessons form a single branch (and in openings imported before branches).
+  branch: string | null
+}
+
+// DONE: completed · OPEN: can be studied (first of its branch, or the lesson before it in the
+// branch is done) · LOCKED: the lesson before it in the branch is not done yet.
+export type LessonState = 'DONE' | 'OPEN' | 'LOCKED'
+
+export interface TrackLesson extends LessonSummary {
+  state: LessonState
+}
+
+export interface TrackBranch {
+  // Same as the branch of its lessons; null for the single branch of an opening without them.
+  branch: string | null
+  lessons: TrackLesson[]
+}
+
+// The trail of an opening as a two-level tree: branches in the order of their first lesson,
+// lessons of a branch in order. The student picks the branch; `nextLessonId` is the one the
+// interface suggests (the first lesson not done, walking the branches in order).
+export interface LessonTrack {
+  branches: TrackBranch[]
+  nextLessonId: string | null
 }
 
 export interface OpeningSummary {
@@ -37,6 +62,12 @@ export interface OpeningPathSummary {
   slug: string
   style: OpeningStyle
   lessons: LessonSummary[]
+}
+
+// The opening page: the summary plus the trail of its (active) path, with the logged-in
+// student's progress; without a student nothing is done.
+export interface OpeningDetail extends OpeningSummary {
+  track: LessonTrack
 }
 
 export interface OpeningChoice {
