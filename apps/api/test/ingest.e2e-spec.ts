@@ -90,6 +90,27 @@ describe('Study ingestion (e2e)', () => {
     expect(practice.moves.every((m: { coachInsights: unknown }) => m.coachInsights === null)).toBe(true)
   })
 
+  it('serves the stored engine evaluation of each move, and null where there was none', async () => {
+    // Only the position after 1.e4 has an evaluation.
+    const evaluating: IEngineService = {
+      getEvaluationsBatch: async (fens) =>
+        Object.fromEntries(
+          fens.filter((fen) => fen.startsWith('rnbqkbnr/pppppppp/8/8/4P3/')).map((fen) => [fen, { cp: 31, mate: null, complexity: 'BAIXA' as const }]),
+        ),
+    }
+    const opening = await new IngestStudy(new PgnParserService(), evaluating, coach, app.get(PrismaContentRepository))
+      .execute(REVIEWED_STUDY, { useAuthorComments: true })
+
+    const lesson = await ctx.prisma.lesson.findFirstOrThrow({ where: { openingId: opening.id } })
+    const res = await request(app.getHttpServer())
+      .get(`/api/lessons/${lesson.id}`)
+      .set('Authorization', `Bearer ${await studentToken()}`)
+
+    const theory = res.body.exercises[0]
+    expect(theory.moves.find((m: { san: string }) => m.san === 'e4').absoluteCp).toBe(31)
+    expect(theory.moves.find((m: { san: string }) => m.san === 'c5').absoluteCp).toBeNull()
+  })
+
   it('replaces the lessons when the same opening is imported again', async () => {
     const first = await useCase.execute(REVIEWED_STUDY, { useAuthorComments: true })
     const second = await useCase.execute(REVIEWED_STUDY, { useAuthorComments: true })
