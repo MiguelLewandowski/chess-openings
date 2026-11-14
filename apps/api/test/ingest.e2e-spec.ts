@@ -90,6 +90,32 @@ describe('Study ingestion (e2e)', () => {
     expect(await ctx.prisma.exercise.count()).toBe(3)
   })
 
+  it('imports each path of a family as a sister opening, and a re-import replaces only that path', async () => {
+    const tactical = await useCase.execute(REVIEWED_STUDY, { useAuthorComments: true, family: 'Defesa Siciliana', style: 'TACTICAL' })
+    const positional = await useCase.execute(REVIEWED_STUDY, { useAuthorComments: true, family: 'Defesa Siciliana', style: 'POSITIONAL' })
+
+    expect(tactical.name).toBe('Defesa Siciliana — Tático')
+    expect(positional.id).not.toBe(tactical.id)
+    const saved = await ctx.prisma.opening.findUniqueOrThrow({ where: { id: tactical.id } })
+    expect(saved).toMatchObject({ slug: 'defesa-siciliana-tatico', family: 'defesa-siciliana', style: 'TACTICAL' })
+
+    const positionalLesson = await ctx.prisma.lesson.findFirstOrThrow({ where: { openingId: positional.id } })
+    const again = await useCase.execute(REVIEWED_STUDY, { useAuthorComments: true, family: 'Defesa Siciliana', style: 'TACTICAL' })
+
+    expect(again.id).toBe(tactical.id)
+    expect(await ctx.prisma.lesson.count({ where: { openingId: tactical.id } })).toBe(1)
+    // The other path keeps the very same lesson (and with it the students' progress).
+    expect(await ctx.prisma.lesson.findFirstOrThrow({ where: { openingId: positional.id } })).toEqual(positionalLesson)
+  })
+
+  it('serves family and style on the opening (null for an opening without paths)', async () => {
+    await useCase.execute(REVIEWED_STUDY, { useAuthorComments: true })
+    const res = await request(app.getHttpServer()).get('/api/openings/defesa-siciliana')
+
+    expect(res.status).toBe(200)
+    expect(res.body).toMatchObject({ slug: 'defesa-siciliana', family: null, style: null })
+  })
+
   it('refuses a study that still has [REVISAR] markers and writes nothing', async () => {
     const unreviewed = REVIEWED_STUDY.replace('{Contestamos d4 pelo flanco.}', '{[REVISAR: casa errada] Contestamos d4.}')
 

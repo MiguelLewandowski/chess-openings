@@ -13,16 +13,30 @@ export class PrismaContentRepository implements IContentRepository {
   async upsertStudy(data: IngestStudyData): Promise<{ id: string; name: string }> {
     return this.prisma.$transaction(
       async (tx) => {
+        // A path of a family is found by family and style, so each path keeps its own lessons
+        // and a re-import of one never touches its sisters.
         const opening = await tx.opening.upsert({
-          where: { slug: data.openingSlug },
+          where:
+            data.family && data.style
+              ? { family_style: { family: data.family, style: data.style } }
+              : { slug: data.openingSlug },
           create: {
             name: data.openingName,
             slug: data.openingSlug,
             description: 'Auto-imported',
             styleTags: data.styleTags,
             isTutorial: data.isTutorial,
+            family: data.family,
+            style: data.style,
           },
-          update: { name: data.openingName, styleTags: data.styleTags, isTutorial: data.isTutorial },
+          update: {
+            name: data.openingName,
+            slug: data.openingSlug,
+            styleTags: data.styleTags,
+            isTutorial: data.isTutorial,
+            family: data.family,
+            style: data.style,
+          },
         })
 
         // Re-importing an opening (e.g. after reviewing it on Lichess) replaces its lessons
