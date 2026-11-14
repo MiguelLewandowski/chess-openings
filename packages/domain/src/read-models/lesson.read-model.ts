@@ -1,3 +1,5 @@
+import type { LessonSummary } from './opening.read-model'
+
 export interface MoveSummary {
   id: string
   san: string
@@ -30,7 +32,8 @@ export interface LessonDetail {
     slug: string
     // A tutorial's lessons are never brought back for review.
     isTutorial: boolean
-    lessons: { id: string; title: string; order: number }[]
+    // With their branches, so the next lesson can be the next one of the same branch.
+    lessons: LessonSummary[]
   }
   exercises: ExerciseSummary[]
 }

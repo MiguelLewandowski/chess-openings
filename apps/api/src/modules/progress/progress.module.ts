@@ -7,5 +7,7 @@ import { PrismaUserRepository } from '../../infrastructure/repositories/prisma-u
 @Module({
   controllers: [ProgressController],
   providers: [ProgressService, PrismaUserProgressRepository, PrismaUserRepository],
+  // The opening page shows the trail with the same rule for a completed lesson.
+  exports: [ProgressService],
 })
 export class ProgressModule {}
