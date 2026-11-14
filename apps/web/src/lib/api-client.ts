@@ -1,4 +1,13 @@
-import type { ExerciseCompletion, OpeningSummary, LessonDetail, MoveSummary, PracticeAttempt, UserProfile } from '@chess-openings/domain'
+import type {
+  ExerciseCompletion,
+  LessonDetail,
+  MoveSummary,
+  OpeningChoice,
+  OpeningStyle,
+  OpeningSummary,
+  PracticeAttempt,
+  UserProfile,
+} from '@chess-openings/domain'
 
 export interface ApiUser {
   id: string
@@ -70,8 +79,16 @@ async function apiFetchNullable<T>(path: string, options: FetchOptions = {}): Pr
 
 export const apiClient = {
   openings: {
-    findAll: () => apiFetch<OpeningSummary[]>('/openings'),
-    findBySlug: (slug: string) => apiFetchNullable<OpeningSummary>(`/openings/${slug}`),
+    // The token is optional: with it, each family comes with the path the student chose.
+    findAll: (token?: string) => apiFetch<OpeningSummary[]>('/openings', { token }),
+    findBySlug: (slug: string, token?: string) =>
+      apiFetchNullable<OpeningSummary>(`/openings/${encodeURIComponent(slug)}`, { token }),
+    choosePath: (family: string, style: OpeningStyle, token: string) =>
+      apiFetch<OpeningChoice>(`/openings/${encodeURIComponent(family)}/choice`, {
+        method: 'PUT',
+        body: JSON.stringify({ style }),
+        token,
+      }),
     remove: (id: string, token: string) =>
       apiFetch<void>(`/openings/${id}`, { method: 'DELETE', token }),
   },
