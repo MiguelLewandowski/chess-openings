@@ -4,13 +4,22 @@ import { getSession } from "@/lib/session";
 import { apiClient } from "@/lib/api-client";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { practiceXp, type LessonSummary, type TrackBranch, type TrackLesson } from "@chess-openings/domain";
-import { BookOpen, Check, ChevronLeft, ChevronRight, Lock, RotateCcw, Swords, Trophy } from "lucide-react";
+import {
+  practiceXp,
+  type LessonSummary,
+  type OpeningDetail,
+  type TrackBranch,
+  type TrackLesson,
+} from "@chess-openings/domain";
+import { BookOpen, Check, ChevronRight, Lock, RotateCcw, Swords, Trophy } from "lucide-react";
 import { Badge, Card, EmptyState } from "@/components/ui";
-import { PageBody, PageHeader, PageTitle } from "@/components/layout/Page";
+import { PageBody } from "@/components/layout/Page";
 import { cn } from "@/lib/cn";
 import { percent } from "@/lib/profile";
 import { lessonTitleParts, type LessonKind } from "@/lib/lesson-title";
+import { openingView } from "@/lib/opening-paths";
+import { OpeningHeader } from "./OpeningHeader";
+import { PathBar, PathChoice } from "./PathChoice";
 
 // The most a lesson can pay: a perfect practice run. XP depends on how each run goes, so the
 // track only promises the ceiling.
@@ -27,22 +36,38 @@ const stepStateOf = (lesson: TrackLesson, nextLessonId: string | null): StepStat
   return lesson.id === nextLessonId ? "current" : "open";
 };
 
-// The tab title and the page need the same opening: cache() makes it one request.
-const findOpening = cache((slug: string, token?: string) => apiClient.openings.findBySlug(slug, token));
+// The tab title and the page need the same opening: cache() makes it one request. With the
+// token, a family comes with the path the student chose.
+const findOpening = cache((slug: string, token: string | undefined) => apiClient.openings.findBySlug(slug, token));
 
-export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+interface OpeningPageProps {
+  params: Promise<{ slug: string }>;
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}
+
+export async function generateMetadata({ params }: OpeningPageProps): Promise<Metadata> {
   const session = await getSession();
   const opening = await findOpening((await params).slug, session?.apiToken);
   return { title: opening?.name ?? "Abertura" };
 }
 
-export default async function OpeningTrackPage({ params }: { params: Promise<{ slug: string }> }) {
-  const resolvedParams = await params;
+// A family with several paths shows the choice until the student picks one (and again on
+// `?trocar`); otherwise, the track of the opening or of the chosen path.
+export default async function OpeningPage({ params, searchParams }: OpeningPageProps) {
+  const [{ slug }, query, session] = await Promise.all([params, searchParams, getSession()]);
 
-  const session = await getSession();
-  const opening = await findOpening(resolvedParams.slug, session?.apiToken);
+  const opening = await findOpening(slug, session?.apiToken);
   if (!opening) notFound();
 
+  if (openingView(opening, { switching: query.trocar !== undefined }) === "choose") {
+    return <PathChoice opening={opening} token={session?.apiToken ?? null} />;
+  }
+  return <OpeningTrack opening={opening} />;
+}
+
+// The trail comes from the API already grouped by branch, with each lesson's state for the
+// logged-in student (or nothing done without one).
+function OpeningTrack({ opening }: { opening: OpeningDetail }) {
   const { branches, nextLessonId } = opening.track;
   const trackLessons = branches.flatMap((branch) => branch.lessons);
 
@@ -56,20 +81,13 @@ export default async function OpeningTrackPage({ params }: { params: Promise<{ s
 
   return (
     <div className="flex-1">
-      <PageHeader>
-        <div className="flex items-center gap-2 sm:gap-3 min-w-0">
-          <Link
-            href="/openings"
-            aria-label="Voltar à galeria"
-            className="inline-flex items-center justify-center w-9 h-9 shrink-0 rounded-full text-ink-500 hover:text-ink-900 hover:bg-surface-sunken transition-colors"
-          >
-            <ChevronLeft className="w-5 h-5" />
-          </Link>
-          <PageTitle subtitle={tutorial ? "Tutorial" : "Trilha da abertura"}>{opening.name}</PageTitle>
-        </div>
-      </PageHeader>
+      <OpeningHeader backHref="/openings" backLabel="Voltar à galeria" subtitle={tutorial ? "Tutorial" : "Trilha da abertura"}>
+        {opening.name}
+      </OpeningHeader>
 
       <PageBody className="mx-auto w-full max-w-2xl">
+        {opening.paths.length > 1 && <PathBar opening={opening} />}
+
         {total === 0 ? (
           <EmptyState
             icon={<BookOpen className="w-8 h-8" />}
