@@ -3,6 +3,7 @@ import type { IEngineService, EngineEvaluation } from '../services/IEngineServic
 import type { ICoachService, CoachInsight, CoachRequest } from '../services/ICoachService'
 import type { IContentRepository } from '../repositories/IContentRepository'
 import { pathOpeningName, type OpeningStyle } from '../entities/OpeningStyle'
+import { branchOf, type LessonLine } from '../entities/LessonBranch'
 import type { CardKind, IngestStudyData, IngestLessonData, IngestExerciseData, IngestMoveNode } from '../entities/StudyContent'
 
 export interface IngestOptions {
@@ -191,6 +192,7 @@ function buildStudyData(
   options: IngestOptions,
 ): IngestStudyData {
   const first = groups[0].lesson
+  const branches = branchOf(groups.map((g) => lessonLine(g.lesson)))
   const path = options.family && options.style ? { family: options.family, style: options.style } : null
   const openingName = path
     ? pathOpeningName(path.family, path.style)
@@ -202,13 +204,25 @@ function buildStudyData(
     isTutorial: options.tutorial ?? false,
     family: path ? slugify(path.family) : null,
     style: path?.style ?? null,
-    lessons: groups.map((group, i) => buildLesson(group, i, evaluations, insights)),
+    lessons: groups.map((group, i) => buildLesson(group, i, branches[i], evaluations, insights)),
   }
+}
+
+// Follows the moves marked as main line; variations inside a lesson never make branches.
+function lessonLine(chapter: ParsedChapter): LessonLine {
+  const sans: string[] = []
+  let next = chapter.rootNodes.find((n) => n.isMainLine) ?? chapter.rootNodes[0]
+  while (next) {
+    sans.push(next.san)
+    next = next.children.find((n) => n.isMainLine) ?? next.children[0]
+  }
+  return { initialFen: chapter.initialFen, sans }
 }
 
 function buildLesson(
   group: LessonChapters,
   index: number,
+  branch: string | null,
   evaluations: Record<string, EngineEvaluation | null>,
   insights: Record<string, CoachInsight>,
 ): IngestLessonData {
@@ -216,6 +230,7 @@ function buildLesson(
   return {
     title: lesson.title,
     order: index + 1,
+    branch,
     initialFen: lesson.initialFen,
     exercises: [
       buildExercise(lesson, `${lesson.title} - Theory`, 'THEORY', null, evaluations, insights),

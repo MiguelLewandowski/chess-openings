@@ -28,6 +28,9 @@ export interface IngestExerciseData {
 export interface IngestLessonData {
   title: string
   order: number
+  // The opponent move that opens the lesson's branch of the trail (see branchOf); null when
+  // the lessons form a single branch.
+  branch: string | null
   initialFen: string
   exercises: IngestExerciseData[]
 }
