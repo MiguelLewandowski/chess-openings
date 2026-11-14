@@ -12,23 +12,26 @@ import { PageBody, PageHeader, PageTitle } from "@/components/layout/Page";
 export const metadata: Metadata = { title: "Aberturas" };
 
 export default async function OpeningsCatalogPage() {
-    const [openings, session] = await Promise.all([
-        apiClient.openings.findAll(),
-        getSession(),
-    ]);
+    const session = await getSession();
+    const openings = await apiClient.openings.findAll(session?.apiToken);
 
     let dueReviews: DueReview[] = [];
     let userStreak = 0;
     let userXp = 0;
+    // Lessons done on the chosen path of each family, by the path's opening id.
+    const pathProgress = new Map<string, number>();
 
     if (session) {
-        const [reviews, user] = await Promise.all([
+        const chosen = openings.filter((opening) => opening.chosenStyle !== null);
+        const [reviews, user, completed] = await Promise.all([
             apiClient.progress.dueReviews(session.apiToken),
             apiClient.auth.me(session.apiToken),
+            Promise.all(chosen.map((opening) => apiClient.progress.completedLessons(opening.id, session.apiToken))),
         ]);
         dueReviews = reviews;
         userStreak = user.streak;
         userXp = user.xp;
+        chosen.forEach((opening, index) => pathProgress.set(opening.id, completed[index].length));
     }
 
     const isAdmin = session?.role === 'ADMIN';
@@ -82,7 +85,12 @@ export default async function OpeningsCatalogPage() {
                 ) : (
                     <div className="grid grid-cols-1 @2xl:grid-cols-2 @5xl:grid-cols-3 @7xl:grid-cols-4 @min-[100rem]:grid-cols-5 gap-4 sm:gap-5">
                         {openings.map((opening) => (
-                            <OpeningCard key={opening.id} opening={opening} canDelete={isAdmin} />
+                            <OpeningCard
+                                key={opening.id}
+                                opening={opening}
+                                completedLessons={pathProgress.get(opening.id) ?? null}
+                                canDelete={isAdmin}
+                            />
                         ))}
                     </div>
                 )}
