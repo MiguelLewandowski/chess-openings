@@ -19,6 +19,7 @@
     "lessons:generate": "pnpm --filter @chess-openings/lesson-author generate",
     "lessons:draft": "pnpm --filter @chess-openings/lesson-author draft",
     "lessons:import": "tsx --tsconfig apps/api/tsconfig.json apps/api/scripts/import-lessons.ts",
+    "lessons:branches": "tsx --tsconfig apps/api/tsconfig.json apps/api/scripts/backfill-branches.ts",
     "postinstall": "prisma generate"
   },
   "prisma": {
