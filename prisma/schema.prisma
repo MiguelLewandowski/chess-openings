@@ -76,6 +76,9 @@ model Lesson {
   id        String     @id @default(cuid())
   title     String
   order     Int        // Ordem da lição dentro da abertura
+  // Ramo da trilha: o lance do adversário que sai do tronco comum das lições (ex.: "2...Cf6").
+  // Null = um ramo só, a trilha em sequência como antes.
+  branch    String?
   openingId String
   opening   Opening    @relation(fields: [openingId], references: [id], onDelete: Cascade)
   exercises Exercise[]

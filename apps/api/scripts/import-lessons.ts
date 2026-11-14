@@ -140,7 +140,8 @@ async function checkFormat(pgn: string, options: IngestOptions): Promise<number>
   for (const lesson of data.lessons) {
     const [theory, ...rest] = lesson.exercises
     const cards = rest.filter((e) => e.cardKind)
-    console.log(`  ${lesson.order}. ${lesson.title} — ${countMoves(theory.moves)} lances, ${cards.length} cartão(ões)`)
+    const branch = lesson.branch ? ` [ramo ${lesson.branch}]` : ''
+    console.log(`  ${lesson.order}. ${lesson.title}${branch} — ${countMoves(theory.moves)} lances, ${cards.length} cartão(ões)`)
     // A card or practice title as a lesson means it did not find the lesson it belongs to.
     if (/ \| (cr[ií]tica|armadilha|pr[aá]tica)\b/i.test(lesson.title)) problems.push(`cartão sem lição de mesmo título: "${lesson.title}"`)
     if (countMoves(theory.moves) === 0) problems.push(`lição sem lances: "${lesson.title}"`)
