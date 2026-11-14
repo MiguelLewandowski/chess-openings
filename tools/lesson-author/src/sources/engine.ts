@@ -204,10 +204,12 @@ export class CachedEngine implements Engine {
   }
 }
 
-export async function fetchWithBackoff(url: string, init: RequestInit = {}, attempts = 4): Promise<Response | null> {
+// Without a timeout a server that accepts the connection and never answers hangs the run for
+// minutes per request.
+export async function fetchWithBackoff(url: string, init: RequestInit = {}, attempts = 4, timeoutMs = 20_000): Promise<Response | null> {
   for (let attempt = 0; attempt < attempts; attempt++) {
     try {
-      const response = await fetch(url, init)
+      const response = await fetch(url, { ...init, signal: AbortSignal.timeout(timeoutMs) })
       // Lichess asks clients to wait a full minute after a 429.
       if (response.status === 429) {
         await sleep(60_000)
