@@ -23,13 +23,9 @@ export async function deleteOpening(id: string) {
 }
 
 // Saving a path, or switching to another, keeps the progress of every path: it only changes
-// which one the track shows and the reviews bring back.
-//
-// The revalidation alone re-renders the page the form is on, which already shows the track
-// once a path is chosen. Only the switch screen (`?trocar`) needs a redirect to leave it: a
-// redirect to the URL the form is already on came back with the old page in the router about
-// three times in four (seen with Next 16.2.1), so the first choice does not redirect.
-export async function chooseOpeningPath(family: string, style: OpeningStyle, leaveSwitchScreen: boolean) {
+// which one the track shows and the reviews bring back. The caller navigates afterwards (see
+// ChoosePathButton).
+export async function chooseOpeningPath(family: string, style: OpeningStyle) {
   const session = await getSession()
   if (!session) redirect('/login')
   // Server actions are public endpoints: the arguments come from the client.
@@ -37,5 +33,4 @@ export async function chooseOpeningPath(family: string, style: OpeningStyle, lea
 
   await apiClient.openings.choosePath(family, style, session.apiToken)
   revalidatePath('/openings', 'layout')
-  if (leaveSwitchScreen) redirect(`/openings/${encodeURIComponent(family)}`)
 }

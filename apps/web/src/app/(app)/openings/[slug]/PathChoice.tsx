@@ -2,13 +2,12 @@ import Link from "next/link";
 import { ArrowRight, Check, Route } from "lucide-react";
 import { OPENING_STYLE_LABELS, type OpeningPathSummary, type OpeningSummary } from "@chess-openings/domain";
 import { apiClient } from "@/lib/api-client";
-import { chooseOpeningPath } from "@/app/actions/opening.actions";
 import { STYLE_PITCH } from "@/lib/opening-paths";
 import { buttonClasses, Card } from "@/components/ui";
 import { PageBody } from "@/components/layout/Page";
 import { cn } from "@/lib/cn";
 import { OpeningHeader } from "./OpeningHeader";
-import { PathSubmitButton } from "./PathSubmitButton";
+import { ChoosePathButton } from "./ChoosePathButton";
 
 const cardClasses =
   "group flex h-full w-full flex-col text-left rounded-[14px] bg-surface-card border p-5 sm:p-6 transition-all duration-150 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[var(--focus-ring)]";
@@ -54,11 +53,15 @@ export async function PathChoice({ opening, token }: { opening: OpeningSummary; 
                   <PathCardBody path={path} done={completed[index].length} isCurrent />
                 </Link>
               ) : (
-                <form action={chooseOpeningPath.bind(null, family, path.style, current !== null)} className="h-full">
-                  <PathSubmitButton className={cn(cardClasses, "border-border-subtle shadow-sm hover:border-accent/50 hover:shadow-md cursor-pointer")}>
-                    <PathCardBody path={path} done={completed[index].length} isCurrent={false} />
-                  </PathSubmitButton>
-                </form>
+                <ChoosePathButton
+                  family={family}
+                  style={path.style}
+                  // The switch screen (`?trocar`) leaves for the track; the first choice stays put.
+                  goTo={current ? trackHref : null}
+                  className={cn(cardClasses, "border-border-subtle shadow-sm hover:border-accent/50 hover:shadow-md cursor-pointer")}
+                >
+                  <PathCardBody path={path} done={completed[index].length} isCurrent={false} />
+                </ChoosePathButton>
               )}
             </li>
           ))}
@@ -126,9 +129,9 @@ export function PathBar({ opening }: { opening: OpeningSummary }) {
       </div>
       <div className="flex flex-wrap gap-2 sm:shrink-0">
         {!isActive && !isFamilyEntry && (
-          <form action={chooseOpeningPath.bind(null, family, style, false)}>
-            <PathSubmitButton className={buttonClasses({ variant: "primary", size: "sm" })}>Seguir este caminho</PathSubmitButton>
-          </form>
+          <ChoosePathButton family={family} style={style} goTo={null} className={buttonClasses({ variant: "primary", size: "sm" })}>
+            Seguir este caminho
+          </ChoosePathButton>
         )}
         <Link href={`/openings/${encodeURIComponent(family)}?trocar=1`} className={buttonClasses({ variant: "secondary", size: "sm" })}>
           Trocar caminho
