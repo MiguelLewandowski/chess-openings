@@ -12,6 +12,7 @@ import { PageBody, PageHeader } from "@/components/layout/Page"
 import { CARD_KIND_LABEL, LessonCards } from "@/components/chess/LessonCards"
 import { Badge } from "@/components/ui"
 import { lessonShortTitle } from "@/lib/profile"
+import { nextLessonInBranch } from "@/lib/lesson-track"
 
 // The tab title and the page need the same lesson: cache() makes it one request.
 const findLesson = cache((id: string, token: string) => apiClient.lessons.findById(id, token))
@@ -50,8 +51,7 @@ export default async function LessonPage({
     const watchExercise = !requested && practiceExercise ? theoryExercise : undefined
     const isCard = Boolean(selectedExercise?.cardKind)
 
-    const currentLessonIndex = lesson.opening.lessons.findIndex(l => l.id === lesson.id)
-    const nextLesson = lesson.opening.lessons[currentLessonIndex + 1]
+    const nextLesson = nextLessonInBranch(lesson.opening.lessons, lesson.id)
     // After a card, the next card of the lesson; after the last one, back to its practice.
     const nextCard = isCard ? cards[cards.findIndex(c => c.id === selectedExercise?.id) + 1] : undefined
     const next = isCard
