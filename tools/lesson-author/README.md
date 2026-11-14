@@ -95,6 +95,11 @@ pnpm lessons:draft --inicio "1.e4 e5 2.Bc4" --nome "Abertura do Bispo" --licoes 
 - **Nossos lances:** os do `--base` quando a posição aparece nele (mantém o sistema que você
   escolheu); fora dele, o melhor da engine, preferindo o mais jogado por mestres entre os que
   estão a até 0,30 do melhor.
+- **`--estilo tatico`:** entre os nossos lances a até 0,50 do melhor (`--tolerancia-cp`), escolhe
+  o que mais faz os adversários da faixa errarem de verdade: para cada candidato, a perda média
+  das respostas reais (frequência do explorer × quanto a engine pune cada uma), com um bônus
+  pequeno para xeques e capturas. A linha ganha o comentário `// escolha tática: ...` com o
+  número, para você revisar. Combina bem com `--erro-cp 80` (mais linhas de punição).
 - **Capítulos:** a árvore é dividida pelos desvios do adversário até chegar a `--licoes`,
   com nomes da base de aberturas da Lichess.
 - Nenhuma IA escolhe lances; cada linha vem comentada (`//`) com frequência e avaliação para
@@ -110,6 +115,41 @@ rascunho como treinador (coerência do sistema, armadilhas, nomes em português)
 `.claude/skills/gerar-repertorio/` (pasta local, fora do git); a cópia versionada está em
 [`skill/gerar-repertorio/SKILL.md`](skill/gerar-repertorio/SKILL.md) — para instalar numa
 máquina nova, copie a pasta para `.claude/skills/`.
+
+## Gerando as lições sem a API da Anthropic (`--agente`)
+
+Quem escreve passa a ser um agente do Claude Code, não uma chamada paga. O resto do pipeline é
+o mesmo: dossiê, verificador em código, revisão independente e PGN com `[REVISAR` no que
+não passou.
+
+```bash
+pnpm lessons:generate --source tools/lesson-author/repertorios/<arquivo>.txt --agente out/lesson-author/<slug>-agente
+```
+
+1. A primeira rodada grava na pasta `INSTRUCOES-AUTOR.md` e `INSTRUCOES-REVISOR.md` (geradas
+   de `src/author/prompt.ts`, as mesmas regras do modo API, com o JSON Schema), um
+   `capNN.dossie.json` por capítulo e o `estado.json`.
+2. O agente `autor-licoes` escreve `capNN.anotacao.json` e roda o mesmo comando com
+   `--chapters N`: o verificador grava o que está errado em `capNN.problemas.md`, e ele corrige.
+3. O agente `revisor-licoes` grava `capNN.revisao.json`. Uma revisão mais antiga que a anotação
+   é ignorada. Erros da revisão voltam para o autor; o que sobrar sai marcado `[REVISAR`.
+4. Capítulo sem anotação sai com todos os lances marcados, então o app recusa importar.
+
+Estados no `estado.json`: `pendente` → `json-invalido` / `com-problemas` → `aguardando-revisao`
+→ `revisao-com-erros` / `pronto`.
+
+Para conferir o PGN com o importador de verdade (mesmo parser e mesmo agrupamento de cartões),
+sem banco:
+
+```bash
+pnpm lessons:import out/lesson-author/<slug>-agente/<slug>.pgn --check
+```
+
+A skill **`/gerar-licoes`** conduz tudo: rascunho tático, autores em paralelo, revisão,
+`--check` e entrega, sem importar no banco por conta própria. Os dois agentes rodam em
+`claude-opus-5-5` (autor com esforço `xhigh`, revisor `high`). As cópias versionadas ficam em
+[`agents/`](agents/) e [`skill/gerar-licoes/`](skill/gerar-licoes/SKILL.md); para instalar,
+copie para `.claude/agents/` e `.claude/skills/`.
 
 ## Fluxo completo (para cada abertura)
 
