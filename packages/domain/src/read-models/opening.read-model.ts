@@ -22,4 +22,24 @@ export interface OpeningSummary {
   family: string | null
   style: OpeningStyle | null
   lessons: LessonSummary[]
+  // The family's paths, from the calmest to the sharpest; empty for an opening without paths.
+  paths: OpeningPathSummary[]
+  // The path the logged-in student chose in the family; null without a choice or a student.
+  chosenStyle: OpeningStyle | null
+}
+
+// The catalog and the family slug show a family as one entry: name and slug are the family's,
+// and the rest (id, style, lessons...) describes its active path, which is the chosen one or,
+// without a choice, the first of `paths`.
+export interface OpeningPathSummary {
+  id: string
+  name: string
+  slug: string
+  style: OpeningStyle
+  lessons: LessonSummary[]
+}
+
+export interface OpeningChoice {
+  family: string
+  style: OpeningStyle
 }
