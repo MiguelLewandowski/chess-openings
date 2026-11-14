@@ -49,6 +49,9 @@ export class LichessExplorer {
     private readonly amateurRatings: number[] = [1600, 1800, 2000],
   ) {}
 
+  // Set when the service stops answering: the rest of the run uses only the cache.
+  private down = false
+
   get available(): boolean {
     return Boolean(this.token)
   }
@@ -60,6 +63,7 @@ export class LichessExplorer {
     const cached = await this.cache.get<ExplorerResult | null>(namespace, fen)
     // A cached null is a failure saved by an older version: ask again.
     if (cached) return cached
+    if (this.down) return null
 
     const url =
       db === 'masters'
@@ -67,7 +71,11 @@ export class LichessExplorer {
         : `https://explorer.lichess.ovh/lichess?variant=standard&speeds=blitz,rapid,classical&ratings=${ratings}&moves=12&fen=${encodeURIComponent(fen)}`
     // Be polite to a free service: one request at a time with a short pause.
     await sleep(250)
-    const response = await fetchWithBackoff(url, { headers: { Authorization: `Bearer ${this.token}` } })
+    const response = await fetchWithBackoff(url, { headers: { Authorization: `Bearer ${this.token}` } }, 2)
+    if (!response) {
+      this.down = true
+      console.warn('explorer da Lichess sem resposta: o resto desta rodada usa só o cache')
+    }
     // A failure (timeout, 5xx, rate limit) is not an answer about the position: never cache
     // it, or every later run silently sees "no games" there.
     if (!response?.ok) return null

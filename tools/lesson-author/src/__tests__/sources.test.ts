@@ -75,4 +75,24 @@ describe('LichessExplorer', () => {
       await rm(dir, { recursive: true, force: true })
     }
   })
+
+  it('should stop asking for the rest of the run once the service does not answer', async () => {
+    const dir = await mkdtemp(path.join(tmpdir(), 'explorer-'))
+    let calls = 0
+    vi.stubGlobal('fetch', async () => {
+      calls++
+      throw new TypeError('fetch failed')
+    })
+    try {
+      const explorer = new LichessExplorer('token', new DiskCache(dir))
+      expect(await explorer.query(STARTING_FEN, 'masters')).toBeNull()
+      const callsAfterFirst = calls
+      const afterE4 = 'rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq - 0 1'
+      expect(await explorer.query(afterE4, 'amateurs')).toBeNull()
+      expect(calls).toBe(callsAfterFirst)
+    } finally {
+      vi.unstubAllGlobals()
+      await rm(dir, { recursive: true, force: true })
+    }
+  }, 15_000)
 })
