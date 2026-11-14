@@ -2,6 +2,7 @@ import type { IPgnParser, ParsedChapter, ParsedNode } from '../services/IPgnPars
 import type { IEngineService, EngineEvaluation } from '../services/IEngineService'
 import type { ICoachService, CoachInsight, CoachRequest } from '../services/ICoachService'
 import type { IContentRepository } from '../repositories/IContentRepository'
+import { pathOpeningName, type OpeningStyle } from '../entities/OpeningStyle'
 import type { CardKind, IngestStudyData, IngestLessonData, IngestExerciseData, IngestMoveNode } from '../entities/StudyContent'
 
 export interface IngestOptions {
@@ -15,6 +16,10 @@ export interface IngestOptions {
   // A tutorial (e.g. how the pieces move): shown in the catalog like an opening, but its
   // lessons stay out of the spaced-repetition reviews.
   tutorial?: boolean
+  // One path of an opening taught in several styles: the family's display name (e.g.
+  // "Abertura do Bispo") and the style. Given together; they also name the opening.
+  family?: string
+  style?: OpeningStyle
 }
 
 // Left in a comment by the lesson-authoring pipeline for everything a person still has to
@@ -44,6 +49,7 @@ export class IngestStudy {
   ) {}
 
   async execute(pgnString: string, options: IngestOptions = {}): Promise<{ id: string; name: string }> {
+    validatePath(options)
     const parsed = this.pgnParser.parseStudy(pgnString)
     const pending = findReviewMarkers(parsed)
     if (pending.length > 0) throw new ContentNotReviewedError(pending)
@@ -116,6 +122,15 @@ export function findReviewMarkers(chapters: ParsedChapter[]): string[] {
   return found
 }
 
+function validatePath(options: IngestOptions): void {
+  if (Boolean(options.family) !== Boolean(options.style)) {
+    throw new Error('Um caminho de abertura precisa de família e estilo juntos.')
+  }
+  if (options.family && options.tutorial) {
+    throw new Error('Um tutorial não tem caminhos: importe sem família e estilo.')
+  }
+}
+
 function applyFilters(groups: LessonChapters[], options: IngestOptions): LessonChapters[] {
   if (options.specificChapter !== undefined && options.specificChapter > 0) {
     const index = options.specificChapter - 1
@@ -176,12 +191,17 @@ function buildStudyData(
   options: IngestOptions,
 ): IngestStudyData {
   const first = groups[0].lesson
-  const openingName = options.openingName || first.studyName || first.title || 'Unknown Opening'
+  const path = options.family && options.style ? { family: options.family, style: options.style } : null
+  const openingName = path
+    ? pathOpeningName(path.family, path.style)
+    : options.openingName || first.studyName || first.title || 'Unknown Opening'
   return {
     openingName,
     openingSlug: slugify(openingName),
     styleTags: options.styleTags ?? [],
     isTutorial: options.tutorial ?? false,
+    family: path ? slugify(path.family) : null,
+    style: path?.style ?? null,
     lessons: groups.map((group, i) => buildLesson(group, i, evaluations, insights)),
   }
 }

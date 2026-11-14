@@ -5,15 +5,19 @@
 //   pnpm lessons:import out/lesson-author/bispo-cap1.revisado.pgn out/lesson-author/bispo-cap14.revisado.pgn
 //   pnpm lessons:import content/primeiros-passos.pgn --tutorial
 //   pnpm lessons:import out/lesson-author/bispo.pgn --check   (only checks the format, no database)
+//   pnpm lessons:import out/lesson-author/bispo-tatico.pgn --familia "Abertura do Bispo" --estilo tatico
 //
 // Re-importing an opening replaces all of its lessons (and the students' progress on them), so
-// every chapter of an opening must go in the same call.
+// every chapter of an opening must go in the same call. A path of a family is an opening of its
+// own: re-importing it replaces only that path.
 import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { parseArgs } from 'node:util'
 import {
   ContentNotReviewedError,
   IngestStudy,
+  OPENING_STYLE_LABELS,
+  parseOpeningStyle,
   type IContentRepository,
   type IngestMoveNode,
   type IngestOptions,
@@ -25,10 +29,14 @@ import { EngineService } from '../src/infrastructure/services/engine.service'
 import { CoachService } from '../src/infrastructure/services/coach.service'
 import { PrismaContentRepository } from '../src/infrastructure/repositories/prisma-content.repository'
 
-const USAGE = `Uso: pnpm lessons:import <arquivo.pgn>... [--tutorial] [--nome "Nome da abertura"] [--check]
+const USAGE = `Uso: pnpm lessons:import <arquivo.pgn>... [--tutorial] [--nome "Nome da abertura"]
+                          [--familia "Nome da abertura" --estilo posicional|equilibrado|tatico] [--check]
 
   --tutorial   conteúdo de tutorial: aparece no catálogo, mas fica fora das revisões
   --nome       nome da abertura (padrão: o StudyName do PGN)
+  --familia    importa um caminho de uma abertura com vários estilos; vai junto com --estilo e
+               dá o nome "<família> — <Estilo>" (ignora --nome)
+  --estilo     o caminho: posicional, equilibrado ou tatico
   --check      só confere o formato com o importador de verdade, sem banco e sem rede: lista
                lições, exercícios e cartões e aponta cartão solto, lição ou cartão vazio,
                cartão sem pergunta e marcas [REVISAR
@@ -41,6 +49,8 @@ async function main(): Promise<void> {
     options: {
       tutorial: { type: 'boolean', default: false },
       nome: { type: 'string' },
+      familia: { type: 'string' },
+      estilo: { type: 'string' },
       check: { type: 'boolean', default: false },
       help: { type: 'boolean', default: false },
     },
@@ -50,8 +60,24 @@ async function main(): Promise<void> {
     process.exit(values.help ? 0 : 1)
   }
 
+  const style = values.estilo === undefined ? undefined : parseOpeningStyle(values.estilo)
+  if (style === null) {
+    console.error(`Estilo desconhecido: "${values.estilo}". Use posicional, equilibrado ou tatico.`)
+    process.exit(1)
+  }
+  if (Boolean(values.familia) !== Boolean(style)) {
+    console.error('--familia e --estilo vão juntos: um caminho precisa dos dois.')
+    process.exit(1)
+  }
+
   const pgn = positionals.map((file) => readFileSync(resolve(file), 'utf8').trim()).join('\n\n')
-  const options: IngestOptions = { useAuthorComments: true, tutorial: values.tutorial, openingName: values.nome }
+  const options: IngestOptions = {
+    useAuthorComments: true,
+    tutorial: values.tutorial,
+    openingName: values.nome,
+    family: values.familia,
+    style,
+  }
   if (values.check) process.exit(await checkFormat(pgn, options))
 
   // Say where the data is going before writing anything: the same command imports locally
@@ -109,7 +135,8 @@ async function checkFormat(pgn: string, options: IngestOptions): Promise<number>
   const [data] = captured
 
   const problems: string[] = []
-  console.log(`${data.openingName} (slug ${data.openingSlug}): ${data.lessons.length} lição(ões)`)
+  const path = data.family && data.style ? `, família ${data.family}, caminho ${OPENING_STYLE_LABELS[data.style]}` : ''
+  console.log(`${data.openingName} (slug ${data.openingSlug}${path}): ${data.lessons.length} lição(ões)`)
   for (const lesson of data.lessons) {
     const [theory, ...rest] = lesson.exercises
     const cards = rest.filter((e) => e.cardKind)

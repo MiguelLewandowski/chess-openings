@@ -70,7 +70,8 @@ export class ProgressService {
     }
   }
 
-  findDueReviews(userId: string) {
+  async findDueReviews(userId: string) {
+    const choices = await this.findChoices(userId)
     return this.prisma.userProgress.findMany({
       where: {
         userId,
@@ -78,7 +79,17 @@ export class ProgressService {
         // No repetitions filter: a lapsed card (SM-2 resets repetitions to 0 on
         // a failure) must still resurface once its 1-day interval elapses. Rows
         // only exist after a real attempt, so there are no untouched cards to leak.
-        exercise: { type: 'PRACTICE', lesson: { opening: { isTutorial: false } } },
+        exercise: {
+          type: 'PRACTICE',
+          lesson: {
+            opening: {
+              isTutorial: false,
+              // Only the active path of each family: mixing paths would drill contradictory
+              // moves in the same position. Without a choice, no path of the family is due.
+              OR: [{ family: null }, ...choices.map(({ family, style }) => ({ family, style }))],
+            },
+          },
+        },
       },
       select: {
         nextReview: true,
@@ -103,7 +114,7 @@ export class ProgressService {
   }
 
   async findProfile(userId: string): Promise<UserProfile> {
-    const [user, openings, progress] = await Promise.all([
+    const [user, openings, progress, choices] = await Promise.all([
       this.prisma.user.findUnique({
         where: { id: userId },
         select: { name: true, email: true, styleArchetype: true, createdAt: true, xp: true, streak: true, lastStudyDate: true },
@@ -138,10 +149,16 @@ export class ProgressService {
           nextReview: true,
           updatedAt: true,
           exercise: {
-            select: { type: true, lessonId: true, cardKind: true, lesson: { select: { opening: { select: { isTutorial: true } } } } },
+            select: {
+              type: true,
+              lessonId: true,
+              cardKind: true,
+              lesson: { select: { opening: { select: { isTutorial: true, family: true, style: true } } } },
+            },
           },
         },
       }),
+      this.findChoices(userId),
     ])
     if (!user) throw new UnauthorizedException('User not found.')
 
@@ -150,10 +167,14 @@ export class ProgressService {
       progress.filter((p) => p.exercise.cardKind === null).map((p) => p.exercise.lessonId),
     )
 
-    // Only PRACTICE exercises outside a tutorial are ever brought back for review, so the
-    // review stats count those alone.
+    // Only PRACTICE exercises outside a tutorial, on the active path of their family, are
+    // brought back for review (see findDueReviews), so the review stats count those alone.
     const now = new Date()
-    const practice = progress.filter((p) => p.exercise.type === 'PRACTICE' && !p.exercise.lesson.opening.isTutorial)
+    const isActivePath = ({ family, style }: { family: string | null; style: string | null }) =>
+      family === null || choices.some((c) => c.family === family && c.style === style)
+    const practice = progress.filter(
+      (p) => p.exercise.type === 'PRACTICE' && !p.exercise.lesson.opening.isTutorial && isActivePath(p.exercise.lesson.opening),
+    )
     const upcoming = practice
       .map((p) => p.nextReview)
       .filter((date) => date > now)
@@ -235,6 +256,10 @@ export class ProgressService {
       hasProgress: touchedLessonIds.has(lesson.id),
       remainingLessons: opening.lessons.filter((l) => !completedLessonIds.has(l.id)).length,
     }
+  }
+
+  private findChoices(userId: string) {
+    return this.prisma.userOpeningChoice.findMany({ where: { userId }, select: { family: true, style: true } })
   }
 
   // A lesson is completed once its theory or its main practice was finished at least once

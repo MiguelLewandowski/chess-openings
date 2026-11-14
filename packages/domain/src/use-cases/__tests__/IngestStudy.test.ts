@@ -149,6 +149,42 @@ describe('IngestStudy', () => {
     expect(saved().isTutorial).toBe(false)
   })
 
+  it('should leave an opening without paths out of any family by default', async () => {
+    const { useCase, saved } = setup([chapter('Linha', 'WHITE', [node('n1', 'c4', 'WHITE')])])
+    await useCase.execute('pgn', { useAuthorComments: true })
+    expect(saved()).toMatchObject({ openingName: 'Inglesa', openingSlug: 'inglesa', family: null, style: null })
+  })
+
+  it('should save a path of a family under "<family> — <style>", with the family slug', async () => {
+    const { useCase, saved } = setup([chapter('Linha', 'WHITE', [node('n1', 'e4', 'WHITE')])])
+    await useCase.execute('pgn', { useAuthorComments: true, family: 'Abertura do Bispo', style: 'TACTICAL' })
+    expect(saved()).toMatchObject({
+      openingName: 'Abertura do Bispo — Tático',
+      openingSlug: 'abertura-do-bispo-tatico',
+      family: 'abertura-do-bispo',
+      style: 'TACTICAL',
+    })
+  })
+
+  it('should name the family path even when an opening name is also given', async () => {
+    const { useCase, saved } = setup([chapter('Linha', 'WHITE', [node('n1', 'e4', 'WHITE')])])
+    await useCase.execute('pgn', { openingName: 'Outro nome', family: 'Abertura do Bispo', style: 'BALANCED' })
+    expect(saved().openingName).toBe('Abertura do Bispo — Equilibrado')
+  })
+
+  it('should refuse a family without a style, and a style without a family', async () => {
+    const { useCase } = setup([chapter('Linha', 'WHITE', [node('n1', 'e4', 'WHITE')])])
+    await expect(useCase.execute('pgn', { family: 'Abertura do Bispo' })).rejects.toThrow(/família e estilo/)
+    await expect(useCase.execute('pgn', { style: 'POSITIONAL' })).rejects.toThrow(/família e estilo/)
+  })
+
+  it('should refuse a tutorial with paths', async () => {
+    const { useCase } = setup([chapter('Linha', 'WHITE', [node('n1', 'e4', 'WHITE')])])
+    await expect(
+      useCase.execute('pgn', { tutorial: true, family: 'Abertura do Bispo', style: 'POSITIONAL' }),
+    ).rejects.toThrow(/tutorial/)
+  })
+
   it('should refuse a study that still has review markers', async () => {
     const { useCase } = setup([
       chapter('Linha', 'WHITE', [node('n1', 'c4', 'WHITE', '[REVISAR: casa errada] Controla d6.')]),
