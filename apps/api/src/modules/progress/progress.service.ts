@@ -5,6 +5,7 @@ import { PrismaUserRepository } from '../../infrastructure/repositories/prisma-u
 import {
   CompleteExercise,
   MATURE_INTERVAL_DAYS,
+  activePaths,
   currentStreak,
   formatMoveList,
   lessonTrack,
@@ -78,7 +79,7 @@ export class ProgressService {
   }
 
   async findDueReviews(userId: string) {
-    const choices = await this.findChoices(userId)
+    const paths = await this.findActivePaths(userId)
     return this.prisma.userProgress.findMany({
       where: {
         userId,
@@ -91,9 +92,9 @@ export class ProgressService {
           lesson: {
             opening: {
               isTutorial: false,
-              // Only the active path of each family: mixing paths would drill contradictory
-              // moves in the same position. Without a choice, no path of the family is due.
-              OR: [{ family: null }, ...choices.map(({ family, style }) => ({ family, style }))],
+              // Only the active path of each family (see activePaths): mixing paths would drill
+              // contradictory moves in the same position.
+              OR: [{ family: null }, ...paths.map(({ family, style }) => ({ family, style }))],
             },
           },
         },
@@ -121,7 +122,7 @@ export class ProgressService {
   }
 
   async findProfile(userId: string): Promise<UserProfile> {
-    const [user, openings, progress, choices] = await Promise.all([
+    const [user, openings, progress, paths] = await Promise.all([
       this.prisma.user.findUnique({
         where: { id: userId },
         select: { name: true, email: true, styleArchetype: true, createdAt: true, xp: true, streak: true, lastStudyDate: true },
@@ -166,7 +167,7 @@ export class ProgressService {
           },
         },
       }),
-      this.findChoices(userId),
+      this.findActivePaths(userId),
     ])
     if (!user) throw new UnauthorizedException('User not found.')
 
@@ -179,7 +180,7 @@ export class ProgressService {
     // brought back for review (see findDueReviews), so the review stats count those alone.
     const now = new Date()
     const isActivePath = ({ family, style }: { family: string | null; style: string | null }) =>
-      family === null || choices.some((c) => c.family === family && c.style === style)
+      family === null || paths.some((p) => p.family === family && p.style === style)
     const practice = progress.filter(
       (p) => p.exercise.type === 'PRACTICE' && !p.exercise.lesson.opening.isTutorial && isActivePath(p.exercise.lesson.opening),
     )
@@ -267,8 +268,23 @@ export class ProgressService {
     }
   }
 
-  private findChoices(userId: string) {
-    return this.prisma.userOpeningChoice.findMany({ where: { userId }, select: { family: true, style: true } })
+  // The chosen paths plus, in a family without a choice, its only practiced path.
+  private async findActivePaths(userId: string) {
+    const [chosen, practiced] = await Promise.all([
+      this.prisma.userOpeningChoice.findMany({ where: { userId }, select: { family: true, style: true } }),
+      this.prisma.opening.findMany({
+        where: {
+          family: { not: null },
+          style: { not: null },
+          lessons: { some: { exercises: { some: { progress: { some: { userId } } } } } },
+        },
+        select: { family: true, style: true },
+      }),
+    ])
+    return activePaths(
+      chosen,
+      practiced.flatMap(({ family, style }) => (family !== null && style !== null ? [{ family, style }] : [])),
+    )
   }
 
   // A lesson is completed once its theory or its main practice was finished at least once

@@ -205,6 +205,24 @@ describe('Opening paths (e2e)', () => {
       expect(await ctx.prisma.userProgress.count()).toBe(3)
     })
 
+    it('bring back a family with a single path, which never asks for a choice', async () => {
+      const balanced = await createPath('BALANCED')
+      await completeAndMakeDue([balanced.exerciseId])
+
+      expect(await dueIds()).toEqual([balanced.exerciseId])
+      const profile = await request(http()).get('/api/progress/profile').set('Authorization', auth())
+      expect(profile.body.reviews).toMatchObject({ due: 1, scheduled: 1 })
+    })
+
+    it('bring back the only practiced path of a family without a choice', async () => {
+      // Opened by its own slug: the student studied the tactical path and never chose.
+      const tactical = await createPath('TACTICAL')
+      await createPath('POSITIONAL')
+      await completeAndMakeDue([tactical.exerciseId])
+
+      expect(await dueIds()).toEqual([tactical.exerciseId])
+    })
+
     it('count in the profile the same reviews as the queue', async () => {
       const tactical = await createPath('TACTICAL')
       const positional = await createPath('POSITIONAL')
