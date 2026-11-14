@@ -2,19 +2,13 @@
 
 import { useState, useSyncExternalStore } from "react";
 import Link from "next/link";
-import { BookOpen, Trash2, Loader2, ChevronRight } from "lucide-react";
+import { BookOpen, Trash2, Loader2, ChevronRight, Route } from "lucide-react";
+import { OPENING_STYLE_LABELS, type OpeningSummary } from "@chess-openings/domain";
 import { deleteOpening } from "@/app/actions/opening.actions";
 import { isStyleArchetype, type StyleArchetype } from "@/lib/archetypes";
-import { styleTagLabel } from "@/lib/profile";
-
-interface Opening {
-    id: string;
-    name: string;
-    slug: string;
-    description: string | null;
-    styleTags: string[];
-    lessons: { id: string }[];
-}
+import { percent, styleTagLabel } from "@/lib/profile";
+import { pathsLabel } from "@/lib/opening-paths";
+import { cn } from "@/lib/cn";
 
 // The archetype lives in localStorage, which exists only in the browser. Reading it through
 // useSyncExternalStore lets the server render `null` and the client render the stored value
@@ -26,17 +20,33 @@ const noStyleOnServer = () => null;
 
 // Deleting is an admin action; the API enforces it too, the flag only keeps the button
 // away from students.
-export default function OpeningCard({ opening, canDelete }: { opening: Opening; canDelete: boolean }) {
+export default function OpeningCard({
+    opening,
+    completedLessons,
+    canDelete,
+}: {
+    opening: OpeningSummary;
+    // Lessons done on the chosen path; null when the student has not chosen one.
+    completedLessons: number | null;
+    canDelete: boolean;
+}) {
     const [isDeleting, setIsDeleting] = useState(false);
     const saved = useSyncExternalStore(NEVER_CHANGES, readStoredStyle, noStyleOnServer);
     const userStyle: StyleArchetype | null = isStyleArchetype(saved) ? saved : null;
 
     const isMatch = userStyle && opening.styleTags?.includes(userStyle);
 
+    // A family entry stands for one of its paths (the chosen one, or the calmest): deleting
+    // removes that path only, so the confirmation names it.
+    const hasPaths = opening.paths.length > 1;
+    const deletedName = opening.paths.find((path) => path.id === opening.id)?.name ?? opening.name;
+    const chosen = hasPaths ? opening.chosenStyle : null;
+    const total = opening.lessons.length;
+
     const handleDelete = async (e: React.MouseEvent) => {
         e.preventDefault();
 
-        if (!window.confirm(`Tem certeza que deseja excluir "${opening.name}"? Esta ação não pode ser desfeita.`)) {
+        if (!window.confirm(`Tem certeza que deseja excluir "${deletedName}"? Esta ação não pode ser desfeita.`)) {
             return;
         }
 
@@ -82,7 +92,7 @@ export default function OpeningCard({ opening, canDelete }: { opening: Opening; 
                         onClick={handleDelete}
                         disabled={isDeleting}
                         className="p-2 text-ink-400 hover:text-danger hover:bg-danger-soft rounded-[6px] transition-colors z-20"
-                        title="Excluir abertura"
+                        title={`Excluir ${deletedName}`}
                     >
                         {isDeleting ? (
                             <Loader2 className="w-4 h-4 animate-spin" />
@@ -97,18 +107,60 @@ export default function OpeningCard({ opening, canDelete }: { opening: Opening; 
                 <p className="text-ink-500 text-[13px] leading-relaxed line-clamp-2 mb-5">
                     {opening.description || "Sem descrição disponível."}
                 </p>
+                {hasPaths && (
+                    <p className="flex items-start gap-1.5 text-[12px] text-ink-500 mb-5">
+                        <Route className="w-3.5 h-3.5 mt-px shrink-0 text-ink-400" aria-hidden />
+                        {chosen ? (
+                            <span>
+                                Seu caminho: <span className="font-semibold text-ink-900">{OPENING_STYLE_LABELS[chosen]}</span>
+                            </span>
+                        ) : (
+                            <span>
+                                <span className="font-semibold text-ink-700">{opening.paths.length} caminhos:</span>{" "}
+                                {pathsLabel(opening.paths)}
+                            </span>
+                        )}
+                    </p>
+                )}
             </div>
 
-            <div className="relative z-10 flex items-center justify-between pt-4 border-t border-border-subtle">
-                <span className="text-[12px] font-medium text-ink-500 bg-surface-sunken px-2.5 py-1 rounded-full border border-border-subtle">
-                    {opening.lessons.length} {opening.lessons.length === 1 ? 'lição' : 'lições'}
-                </span>
+            <div className="relative z-10 flex items-center justify-between gap-3 pt-4 border-t border-border-subtle">
+                {chosen && completedLessons !== null ? (
+                    <PathProgress done={completedLessons} total={total} />
+                ) : (
+                    <span className="text-[12px] font-medium text-ink-500 bg-surface-sunken px-2.5 py-1 rounded-full border border-border-subtle">
+                        {hasPaths
+                            ? "Escolha um caminho"
+                            : `${total} ${total === 1 ? 'lição' : 'lições'}`}
+                    </span>
+                )}
 
                 <div className="flex items-center gap-1 text-[13px] font-semibold text-accent opacity-0 group-hover:opacity-100 transition-all -translate-x-2 group-hover:translate-x-0 duration-200">
-                    Estudar
+                    {hasPaths && !chosen ? "Escolher" : "Estudar"}
                     <ChevronRight className="w-4 h-4" />
                 </div>
             </div>
         </Link>
+    );
+}
+
+function PathProgress({ done, total }: { done: number; total: number }) {
+    const value = percent(done, total);
+    return (
+        <div className="flex items-center gap-2.5 min-w-0 flex-1">
+            <div
+                className="h-1.5 w-full max-w-28 rounded-full bg-surface-sunken overflow-hidden"
+                role="progressbar"
+                aria-label="Progresso no caminho"
+                aria-valuenow={value}
+                aria-valuemin={0}
+                aria-valuemax={100}
+            >
+                <div className={cn("h-full rounded-full", done === total ? "bg-reward" : "bg-success")} style={{ width: `${value}%` }} />
+            </div>
+            <span className="text-[12px] font-medium text-ink-500 whitespace-nowrap">
+                {done} de {total} {total === 1 ? 'lição' : 'lições'}
+            </span>
+        </div>
     );
 }
