@@ -115,6 +115,14 @@ async function main(): Promise<void> {
     await engine.close()
   }
 
+  // Nothing past the defining moves means the explorer gave no answer (service down, rate
+  // limit, bad token): fail instead of writing an "empty" repertoire that looks valid.
+  if (roots.length > 0 && countNodes(roots) <= start.sans.length) {
+    throw new Error(
+      'O explorer da Lichess não devolveu partidas depois dos lances iniciais. Confira se ' +
+        'explorer.lichess.ovh responde e o LICHESS_TOKEN, e rode de novo (falhas não ficam no cache).',
+    )
+  }
   const names = await loadOpeningNames(cache)
   const chapters = splitChapters(roots, start.sans.length, Number(values.licoes), names, ratingLabel)
   const text = renderRepertoire({
@@ -166,6 +174,10 @@ function parseStart(text: string): { sans: string[]; lastColor: Color } {
   }
   if (sans.length === 0) throw new Error('--inicio precisa de pelo menos um lance')
   return { sans, lastColor: sans.length % 2 === 1 ? 'w' : 'b' }
+}
+
+function countNodes(nodes: { children: unknown[] }[]): number {
+  return nodes.reduce((sum, n) => sum + 1 + countNodes(n.children as { children: unknown[] }[]), 0)
 }
 
 function parseStyle(value: string): 'solid' | 'tactical' | 'balanced' {

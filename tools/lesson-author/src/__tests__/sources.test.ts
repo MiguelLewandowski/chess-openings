@@ -1,6 +1,10 @@
-import { describe, expect, it } from 'vitest'
+import { mkdtemp, rm } from 'node:fs/promises'
+import { tmpdir } from 'node:os'
+import path from 'node:path'
+import { describe, expect, it, vi } from 'vitest'
 import { formatCp, parseUciInfo, studentCp } from '../sources/engine'
-import { normalizeExplorer } from '../sources/explorer'
+import { DiskCache } from '../sources/cache'
+import { LichessExplorer, normalizeExplorer } from '../sources/explorer'
 import { STARTING_FEN } from '../chess/types'
 
 describe('parseUciInfo', () => {
@@ -51,5 +55,24 @@ describe('normalizeExplorer', () => {
     expect(result.total).toBe(100)
     expect(result.moves[0].share).toBeCloseTo(0.75)
     expect(result.moves[0].scoreForMover).toBeCloseTo((50 + 5) / 75)
+  })
+})
+
+describe('LichessExplorer', () => {
+  it('should not cache a failed request, so the next run asks again', async () => {
+    const dir = await mkdtemp(path.join(tmpdir(), 'explorer-'))
+    const ok = { white: 6, draws: 2, black: 2, moves: [{ san: 'd4', white: 6, draws: 2, black: 2 }], opening: null }
+    const responses = [new Response('', { status: 503 }), new Response(JSON.stringify(ok), { status: 200 })]
+    vi.stubGlobal('fetch', async () => responses.shift())
+    try {
+      const explorer = new LichessExplorer('token', new DiskCache(dir))
+      expect(await explorer.query(STARTING_FEN, 'masters')).toBeNull()
+      expect((await explorer.query(STARTING_FEN, 'masters'))?.total).toBe(10)
+      // ...and a success is cached: no third request.
+      expect((await explorer.query(STARTING_FEN, 'masters'))?.total).toBe(10)
+    } finally {
+      vi.unstubAllGlobals()
+      await rm(dir, { recursive: true, force: true })
+    }
   })
 })

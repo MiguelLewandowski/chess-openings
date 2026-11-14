@@ -57,17 +57,23 @@ export class LichessExplorer {
     if (!this.token) return null
     const ratings = this.amateurRatings.join(',')
     const namespace = db === 'masters' ? 'explorer-masters' : ratings === '1600,1800,2000' ? 'explorer-amateurs' : `explorer-amateurs-${ratings}`
-    return this.cache.wrap(namespace, fen, async () => {
-      const url =
-        db === 'masters'
-          ? `https://explorer.lichess.ovh/masters?moves=12&fen=${encodeURIComponent(fen)}`
-          : `https://explorer.lichess.ovh/lichess?variant=standard&speeds=blitz,rapid,classical&ratings=${ratings}&moves=12&fen=${encodeURIComponent(fen)}`
-      // Be polite to a free service: one request at a time with a short pause.
-      await sleep(250)
-      const response = await fetchWithBackoff(url, { headers: { Authorization: `Bearer ${this.token}` } })
-      if (!response?.ok) return null
-      return normalizeExplorer((await response.json()) as RawExplorer, fen)
-    })
+    const cached = await this.cache.get<ExplorerResult | null>(namespace, fen)
+    // A cached null is a failure saved by an older version: ask again.
+    if (cached) return cached
+
+    const url =
+      db === 'masters'
+        ? `https://explorer.lichess.ovh/masters?moves=12&fen=${encodeURIComponent(fen)}`
+        : `https://explorer.lichess.ovh/lichess?variant=standard&speeds=blitz,rapid,classical&ratings=${ratings}&moves=12&fen=${encodeURIComponent(fen)}`
+    // Be polite to a free service: one request at a time with a short pause.
+    await sleep(250)
+    const response = await fetchWithBackoff(url, { headers: { Authorization: `Bearer ${this.token}` } })
+    // A failure (timeout, 5xx, rate limit) is not an answer about the position: never cache
+    // it, or every later run silently sees "no games" there.
+    if (!response?.ok) return null
+    const result = normalizeExplorer((await response.json()) as RawExplorer, fen)
+    await this.cache.set(namespace, fen, result)
+    return result
   }
 }
 
