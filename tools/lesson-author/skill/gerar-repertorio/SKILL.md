@@ -34,6 +34,7 @@ e entregar um arquivo limpo.
 | Lições (`--licoes`) | O número pedido | 15 |
 | Rating dos adversários (`--rating`) | "Pegar iniciantes" / armadilhas: `1000-1600`. Repertório para alunos mais fortes: `1600-2200` | `1000-1600` |
 | Profundidade (`--ate-lance`) | Até que lance da partida | 10 |
+| Estilo (`--estilo`) | `tatico` quando o pedido for por linhas táticas, forçantes ou "para pegar o adversário": nosso lance passa a ser o que mais faz os adversários da faixa errarem (dados do explorer + engine), até 0,50 do melhor. `solido` para um repertório posicional | `solido` |
 | Base (`--base`) | Se já existe um `.txt` aprovado dessa abertura em `tools/lesson-author/repertorios/`, use-o: os nossos lances dele têm prioridade e mantêm o sistema escolhido | — |
 
 ## 2. Pré-requisitos
@@ -60,6 +61,12 @@ Se vierem **menos capítulos** que o pedido: baixe `--min-freq` (ex.: `0.03`) ou
 Linhas de punição aparecem com um comentário `// X? — N% dos jogadores ... jogam`. Se vierem
 **poucas**: baixe `--erro-cp` (ex.: `80`) ou `--min-alcance` (ex.: `0.002`). Se vierem
 punições fracas (vantagem pequena no fim): suba `--erro-cp` (ex.: `150`).
+
+No estilo tático, as linhas dizem por que o lance foi escolhido (`// escolha tática: 3.Cf3
+(o adversário entrega 0.80 em média)`). Desconfie de escolhas táticas que quebram o sistema:
+se o ganho é pequeno (< 0.40) e o lance destoa dos ramos vizinhos, prefira fixá-lo com `--base`.
+
+Para gerar as **lições anotadas sem a API da Anthropic**, siga depois com a skill `/gerar-licoes`.
 
 ## 4. Revisar o rascunho como treinador
 

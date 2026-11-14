@@ -100,6 +100,8 @@ describe('splitChapters + renderRepertoire', () => {
       "2...Bc5 — Bishop's Opening (C23)",
       "Armadilha: 2...Dh4? — Bishop's Opening (C23)",
     ])
+    expect(chapters[2].lines[0].punishment).toBe(true)
+    expect(chapters[0].lines[0].punishment).toBe(false)
     expect(chapters[2].lines[0].note).toBe('2...Dh4? — 10% dos jogadores de 1000–1399 jogam; depois dele, +2.50 para nós')
   })
 
@@ -144,5 +146,79 @@ describe('RepertoireBuilder after a mistake', () => {
     const line = [childOf(roots, 'e4', 'e5', 'Bc4', 'Qh4')]
     while (line.at(-1)!.children.length > 0) line.push(line.at(-1)!.children[0])
     expect(line.map((n) => n.san)).toEqual(['Qh4', 'Nf3', 'Qxe4+', 'Be2'])
+  })
+})
+
+describe('RepertoireBuilder in the tactical style', () => {
+  // Against 2...Bc5 the engine rates 3.Cf3 and 3.c3 about the same and masters prefer 3.c3.
+  // After 3.Cf3, though, 40% of amateurs answer 3...f6?, which loses material (3...d6 is
+  // the sound reply); after 3.c3 everybody plays a sound move.
+  const BC5 = [...START, 'Bc5']
+  const tacticalEngine = new FakeEngine({
+    [AFTER_START]: eval_(['Bc5'], 30),
+    [fenAfter(...BC5)]: {
+      source: 'fake',
+      depth: 20,
+      lines: [
+        { san: ['c3'], cp: 35, mate: null },
+        { san: ['Nf3'], cp: 30, mate: null },
+      ],
+    },
+    [fenAfter(...BC5, 'c3')]: eval_(['Nf6'], 35),
+    [fenAfter(...BC5, 'c3', 'Nf6')]: eval_(['d4'], 35),
+    [fenAfter(...BC5, 'Nf3')]: eval_(['d6'], 30),
+    [fenAfter(...BC5, 'Nf3', 'd6')]: eval_(['c3'], 30),
+    [fenAfter(...BC5, 'Nf3', 'f6')]: eval_(['Nxe5'], 230),
+  })
+  class TacticalExplorer implements ExplorerLike {
+    async query(fen: string, db: 'masters' | 'amateurs'): Promise<ExplorerResult | null> {
+      if (db === 'amateurs' && fen === AFTER_START) return stats([['Bc5', 1000]])
+      if (db === 'masters' && fen === fenAfter(...BC5)) return stats([['c3', 90], ['Nf3', 10]])
+      if (db === 'amateurs' && fen === fenAfter(...BC5, 'c3')) return stats([['Nf6', 1000]])
+      if (db === 'amateurs' && fen === fenAfter(...BC5, 'Nf3')) return stats([['d6', 600], ['f6', 400]])
+      return null
+    }
+  }
+  const build = (style: 'solid' | 'tactical') =>
+    new RepertoireBuilder(tacticalEngine, new TacticalExplorer(), 'w', new Map(), { ...DEFAULT_DRAFT, maxPlies: 6, style }).build(START)
+
+  it('should keep the masters move in the solid style', async () => {
+    expect(childOf(await build('solid'), 'e4', 'e5', 'Bc4', 'Bc5').children[0].san).toBe('c3')
+  })
+
+  it('should pick the move where real opponents go wrong most often, and say why', async () => {
+    const ours = childOf(await build('tactical'), 'e4', 'e5', 'Bc4', 'Bc5').children[0]
+    expect(ours.san).toBe('Nf3')
+    // 40% of the games give away 2.00 → 0.80 of a pawn on average.
+    expect(ours.trapCp).toBe(80)
+    expect(ours.children.find((n) => n.san === 'f6')?.mistake).not.toBeNull()
+  })
+})
+
+describe('splitChapters in the tactical style', () => {
+  it('should explain a tactical choice in the line note, for the coach to review', async () => {
+    const engine = new FakeEngine({
+      [AFTER_START]: eval_(['Bc5'], 30),
+      [fenAfter(...START, 'Bc5')]: {
+        source: 'fake',
+        depth: 20,
+        lines: [
+          { san: ['c3'], cp: 35, mate: null },
+          { san: ['Nf3'], cp: 30, mate: null },
+        ],
+      },
+      [fenAfter(...START, 'Bc5', 'Nf3')]: eval_(['d6'], 30),
+      [fenAfter(...START, 'Bc5', 'Nf3', 'f6')]: eval_(['Nxe5'], 230),
+    })
+    const explorer: ExplorerLike = {
+      query: async (fen, db) => {
+        if (db === 'amateurs' && fen === AFTER_START) return stats([['Bc5', 1000]])
+        if (db === 'amateurs' && fen === fenAfter(...START, 'Bc5', 'Nf3')) return stats([['d6', 600], ['f6', 400]])
+        return null
+      },
+    }
+    const roots = await new RepertoireBuilder(engine, explorer, 'w', new Map(), { ...DEFAULT_DRAFT, maxPlies: 6, style: 'tactical' }).build(START)
+    const [chapter] = splitChapters(roots, START.length, 1, namesFrom(new Map()), '1000–1399')
+    expect(chapter.lines[0].note).toContain('escolha tática: 3.Cf3 (o adversário entrega 0.80 em média)')
   })
 })

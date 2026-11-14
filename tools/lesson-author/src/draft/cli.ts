@@ -34,6 +34,12 @@ Opções:
   --min-alcance <0-1>      corta linhas que menos desta fração das partidas alcançam (padrão: 0.003)
   --erro-cp <n>            quanto (em centésimos de peão) um lance precisa perder para virar
                            linha de punição (padrão: 100 = um peão)
+  --estilo solido|tatico   solido: entre os lances quase tão bons quanto o melhor, o mais
+                           jogado por mestres. tatico: o que mais faz os adversários da faixa
+                           errarem de verdade (dados do explorer + engine), com bônus para
+                           xeques e capturas (padrão: solido)
+  --tolerancia-cp <n>      quanto o nosso lance pode ser pior que o melhor da engine
+                           (padrão: 30; no estilo tático, 50)
   --stockfish <caminho>    executável do Stockfish (ou STOCKFISH_PATH)
   --depth <n>              profundidade do Stockfish (padrão: 18)
   --out <arquivo.txt>      onde gravar (padrão: tools/lesson-author/repertorios/<nome>.txt)
@@ -55,6 +61,8 @@ async function main(): Promise<void> {
       'max-respostas': { type: 'string', default: String(DEFAULT_DRAFT.maxReplies) },
       'min-alcance': { type: 'string', default: String(DEFAULT_DRAFT.minReach) },
       'erro-cp': { type: 'string', default: String(DEFAULT_DRAFT.mistakeCp) },
+      estilo: { type: 'string', default: 'solido' },
+      'tolerancia-cp': { type: 'string' },
       stockfish: { type: 'string' },
       depth: { type: 'string', default: '18' },
       out: { type: 'string' },
@@ -78,8 +86,11 @@ async function main(): Promise<void> {
 
   const engine = createEngine({ stockfish: values.stockfish, depth: Number(values.depth), log })
   const explorer = createExplorer(log, buckets)
+  const style = parseStyle(values.estilo)
   const options = {
     ...DEFAULT_DRAFT,
+    style,
+    toleranceCp: Number(values['tolerancia-cp'] ?? (style === 'tactical' ? 50 : DEFAULT_DRAFT.toleranceCp)),
     maxPlies: Number(values['ate-lance']) * 2,
     minShare: Number(values['min-freq']),
     maxReplies: Number(values['max-respostas']),
@@ -107,6 +118,9 @@ async function main(): Promise<void> {
     settings: [
       `início: ${values.inicio} | adversários: ${ratingLabel} (Lichess, blitz/rápidas/clássicas)`,
       `respostas com ≥ ${Math.round(options.minShare * 100)}% das partidas, até ${options.maxReplies} por posição, até o lance ${values['ate-lance']}`,
+      style === 'tactical'
+        ? `estilo tático: nosso lance é o que mais faz os adversários errarem, até ${options.toleranceCp} centésimos pior que o melhor`
+        : `estilo sólido: nosso lance é o mais jogado por mestres, até ${options.toleranceCp} centésimos pior que o melhor`,
       base.size > 0 ? `base: ${values.base} (${base.size} posições com lance nosso definido)` : 'sem repertório base',
       `gerado em ${new Date().toISOString().slice(0, 10)}`,
     ],
@@ -121,7 +135,7 @@ async function main(): Promise<void> {
   // The file must be something the generator accepts; fail here rather than later.
   const check = readRepertoireText(text)
   const lines = chapters.reduce((s, c) => s + c.lines.length, 0)
-  const traps = chapters.reduce((s, c) => s + c.lines.filter((l) => l.note).length, 0)
+  const traps = chapters.reduce((s, c) => s + c.lines.filter((l) => l.punishment).length, 0)
   log(`\n${check.chapters.length} capítulos, ${lines} linhas (${traps} de punição a erros do adversário).`)
   log(`Rascunho: ${out}`)
 }
@@ -144,6 +158,13 @@ function parseStart(text: string): { sans: string[]; lastColor: Color } {
   }
   if (sans.length === 0) throw new Error('--inicio precisa de pelo menos um lance')
   return { sans, lastColor: sans.length % 2 === 1 ? 'w' : 'b' }
+}
+
+function parseStyle(value: string): 'solid' | 'tactical' {
+  const v = value.trim().toLowerCase()
+  if (['solido', 'sólido', 'solid'].includes(v)) return 'solid'
+  if (['tatico', 'tático', 'tactical'].includes(v)) return 'tactical'
+  throw new Error(`--estilo "${value}" inválido (use solido ou tatico)`)
 }
 
 function parseColor(value: string): Color {
