@@ -27,6 +27,13 @@ function chapter(title: string, studentColor: 'WHITE' | 'BLACK', rootNodes: Pars
   return { title, studyName: 'Inglesa', studentColor, intro, initialFen: START, rootNodes }
 }
 
+// A main line from the initial position, as nested nodes (White moves first).
+function chain(prefix: string, moves: string): ParsedNode[] {
+  const nodes = moves.split(' ').map((san, i) => node(`${prefix}${i}`, san, i % 2 === 0 ? 'WHITE' : 'BLACK'))
+  nodes.slice(1).forEach((child, i) => nodes[i].children.push(child))
+  return [nodes[0]]
+}
+
 function setup(chapters: ParsedChapter[]) {
   const parser: IPgnParser = { parseStudy: vi.fn().mockReturnValue(chapters) }
   const engine: IEngineService = { getEvaluationsBatch: vi.fn().mockResolvedValue({}) }
@@ -200,5 +207,29 @@ describe('IngestStudy', () => {
     ])
     await useCase.execute('pgn', { specificChapter: 2, useAuthorComments: true })
     expect(saved().lessons.map((l) => l.title)).toEqual(['B'])
+  })
+
+  it('should store the branch of each lesson, following the main line past its variations', async () => {
+    const lewis = chain('l', 'e4 e5 Bc4 Bc5 d4')
+    const twoKnights = chain('k', 'e4 e5 Bc4 Nf6 d4 d6')
+    // A variation on move 2 inside the lesson (2...Cc6) must not make a branch of its own.
+    twoKnights[0].children[0].children[0].children.push({ ...node('k-alt', 'Nc6', 'BLACK'), isMainLine: false })
+    const { useCase, saved } = setup([
+      chapter('Gambito Lewis', 'WHITE', lewis),
+      chapter('Dois Cavalos', 'WHITE', twoKnights),
+      chapter('Dois Cavalos | Armadilha: 3...d6?', 'WHITE', [node('t1', 'dxe5', 'WHITE')]),
+    ])
+    await useCase.execute('pgn', { useAuthorComments: true, family: 'Abertura do Bispo', style: 'TACTICAL' })
+
+    expect(saved().lessons.map((l) => [l.title, l.branch])).toEqual([
+      ['Gambito Lewis', '2...Bc5'],
+      ['Dois Cavalos', '2...Cf6'],
+    ])
+  })
+
+  it('should give branches to an opening without paths too, and none when it has one line', async () => {
+    const { useCase, saved } = setup([chapter('Única', 'WHITE', chain('u', 'c4 e5 Nc3'))])
+    await useCase.execute('pgn', { useAuthorComments: true })
+    expect(saved().lessons[0].branch).toBeNull()
   })
 })

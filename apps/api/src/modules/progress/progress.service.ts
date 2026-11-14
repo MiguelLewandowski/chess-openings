@@ -7,6 +7,7 @@ import {
   MATURE_INTERVAL_DAYS,
   currentStreak,
   formatMoveList,
+  lessonTrack,
   levelFromXp,
   mainLine,
   type ContinueLesson,
@@ -23,7 +24,13 @@ const OPENING_PREVIEW_PLIES = 4
 interface ProfileOpening {
   name: string
   slug: string
-  lessons: { id: string; title: string; exercises: { initialFen: string | null; moves: LineNode[] }[] }[]
+  lessons: {
+    id: string
+    title: string
+    order: number
+    branch: string | null
+    exercises: { initialFen: string | null; moves: LineNode[] }[]
+  }[]
 }
 
 @Injectable()
@@ -130,6 +137,7 @@ export class ProgressService {
               id: true,
               title: true,
               order: true,
+              branch: true,
               // Practice exercises hold only the main line, so this stays small.
               exercises: {
                 where: { type: 'PRACTICE', cardKind: null },
@@ -220,9 +228,9 @@ export class ProgressService {
     }
   }
 
-  // The first unfinished lesson of the opening the user touched most recently; for a user
-  // with no progress, the first lesson of the catalog. When every lesson of that opening is
-  // done, the most recently studied lesson is offered again as a review.
+  // The lesson the trail suggests (see lessonTrack) in the opening the user touched most
+  // recently; for a user with no progress, the first lesson of the catalog. When every lesson
+  // of that opening is done, the most recently studied lesson is offered again as a review.
   private pickContinueLesson(
     openings: ProfileOpening[],
     progress: { updatedAt: Date; exercise: { lessonId: string } }[],
@@ -238,8 +246,9 @@ export class ProgressService {
       : openings.find((o) => o.lessons.length > 0)
     if (!opening) return null
 
+    const { nextLessonId } = lessonTrack(opening.lessons, completedLessonIds)
     const lesson =
-      opening.lessons.find((l) => !completedLessonIds.has(l.id)) ??
+      opening.lessons.find((l) => l.id === nextLessonId) ??
       opening.lessons.find((l) => l.id === latest?.exercise.lessonId) ??
       opening.lessons[0]
 

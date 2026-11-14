@@ -1,14 +1,17 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common'
 import { PrismaService } from '../../infrastructure/prisma.service'
 import { PrismaOpeningChoiceRepository } from '../../infrastructure/repositories/prisma-opening-choice.repository'
+import { ProgressService } from '../progress/progress.service'
 import {
   ChooseOpeningStyle,
   OPENING_STYLES,
   OpeningFamilyNotFoundError,
   OpeningStyleNotAvailableError,
   familyNameOf,
+  lessonTrack,
   type LessonSummary,
   type OpeningChoice,
+  type OpeningDetail,
   type OpeningPathSummary,
   type OpeningStyle,
   type OpeningSummary,
@@ -23,7 +26,7 @@ const OPENING_SELECT = {
   isTutorial: true,
   family: true,
   style: true,
-  lessons: { select: { id: true, title: true, order: true }, orderBy: { order: 'asc' } },
+  lessons: { select: { id: true, title: true, order: true, branch: true }, orderBy: { order: 'asc' } },
 } as const
 
 interface OpeningRow {
@@ -46,6 +49,7 @@ export class OpeningService {
 
   constructor(
     private readonly prisma: PrismaService,
+    private readonly progressService: ProgressService,
     choiceRepo: PrismaOpeningChoiceRepository,
   ) {
     this.chooseOpeningStyle = new ChooseOpeningStyle(choiceRepo)
@@ -78,8 +82,15 @@ export class OpeningService {
     return summaries
   }
 
-  // A family slug answers with the family entry; any other slug with that opening.
-  async findBySlug(slug: string, userId?: string): Promise<OpeningSummary> {
+  // A family slug answers with the family entry; any other slug with that opening. Either way
+  // with the trail of the opening it describes, and the student's progress on it.
+  async findBySlug(slug: string, userId?: string): Promise<OpeningDetail> {
+    const summary = await this.findSummaryBySlug(slug, userId)
+    const completed = userId ? await this.progressService.findCompletedLessonIds(userId, summary.id) : []
+    return { ...summary, track: lessonTrack(summary.lessons, completed) }
+  }
+
+  private async findSummaryBySlug(slug: string, userId?: string): Promise<OpeningSummary> {
     const [paths, choices] = await Promise.all([
       this.prisma.opening.findMany({ where: { family: slug }, select: OPENING_SELECT }),
       this.findChoices(userId),

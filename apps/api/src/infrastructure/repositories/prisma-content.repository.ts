@@ -46,7 +46,7 @@ export class PrismaContentRepository implements IContentRepository {
 
         for (const lessonData of data.lessons) {
           const lesson = await tx.lesson.create({
-            data: { title: lessonData.title, order: lessonData.order, openingId: opening.id },
+            data: { title: lessonData.title, order: lessonData.order, branch: lessonData.branch, openingId: opening.id },
           })
 
           for (const ex of lessonData.exercises) {

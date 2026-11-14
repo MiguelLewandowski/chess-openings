@@ -12,7 +12,7 @@ export class LessonService {
       include: {
         opening: {
           include: {
-            lessons: { select: { id: true, title: true, order: true }, orderBy: { order: 'asc' } },
+            lessons: { select: { id: true, title: true, order: true, branch: true }, orderBy: { order: 'asc' } },
           },
         },
         exercises: {

@@ -1,7 +1,7 @@
 import { Body, Controller, Get, Delete, Param, HttpCode, Put, Request, UseGuards } from '@nestjs/common'
 import { ApiTags, ApiOperation, ApiParam, ApiResponse, ApiBearerAuth } from '@nestjs/swagger'
 import { OpeningService } from './opening.service'
-import { OpeningResponseDto } from './dto/opening-response.dto'
+import { OpeningDetailDto, OpeningResponseDto } from './dto/opening-response.dto'
 import { ChooseOpeningStyleDto, OpeningChoiceDto } from './dto/choose-opening-style.dto'
 import { JwtAuthGuard } from '../auth/jwt-auth.guard'
 import { OptionalJwtAuthGuard } from '../auth/optional-jwt-auth.guard'
@@ -39,10 +39,11 @@ export class OpeningController {
   @ApiBearerAuth()
   @ApiOperation({
     summary: 'Get opening by slug',
-    description: 'Returns a single opening with full lesson list. A family slug returns the family entry (see the catalog).',
+    description:
+      'Returns a single opening with full lesson list and its trail grouped by branch. A family slug returns the family entry (see the catalog). With a token, the trail shows the student progress.',
   })
   @ApiParam({ name: 'slug', description: 'URL-friendly opening or family identifier, e.g. "italian-game"' })
-  @ApiResponse({ status: 200, description: 'Opening found.', type: OpeningResponseDto })
+  @ApiResponse({ status: 200, description: 'Opening found.', type: OpeningDetailDto })
   @ApiResponse({ status: 404, description: 'Opening not found.' })
   findOne(@Param('slug') slug: string, @Request() req: MaybeAuthenticatedRequest) {
     return this.openingService.findBySlug(slug, req.user?.userId)
