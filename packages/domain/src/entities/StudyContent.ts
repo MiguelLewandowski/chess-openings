@@ -1,5 +1,6 @@
 import type { CoachInsight } from '../services/ICoachService'
 import type { VisualMarkers } from '../services/IPgnParser'
+import type { OpeningStyle } from './OpeningStyle'
 
 export interface IngestMoveNode {
   san: string
@@ -36,5 +37,9 @@ export interface IngestStudyData {
   openingSlug: string
   styleTags: string[]
   isTutorial: boolean
+  // Slug of the family this opening is a path of, and which path; both null for an opening
+  // without paths.
+  family: string | null
+  style: OpeningStyle | null
   lessons: IngestLessonData[]
 }
