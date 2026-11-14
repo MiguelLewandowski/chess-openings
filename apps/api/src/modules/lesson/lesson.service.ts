@@ -22,7 +22,7 @@ export class LessonService {
             moves: {
               select: {
                 id: true, san: true, fen: true, parentId: true,
-                isOpponentResponse: true, coachInsights: true, visualMarkers: true,
+                isOpponentResponse: true, coachInsights: true, visualMarkers: true, absoluteCp: true,
               },
               orderBy: { id: 'asc' },
             },
