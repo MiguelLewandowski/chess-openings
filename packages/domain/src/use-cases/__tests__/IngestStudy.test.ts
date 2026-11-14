@@ -27,6 +27,13 @@ function chapter(title: string, studentColor: 'WHITE' | 'BLACK', rootNodes: Pars
   return { title, studyName: 'Inglesa', studentColor, intro, initialFen: START, rootNodes }
 }
 
+// A main line from the initial position, as nested nodes (White moves first).
+function chain(prefix: string, moves: string): ParsedNode[] {
+  const nodes = moves.split(' ').map((san, i) => node(`${prefix}${i}`, san, i % 2 === 0 ? 'WHITE' : 'BLACK'))
+  nodes.slice(1).forEach((child, i) => nodes[i].children.push(child))
+  return [nodes[0]]
+}
+
 function setup(chapters: ParsedChapter[]) {
   const parser: IPgnParser = { parseStudy: vi.fn().mockReturnValue(chapters) }
   const engine: IEngineService = { getEvaluationsBatch: vi.fn().mockResolvedValue({}) }
@@ -149,6 +156,42 @@ describe('IngestStudy', () => {
     expect(saved().isTutorial).toBe(false)
   })
 
+  it('should leave an opening without paths out of any family by default', async () => {
+    const { useCase, saved } = setup([chapter('Linha', 'WHITE', [node('n1', 'c4', 'WHITE')])])
+    await useCase.execute('pgn', { useAuthorComments: true })
+    expect(saved()).toMatchObject({ openingName: 'Inglesa', openingSlug: 'inglesa', family: null, style: null })
+  })
+
+  it('should save a path of a family under "<family> — <style>", with the family slug', async () => {
+    const { useCase, saved } = setup([chapter('Linha', 'WHITE', [node('n1', 'e4', 'WHITE')])])
+    await useCase.execute('pgn', { useAuthorComments: true, family: 'Abertura do Bispo', style: 'TACTICAL' })
+    expect(saved()).toMatchObject({
+      openingName: 'Abertura do Bispo — Tático',
+      openingSlug: 'abertura-do-bispo-tatico',
+      family: 'abertura-do-bispo',
+      style: 'TACTICAL',
+    })
+  })
+
+  it('should name the family path even when an opening name is also given', async () => {
+    const { useCase, saved } = setup([chapter('Linha', 'WHITE', [node('n1', 'e4', 'WHITE')])])
+    await useCase.execute('pgn', { openingName: 'Outro nome', family: 'Abertura do Bispo', style: 'BALANCED' })
+    expect(saved().openingName).toBe('Abertura do Bispo — Equilibrado')
+  })
+
+  it('should refuse a family without a style, and a style without a family', async () => {
+    const { useCase } = setup([chapter('Linha', 'WHITE', [node('n1', 'e4', 'WHITE')])])
+    await expect(useCase.execute('pgn', { family: 'Abertura do Bispo' })).rejects.toThrow(/família e estilo/)
+    await expect(useCase.execute('pgn', { style: 'POSITIONAL' })).rejects.toThrow(/família e estilo/)
+  })
+
+  it('should refuse a tutorial with paths', async () => {
+    const { useCase } = setup([chapter('Linha', 'WHITE', [node('n1', 'e4', 'WHITE')])])
+    await expect(
+      useCase.execute('pgn', { tutorial: true, family: 'Abertura do Bispo', style: 'POSITIONAL' }),
+    ).rejects.toThrow(/tutorial/)
+  })
+
   it('should refuse a study that still has review markers', async () => {
     const { useCase } = setup([
       chapter('Linha', 'WHITE', [node('n1', 'c4', 'WHITE', '[REVISAR: casa errada] Controla d6.')]),
@@ -164,5 +207,29 @@ describe('IngestStudy', () => {
     ])
     await useCase.execute('pgn', { specificChapter: 2, useAuthorComments: true })
     expect(saved().lessons.map((l) => l.title)).toEqual(['B'])
+  })
+
+  it('should store the branch of each lesson, following the main line past its variations', async () => {
+    const lewis = chain('l', 'e4 e5 Bc4 Bc5 d4')
+    const twoKnights = chain('k', 'e4 e5 Bc4 Nf6 d4 d6')
+    // A variation on move 2 inside the lesson (2...Cc6) must not make a branch of its own.
+    twoKnights[0].children[0].children[0].children.push({ ...node('k-alt', 'Nc6', 'BLACK'), isMainLine: false })
+    const { useCase, saved } = setup([
+      chapter('Gambito Lewis', 'WHITE', lewis),
+      chapter('Dois Cavalos', 'WHITE', twoKnights),
+      chapter('Dois Cavalos | Armadilha: 3...d6?', 'WHITE', [node('t1', 'dxe5', 'WHITE')]),
+    ])
+    await useCase.execute('pgn', { useAuthorComments: true, family: 'Abertura do Bispo', style: 'TACTICAL' })
+
+    expect(saved().lessons.map((l) => [l.title, l.branch])).toEqual([
+      ['Gambito Lewis', '2...Bc5'],
+      ['Dois Cavalos', '2...Cf6'],
+    ])
+  })
+
+  it('should give branches to an opening without paths too, and none when it has one line', async () => {
+    const { useCase, saved } = setup([chapter('Única', 'WHITE', chain('u', 'c4 e5 Nc3'))])
+    await useCase.execute('pgn', { useAuthorComments: true })
+    expect(saved().lessons[0].branch).toBeNull()
   })
 })

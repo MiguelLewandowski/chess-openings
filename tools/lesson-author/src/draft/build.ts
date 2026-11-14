@@ -31,6 +31,9 @@ export interface DraftNode {
   // Our moves chosen while punishing a mistake.
   punishing: boolean
   fromBase: boolean
+  // Tactical style, our moves only: how much (in centipawns, from our side) the opponent's
+  // real replies give away on average after this move. Null when it was not measured.
+  trapCp: number | null
 }
 
 export interface ExplorerLike {
@@ -47,6 +50,13 @@ export interface DraftOptions {
   mistakeCp: number // an opponent reply this much worse than their best is a mistake
   punishUntilCp: number // stop punishing once our advantage reaches this
   maxPunishPlies: number // ...or after this many plies of punishment
+  // solid: among the moves about as good as the engine's best, the one masters play most.
+  // tactical: among those, the one after which real opponents of the chosen rating go wrong
+  // most (expected centipawns given away), with a small bonus for checks and captures.
+  // balanced: the masters' move, unless the best tactical candidate scores at least
+  // `minTacticalGainCp` more than it.
+  style: 'solid' | 'tactical' | 'balanced'
+  minTacticalGainCp: number
 }
 
 export const DEFAULT_DRAFT: DraftOptions = {
@@ -62,7 +72,15 @@ export const DEFAULT_DRAFT: DraftOptions = {
   mistakeCp: 100,
   punishUntilCp: 250,
   maxPunishPlies: 6,
+  style: 'solid',
+  minTacticalGainCp: 40,
 }
+
+// Gains above this count as "already winning": a 9-pawn blunder should not outweigh a line
+// where many players lose a pawn.
+const TRAP_CAP_CP = 500
+const CHECK_BONUS_CP = 15
+const CAPTURE_BONUS_CP = 5
 
 export interface DraftProgress {
   positions: number
@@ -111,6 +129,7 @@ export class RepertoireBuilder {
       const node = this.play(fen, choice.san, reach, 0)
       node.punishing = punishPlies > 0
       node.fromBase = choice.fromBase
+      node.trapCp = choice.trapCp
       parent.children.push(node)
 
       if (punishPlies > 0) {
@@ -151,21 +170,55 @@ export class RepertoireBuilder {
     }
   }
 
-  private async chooseOurMove(fen: string, punishing: boolean): Promise<{ san: string; fromBase: boolean } | null> {
+  private async chooseOurMove(
+    fen: string,
+    punishing: boolean,
+  ): Promise<{ san: string; fromBase: boolean; trapCp: number | null } | null> {
     const fromBase = this.base.get(positionKey(fen))
-    if (fromBase && isLegal(fen, fromBase)) return { san: fromBase, fromBase: true }
+    if (fromBase && isLegal(fen, fromBase)) return { san: fromBase, fromBase: true, trapCp: null }
 
-    const analysis = await this.engine.analyse(fen, 3)
+    const tactical = this.options.style !== 'solid'
+    const analysis = await this.engine.analyse(fen, tactical ? 5 : 3)
     const lines = analysis?.lines ?? []
     if (lines.length === 0) return null
-    if (punishing) return { san: lines[0].san[0], fromBase: false }
+    if (punishing) return { san: lines[0].san[0], fromBase: false, trapCp: null }
 
     const bestCp = studentCp(lines[0], this.student) ?? 0
     const good = lines.filter((l) => bestCp - (studentCp(l, this.student) ?? -Infinity) <= this.options.toleranceCp)
     const masters = await this.explorer.query(fen, 'masters')
     const played = (san: string) => masters?.moves.find((m) => m.san === san)?.games ?? 0
-    const pick = [...good].sort((a, b) => played(b.san[0]) - played(a.san[0]))[0] ?? lines[0]
-    return { san: pick.san[0], fromBase: false }
+    const byMasters = [...good].sort((a, b) => played(b.san[0]) - played(a.san[0]))
+    if (!tactical || byMasters.length < 2) return { san: (byMasters[0] ?? lines[0]).san[0], fromBase: false, trapCp: null }
+
+    // Scored in the masters' order, so a tie keeps the more established move.
+    const scored: { san: string; trapCp: number; score: number }[] = []
+    for (const line of byMasters) {
+      const san = line.san[0]
+      const trapCp = await this.trapCp(fen, san)
+      scored.push({ san, trapCp, score: trapCp + forcingBonus(fen, san) })
+    }
+    const pick = scored.reduce((best, s) => (s.score > best.score ? s : best))
+    if (this.options.style === 'balanced' && pick.score - scored[0].score < this.options.minTacticalGainCp) {
+      return { san: scored[0].san, fromBase: false, trapCp: null }
+    }
+    return { san: pick.san, fromBase: false, trapCp: pick.trapCp }
+  }
+
+  // What the opponent's real replies give away after our move, weighted by how often each is
+  // played: the data side of "tactical" (an engine alone cannot say which traps people fall in).
+  private async trapCp(fen: string, san: string): Promise<number> {
+    const after = this.play(fen, san, 0, 0).fenAfter
+    const stats = await this.explorer.query(after, 'amateurs')
+    if (!stats || stats.total < this.options.minGames) return 0
+    const best = studentCp((await this.engine.analyse(after, 1))?.lines[0], this.student)
+    if (best === null) return 0
+    let expected = 0
+    for (const reply of stats.moves.filter((m) => m.share >= this.options.minShare).slice(0, this.options.maxReplies)) {
+      const replyFen = this.play(after, reply.san, 0, 0).fenAfter
+      const cp = studentCp((await this.engine.analyse(replyFen, 1))?.lines[0], this.student)
+      if (cp !== null) expected += reply.share * Math.min(Math.max(cp - best, 0), TRAP_CAP_CP)
+    }
+    return Math.round(expected)
   }
 
   private play(fenBefore: string, san: string, reach: number, share: number, games = 0): DraftNode {
@@ -188,6 +241,7 @@ export class RepertoireBuilder {
       mistake: null,
       punishing: false,
       fromBase: false,
+      trapCp: null,
     }
   }
 }
@@ -200,6 +254,11 @@ export function positionKey(fen: string): string {
 function plyOf(fen: string): number {
   const moveNumber = moveNumberOf(fen)
   return (moveNumber - 1) * 2 + (sideToMove(fen) === 'b' ? 1 : 0)
+}
+
+function forcingBonus(fen: string, san: string): number {
+  const move = new Chess(fen).move(san)
+  return (move.san.includes('+') ? CHECK_BONUS_CP : 0) + (move.captured ? CAPTURE_BONUS_CP : 0)
 }
 
 function isLegal(fen: string, san: string): boolean {

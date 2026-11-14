@@ -2,6 +2,7 @@ import type { Metadata } from "next"
 import { cache } from "react"
 import Board from "@/components/chess/Board"
 import LessonSession from "@/components/chess/LessonSession"
+import LessonEvalBar from "@/components/chess/LessonEvalBar"
 import { apiClient } from "@/lib/api-client"
 import { getSession } from "@/lib/session"
 import { ChessWrapper } from "@/lib/chess"
@@ -12,6 +13,7 @@ import { PageBody, PageHeader } from "@/components/layout/Page"
 import { CARD_KIND_LABEL, LessonCards } from "@/components/chess/LessonCards"
 import { Badge } from "@/components/ui"
 import { lessonShortTitle } from "@/lib/profile"
+import { nextLessonInBranch } from "@/lib/lesson-track"
 
 // The tab title and the page need the same lesson: cache() makes it one request.
 const findLesson = cache((id: string, token: string) => apiClient.lessons.findById(id, token))
@@ -50,8 +52,7 @@ export default async function LessonPage({
     const watchExercise = !requested && practiceExercise ? theoryExercise : undefined
     const isCard = Boolean(selectedExercise?.cardKind)
 
-    const currentLessonIndex = lesson.opening.lessons.findIndex(l => l.id === lesson.id)
-    const nextLesson = lesson.opening.lessons[currentLessonIndex + 1]
+    const nextLesson = nextLessonInBranch(lesson.opening.lessons, lesson.id)
     // After a card, the next card of the lesson; after the last one, back to its practice.
     const nextCard = isCard ? cards[cards.findIndex(c => c.id === selectedExercise?.id) + 1] : undefined
     const next = isCard
@@ -130,8 +131,13 @@ export default async function LessonPage({
                 above it add 56px below lg), so the whole position always fits on screen. */}
             <PageBody className="grid grid-cols-1 gap-6 @4xl:grid-cols-[minmax(0,1fr)_minmax(340px,420px)] @7xl:grid-cols-[minmax(0,1fr)_480px] @4xl:gap-8 @4xl:items-start">
                 <div className="flex justify-center min-w-0">
-                    <div className="w-full max-w-[calc(100dvh-13.5rem)] lg:max-w-[calc(100dvh-10rem)] aspect-square rounded-[16px] overflow-hidden ring-1 ring-border-default shadow-xl bg-surface-card">
-                        <Board />
+                    {/* The evaluation bar sits above the board on phones and beside it from sm up,
+                        taking its width from the board's, so the height limit still holds. */}
+                    <div className="w-full max-w-[calc(100dvh-13.5rem)] lg:max-w-[calc(100dvh-10rem)] flex flex-col sm:flex-row gap-2 sm:gap-3">
+                        <LessonEvalBar />
+                        <div className="w-full sm:flex-1 min-w-0 aspect-square rounded-[16px] overflow-hidden ring-1 ring-border-default shadow-xl bg-surface-card">
+                            <Board />
+                        </div>
                     </div>
                 </div>
 

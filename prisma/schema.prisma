@@ -30,6 +30,7 @@ model User {
 
   // Relações
   progress          UserProgress[]
+  openingChoices    UserOpeningChoice[]
   classroomsManaged Classroom[]    @relation("TeacherClassrooms")
   enrollments       Enrollment[]   @relation("StudentEnrollments")
 }
@@ -44,13 +45,40 @@ model Opening {
   styleTags   String[] // Tags para o sistema de recomendação
   // Tutorial (ex.: como as peças se movem): aparece no catálogo, mas fica fora das revisões
   isTutorial  Boolean  @default(false)
+  // Caminho de uma abertura com vários estilos: as irmãs dividem a mesma família (slug da
+  // abertura "mãe", ex.: "abertura-do-bispo"). Null nos dois = abertura sem caminhos.
+  family      String?
+  style       OpeningStyle?
   lessons     Lesson[]
+
+  @@unique([family, style])
+}
+
+enum OpeningStyle {
+  POSITIONAL
+  BALANCED
+  TACTICAL
+}
+
+// O caminho que o aluno escolheu em cada família. Só ele entra na fila de revisões; o
+// progresso dos outros fica guardado e volta se o aluno trocar de novo.
+model UserOpeningChoice {
+  userId    String
+  family    String
+  style     OpeningStyle
+  updatedAt DateTime     @updatedAt
+  user      User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([userId, family])
 }
 
 model Lesson {
   id        String     @id @default(cuid())
   title     String
   order     Int        // Ordem da lição dentro da abertura
+  // Ramo da trilha: o lance do adversário que sai do tronco comum das lições (ex.: "2...Cf6").
+  // Null = um ramo só, a trilha em sequência como antes.
+  branch    String?
   openingId String
   opening   Opening    @relation(fields: [openingId], references: [id], onDelete: Cascade)
   exercises Exercise[]

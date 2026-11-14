@@ -12,7 +12,7 @@ export class LessonService {
       include: {
         opening: {
           include: {
-            lessons: { select: { id: true, title: true, order: true }, orderBy: { order: 'asc' } },
+            lessons: { select: { id: true, title: true, order: true, branch: true }, orderBy: { order: 'asc' } },
           },
         },
         exercises: {
@@ -22,7 +22,7 @@ export class LessonService {
             moves: {
               select: {
                 id: true, san: true, fen: true, parentId: true,
-                isOpponentResponse: true, coachInsights: true, visualMarkers: true,
+                isOpponentResponse: true, coachInsights: true, visualMarkers: true, absoluteCp: true,
               },
               orderBy: { id: 'asc' },
             },

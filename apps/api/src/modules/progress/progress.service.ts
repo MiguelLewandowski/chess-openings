@@ -5,8 +5,10 @@ import { PrismaUserRepository } from '../../infrastructure/repositories/prisma-u
 import {
   CompleteExercise,
   MATURE_INTERVAL_DAYS,
+  activePaths,
   currentStreak,
   formatMoveList,
+  lessonTrack,
   levelFromXp,
   mainLine,
   type ContinueLesson,
@@ -23,7 +25,13 @@ const OPENING_PREVIEW_PLIES = 4
 interface ProfileOpening {
   name: string
   slug: string
-  lessons: { id: string; title: string; exercises: { initialFen: string | null; moves: LineNode[] }[] }[]
+  lessons: {
+    id: string
+    title: string
+    order: number
+    branch: string | null
+    exercises: { initialFen: string | null; moves: LineNode[] }[]
+  }[]
 }
 
 @Injectable()
@@ -70,7 +78,8 @@ export class ProgressService {
     }
   }
 
-  findDueReviews(userId: string) {
+  async findDueReviews(userId: string) {
+    const paths = await this.findActivePaths(userId)
     return this.prisma.userProgress.findMany({
       where: {
         userId,
@@ -78,7 +87,17 @@ export class ProgressService {
         // No repetitions filter: a lapsed card (SM-2 resets repetitions to 0 on
         // a failure) must still resurface once its 1-day interval elapses. Rows
         // only exist after a real attempt, so there are no untouched cards to leak.
-        exercise: { type: 'PRACTICE', lesson: { opening: { isTutorial: false } } },
+        exercise: {
+          type: 'PRACTICE',
+          lesson: {
+            opening: {
+              isTutorial: false,
+              // Only the active path of each family (see activePaths): mixing paths would drill
+              // contradictory moves in the same position.
+              OR: [{ family: null }, ...paths.map(({ family, style }) => ({ family, style }))],
+            },
+          },
+        },
       },
       select: {
         nextReview: true,
@@ -103,7 +122,7 @@ export class ProgressService {
   }
 
   async findProfile(userId: string): Promise<UserProfile> {
-    const [user, openings, progress] = await Promise.all([
+    const [user, openings, progress, paths] = await Promise.all([
       this.prisma.user.findUnique({
         where: { id: userId },
         select: { name: true, email: true, styleArchetype: true, createdAt: true, xp: true, streak: true, lastStudyDate: true },
@@ -119,6 +138,7 @@ export class ProgressService {
               id: true,
               title: true,
               order: true,
+              branch: true,
               // Practice exercises hold only the main line, so this stays small.
               exercises: {
                 where: { type: 'PRACTICE', cardKind: null },
@@ -138,10 +158,16 @@ export class ProgressService {
           nextReview: true,
           updatedAt: true,
           exercise: {
-            select: { type: true, lessonId: true, cardKind: true, lesson: { select: { opening: { select: { isTutorial: true } } } } },
+            select: {
+              type: true,
+              lessonId: true,
+              cardKind: true,
+              lesson: { select: { opening: { select: { isTutorial: true, family: true, style: true } } } },
+            },
           },
         },
       }),
+      this.findActivePaths(userId),
     ])
     if (!user) throw new UnauthorizedException('User not found.')
 
@@ -150,10 +176,14 @@ export class ProgressService {
       progress.filter((p) => p.exercise.cardKind === null).map((p) => p.exercise.lessonId),
     )
 
-    // Only PRACTICE exercises outside a tutorial are ever brought back for review, so the
-    // review stats count those alone.
+    // Only PRACTICE exercises outside a tutorial, on the active path of their family, are
+    // brought back for review (see findDueReviews), so the review stats count those alone.
     const now = new Date()
-    const practice = progress.filter((p) => p.exercise.type === 'PRACTICE' && !p.exercise.lesson.opening.isTutorial)
+    const isActivePath = ({ family, style }: { family: string | null; style: string | null }) =>
+      family === null || paths.some((p) => p.family === family && p.style === style)
+    const practice = progress.filter(
+      (p) => p.exercise.type === 'PRACTICE' && !p.exercise.lesson.opening.isTutorial && isActivePath(p.exercise.lesson.opening),
+    )
     const upcoming = practice
       .map((p) => p.nextReview)
       .filter((date) => date > now)
@@ -199,9 +229,9 @@ export class ProgressService {
     }
   }
 
-  // The first unfinished lesson of the opening the user touched most recently; for a user
-  // with no progress, the first lesson of the catalog. When every lesson of that opening is
-  // done, the most recently studied lesson is offered again as a review.
+  // The lesson the trail suggests (see lessonTrack) in the opening the user touched most
+  // recently; for a user with no progress, the first lesson of the catalog. When every lesson
+  // of that opening is done, the most recently studied lesson is offered again as a review.
   private pickContinueLesson(
     openings: ProfileOpening[],
     progress: { updatedAt: Date; exercise: { lessonId: string } }[],
@@ -217,8 +247,9 @@ export class ProgressService {
       : openings.find((o) => o.lessons.length > 0)
     if (!opening) return null
 
+    const { nextLessonId } = lessonTrack(opening.lessons, completedLessonIds)
     const lesson =
-      opening.lessons.find((l) => !completedLessonIds.has(l.id)) ??
+      opening.lessons.find((l) => l.id === nextLessonId) ??
       opening.lessons.find((l) => l.id === latest?.exercise.lessonId) ??
       opening.lessons[0]
 
@@ -235,6 +266,25 @@ export class ProgressService {
       hasProgress: touchedLessonIds.has(lesson.id),
       remainingLessons: opening.lessons.filter((l) => !completedLessonIds.has(l.id)).length,
     }
+  }
+
+  // The chosen paths plus, in a family without a choice, its only practiced path.
+  private async findActivePaths(userId: string) {
+    const [chosen, practiced] = await Promise.all([
+      this.prisma.userOpeningChoice.findMany({ where: { userId }, select: { family: true, style: true } }),
+      this.prisma.opening.findMany({
+        where: {
+          family: { not: null },
+          style: { not: null },
+          lessons: { some: { exercises: { some: { progress: { some: { userId } } } } } },
+        },
+        select: { family: true, style: true },
+      }),
+    ])
+    return activePaths(
+      chosen,
+      practiced.flatMap(({ family, style }) => (family !== null && style !== null ? [{ family, style }] : [])),
+    )
   }
 
   // A lesson is completed once its theory or its main practice was finished at least once

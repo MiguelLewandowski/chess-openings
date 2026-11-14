@@ -25,6 +25,15 @@ const REVIEWED_STUDY = `[Event "Defesa Siciliana: Linha principal"]
 {As brancas desenvolveram o cavalo. Como preparamos o desenvolvimento das nossas peças?} 2... d6 {Abre a diagonal do bispo de c8 e controla e5.} *
 `
 
+// Three lessons of a Black repertoire that part on White's second move: 2.Cf3 (twice, the
+// second one going deeper) and 2.c3.
+const BRANCHED_STUDY = ['Aberta: 1. e4 c5 2. Nf3 d6', 'Alapin: 1. e4 c5 2. c3 Nf6', 'Aberta com 3.d4: 1. e4 c5 2. Nf3 d6 3. d4 cxd4']
+  .map((entry) => {
+    const [title, moves] = entry.split(': ')
+    return `[Event "${title}"]\n[StudyName "Defesa Siciliana"]\n[ChapterName "${title}"]\n[Orientation "black"]\n\n${moves} *\n`
+  })
+  .join('\n')
+
 // No network in tests: no engine data and no coach (the comments are used as they are).
 const engine: IEngineService = { getEvaluationsBatch: async () => ({}) }
 const coach: ICoachService = { generateExplanationsBatch: async () => ({}) }
@@ -81,6 +90,27 @@ describe('Study ingestion (e2e)', () => {
     expect(practice.moves.every((m: { coachInsights: unknown }) => m.coachInsights === null)).toBe(true)
   })
 
+  it('serves the stored engine evaluation of each move, and null where there was none', async () => {
+    // Only the position after 1.e4 has an evaluation.
+    const evaluating: IEngineService = {
+      getEvaluationsBatch: async (fens) =>
+        Object.fromEntries(
+          fens.filter((fen) => fen.startsWith('rnbqkbnr/pppppppp/8/8/4P3/')).map((fen) => [fen, { cp: 31, mate: null, complexity: 'BAIXA' as const }]),
+        ),
+    }
+    const opening = await new IngestStudy(new PgnParserService(), evaluating, coach, app.get(PrismaContentRepository))
+      .execute(REVIEWED_STUDY, { useAuthorComments: true })
+
+    const lesson = await ctx.prisma.lesson.findFirstOrThrow({ where: { openingId: opening.id } })
+    const res = await request(app.getHttpServer())
+      .get(`/api/lessons/${lesson.id}`)
+      .set('Authorization', `Bearer ${await studentToken()}`)
+
+    const theory = res.body.exercises[0]
+    expect(theory.moves.find((m: { san: string }) => m.san === 'e4').absoluteCp).toBe(31)
+    expect(theory.moves.find((m: { san: string }) => m.san === 'c5').absoluteCp).toBeNull()
+  })
+
   it('replaces the lessons when the same opening is imported again', async () => {
     const first = await useCase.execute(REVIEWED_STUDY, { useAuthorComments: true })
     const second = await useCase.execute(REVIEWED_STUDY, { useAuthorComments: true })
@@ -88,6 +118,42 @@ describe('Study ingestion (e2e)', () => {
     expect(second.id).toBe(first.id)
     expect(await ctx.prisma.lesson.count({ where: { openingId: first.id } })).toBe(1)
     expect(await ctx.prisma.exercise.count()).toBe(3)
+  })
+
+  it('imports each path of a family as a sister opening, and a re-import replaces only that path', async () => {
+    const tactical = await useCase.execute(REVIEWED_STUDY, { useAuthorComments: true, family: 'Defesa Siciliana', style: 'TACTICAL' })
+    const positional = await useCase.execute(REVIEWED_STUDY, { useAuthorComments: true, family: 'Defesa Siciliana', style: 'POSITIONAL' })
+
+    expect(tactical.name).toBe('Defesa Siciliana — Tático')
+    expect(positional.id).not.toBe(tactical.id)
+    const saved = await ctx.prisma.opening.findUniqueOrThrow({ where: { id: tactical.id } })
+    expect(saved).toMatchObject({ slug: 'defesa-siciliana-tatico', family: 'defesa-siciliana', style: 'TACTICAL' })
+
+    const positionalLesson = await ctx.prisma.lesson.findFirstOrThrow({ where: { openingId: positional.id } })
+    const again = await useCase.execute(REVIEWED_STUDY, { useAuthorComments: true, family: 'Defesa Siciliana', style: 'TACTICAL' })
+
+    expect(again.id).toBe(tactical.id)
+    expect(await ctx.prisma.lesson.count({ where: { openingId: tactical.id } })).toBe(1)
+    // The other path keeps the very same lesson (and with it the students' progress).
+    expect(await ctx.prisma.lesson.findFirstOrThrow({ where: { openingId: positional.id } })).toEqual(positionalLesson)
+  })
+
+  it('serves family and style on the opening (null for an opening without paths)', async () => {
+    await useCase.execute(REVIEWED_STUDY, { useAuthorComments: true })
+    const res = await request(app.getHttpServer()).get('/api/openings/defesa-siciliana')
+
+    expect(res.status).toBe(200)
+    expect(res.body).toMatchObject({ slug: 'defesa-siciliana', family: null, style: null })
+  })
+
+  it('stores the branch of each lesson: the opponent move that leaves the common trunk', async () => {
+    const opening = await useCase.execute(BRANCHED_STUDY, { useAuthorComments: true })
+    const lessons = await ctx.prisma.lesson.findMany({ where: { openingId: opening.id }, orderBy: { order: 'asc' } })
+    expect(lessons.map((l) => [l.title, l.branch])).toEqual([
+      ['Aberta', '2.Cf3'],
+      ['Alapin', '2.c3'],
+      ['Aberta com 3.d4', '2.Cf3'],
+    ])
   })
 
   it('refuses a study that still has [REVISAR] markers and writes nothing', async () => {

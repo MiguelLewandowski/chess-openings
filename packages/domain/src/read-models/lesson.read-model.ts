@@ -1,3 +1,5 @@
+import type { LessonSummary } from './opening.read-model'
+
 export interface MoveSummary {
   id: string
   san: string
@@ -6,6 +8,9 @@ export interface MoveSummary {
   isOpponentResponse: boolean
   coachInsights?: { comment?: string; theme?: string } | null
   visualMarkers?: { arrows?: string[]; circles?: string[] } | null
+  // Engine evaluation of the position after the move, in centipawns from White's point of
+  // view. Null when the import had none (older openings, or a mate the cloud reported).
+  absoluteCp?: number | null
 }
 
 export interface ExerciseSummary {
@@ -30,7 +35,8 @@ export interface LessonDetail {
     slug: string
     // A tutorial's lessons are never brought back for review.
     isTutorial: boolean
-    lessons: { id: string; title: string; order: number }[]
+    // With their branches, so the next lesson can be the next one of the same branch.
+    lessons: LessonSummary[]
   }
   exercises: ExerciseSummary[]
 }

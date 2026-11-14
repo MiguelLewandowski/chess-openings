@@ -4,75 +4,90 @@ import { getSession } from "@/lib/session";
 import { apiClient } from "@/lib/api-client";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { practiceXp, type LessonSummary } from "@chess-openings/domain";
-import { BookOpen, Check, ChevronLeft, ChevronRight, Lock, RotateCcw, Swords, Trophy } from "lucide-react";
-import { Card, EmptyState } from "@/components/ui";
-import { PageBody, PageHeader, PageTitle } from "@/components/layout/Page";
+import {
+  practiceXp,
+  type LessonSummary,
+  type OpeningDetail,
+  type TrackBranch,
+  type TrackLesson,
+} from "@chess-openings/domain";
+import { BookOpen, Check, ChevronRight, Lock, RotateCcw, Swords, Trophy } from "lucide-react";
+import { Badge, Card, EmptyState } from "@/components/ui";
+import { PageBody } from "@/components/layout/Page";
 import { cn } from "@/lib/cn";
 import { percent } from "@/lib/profile";
 import { lessonTitleParts, type LessonKind } from "@/lib/lesson-title";
+import { openingView } from "@/lib/opening-paths";
+import { OpeningHeader } from "./OpeningHeader";
+import { PathBar, PathChoice } from "./PathChoice";
 
 // The most a lesson can pay: a perfect practice run. XP depends on how each run goes, so the
 // track only promises the ceiling.
 const MAX_XP_PER_LESSON = practiceXp(5);
 
-// done: completed · current: the next lesson to study · open: unlocked but not the next one
-// (happens when a later lesson was completed first) · locked: previous lesson not completed.
+// done: completed · current: the lesson the API suggests (nextLessonId) · open: unlocked but not
+// the suggested one (e.g. the first lesson of another branch) · locked: the lesson before it in
+// the branch is not done. Unlocking is the domain's rule: the page only maps the API's state.
 type StepState = "done" | "current" | "open" | "locked";
 
-// The tab title and the page need the same opening: cache() makes it one request.
-const findOpening = cache((slug: string) => apiClient.openings.findBySlug(slug));
+const stepStateOf = (lesson: TrackLesson, nextLessonId: string | null): StepState => {
+  if (lesson.state === "DONE") return "done";
+  if (lesson.state === "LOCKED") return "locked";
+  return lesson.id === nextLessonId ? "current" : "open";
+};
 
-export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
-  const opening = await findOpening((await params).slug);
+// The tab title and the page need the same opening: cache() makes it one request. With the
+// token, a family comes with the path the student chose.
+const findOpening = cache((slug: string, token: string | undefined) => apiClient.openings.findBySlug(slug, token));
+
+interface OpeningPageProps {
+  params: Promise<{ slug: string }>;
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}
+
+export async function generateMetadata({ params }: OpeningPageProps): Promise<Metadata> {
+  const session = await getSession();
+  const opening = await findOpening((await params).slug, session?.apiToken);
   return { title: opening?.name ?? "Abertura" };
 }
 
-export default async function OpeningTrackPage({ params }: { params: Promise<{ slug: string }> }) {
-  const resolvedParams = await params;
+// A family with several paths shows the choice until the student picks one (and again on
+// `?trocar`); otherwise, the track of the opening or of the chosen path.
+export default async function OpeningPage({ params, searchParams }: OpeningPageProps) {
+  const [{ slug }, query, session] = await Promise.all([params, searchParams, getSession()]);
 
-  const opening = await findOpening(resolvedParams.slug);
+  const opening = await findOpening(slug, session?.apiToken);
   if (!opening) notFound();
 
-  const sortedLessons = [...opening.lessons].sort((a, b) => a.order - b.order);
-
-  const completedLessonIds = new Set<string>();
-  const session = await getSession();
-
-  if (session) {
-    const completed = await apiClient.progress.completedLessons(opening.id, session.apiToken);
-    completed.forEach(id => completedLessonIds.add(id));
+  if (openingView(opening, { switching: query.trocar !== undefined }) === "choose") {
+    return <PathChoice opening={opening} token={session?.apiToken ?? null} />;
   }
+  return <OpeningTrack opening={opening} />;
+}
 
-  const total = sortedLessons.length;
-  const done = completedLessonIds.size;
+// The trail comes from the API already grouped by branch, with each lesson's state for the
+// logged-in student (or nothing done without one).
+function OpeningTrack({ opening }: { opening: OpeningDetail }) {
+  const { branches, nextLessonId } = opening.track;
+  const trackLessons = branches.flatMap((branch) => branch.lessons);
+
+  const total = trackLessons.length;
+  const done = trackLessons.filter((lesson) => lesson.state === "DONE").length;
   const allDone = done === total && total > 0;
-  const nextLesson = sortedLessons.find((lesson) => !completedLessonIds.has(lesson.id));
+  // An opening without branches (one null branch) keeps the plain list, with no branch titles.
+  const branched = !(branches.length === 1 && branches[0].branch === null);
 
   const tutorial = opening.isTutorial;
 
-  const stateOf = (lesson: LessonSummary, index: number): StepState => {
-    if (completedLessonIds.has(lesson.id)) return "done";
-    if (lesson.id === nextLesson?.id) return "current";
-    return index === 0 || completedLessonIds.has(sortedLessons[index - 1].id) ? "open" : "locked";
-  };
-
   return (
     <div className="flex-1">
-      <PageHeader>
-        <div className="flex items-center gap-2 sm:gap-3 min-w-0">
-          <Link
-            href="/openings"
-            aria-label="Voltar à galeria"
-            className="inline-flex items-center justify-center w-9 h-9 shrink-0 rounded-full text-ink-500 hover:text-ink-900 hover:bg-surface-sunken transition-colors"
-          >
-            <ChevronLeft className="w-5 h-5" />
-          </Link>
-          <PageTitle subtitle={tutorial ? "Tutorial" : "Trilha da abertura"}>{opening.name}</PageTitle>
-        </div>
-      </PageHeader>
+      <OpeningHeader backHref="/openings" backLabel="Voltar à galeria" subtitle={tutorial ? "Tutorial" : "Trilha da abertura"}>
+        {opening.name}
+      </OpeningHeader>
 
       <PageBody className="mx-auto w-full max-w-2xl">
+        {opening.paths.length > 1 && <PathBar opening={opening} />}
+
         {total === 0 ? (
           <EmptyState
             icon={<BookOpen className="w-8 h-8" />}
@@ -81,26 +96,38 @@ export default async function OpeningTrackPage({ params }: { params: Promise<{ s
           />
         ) : (
           <>
-            <TrackSummary done={done} total={total} allDone={allDone} tutorial={tutorial} />
+            <TrackSummary done={done} total={total} allDone={allDone} tutorial={tutorial} branched={branched} />
 
-            <ol aria-label="Lições" className="mt-8 sm:mt-10">
-              {sortedLessons.map((lesson, index) => {
-                const state = stateOf(lesson, index);
-                return (
+            {branched ? (
+              <>
+                {branches.map((branch) => (
+                  <BranchBlock
+                    key={branch.branch ?? "main"}
+                    branch={branch}
+                    nextLessonId={nextLessonId}
+                    openingName={opening.name}
+                    tutorial={tutorial}
+                  />
+                ))}
+                <ol aria-label="Meta da trilha" className="mt-8">
+                  <TrackGoal allDone={allDone} maxXp={total * MAX_XP_PER_LESSON} tutorial={tutorial} />
+                </ol>
+              </>
+            ) : (
+              <ol aria-label="Lições" className="mt-8 sm:mt-10">
+                {branches[0].lessons.map((lesson, index) => (
                   <TrackStep
                     key={lesson.id}
                     lesson={lesson}
                     openingName={opening.name}
                     number={index + 1}
-                    state={state}
-                    // The segment below a node is "walked" once that lesson is done.
-                    walked={state === "done"}
+                    state={stepStateOf(lesson, nextLessonId)}
                     tutorial={tutorial}
                   />
-                );
-              })}
-              <TrackGoal allDone={allDone} maxXp={total * MAX_XP_PER_LESSON} tutorial={tutorial} />
-            </ol>
+                ))}
+                <TrackGoal allDone={allDone} maxXp={total * MAX_XP_PER_LESSON} tutorial={tutorial} />
+              </ol>
+            )}
           </>
         )}
       </PageBody>
@@ -108,7 +135,19 @@ export default async function OpeningTrackPage({ params }: { params: Promise<{ s
   );
 }
 
-function TrackSummary({ done, total, allDone, tutorial }: { done: number; total: number; allDone: boolean; tutorial: boolean }) {
+function TrackSummary({
+  done,
+  total,
+  allDone,
+  tutorial,
+  branched,
+}: {
+  done: number;
+  total: number;
+  allDone: boolean;
+  tutorial: boolean;
+  branched: boolean;
+}) {
   const left = total - done;
   const headline = allDone
     ? tutorial ? "Tutorial concluído" : "Abertura dominada"
@@ -119,7 +158,9 @@ function TrackSummary({ done, total, allDone, tutorial }: { done: number; total:
     ? tutorial
       ? "Você já sabe como todas as peças se movem. Hora de escolher uma abertura!"
       : "Continue revisando para manter as linhas frescas na memória."
-    : "Conclua as lições em ordem: cada uma destrava a próxima.";
+    : branched
+      ? "Escolha um ramo. Dentro de cada um, uma lição destrava a próxima."
+      : "Conclua as lições em ordem: cada uma destrava a próxima.";
 
   return (
     <Card className="p-5 sm:p-6 flex items-center gap-5">
@@ -174,6 +215,47 @@ const nodeStyles: Record<StepState, string> = {
   locked: "bg-surface-card text-ink-300 border-2 border-border-default",
 };
 
+// One branch of the trail: the opponent's reply as the title, its lessons in sequence.
+function BranchBlock({
+  branch,
+  nextLessonId,
+  openingName,
+  tutorial,
+}: {
+  branch: TrackBranch;
+  nextLessonId: string | null;
+  openingName: string;
+  tutorial: boolean;
+}) {
+  const doneInBranch = branch.lessons.filter((lesson) => lesson.state === "DONE").length;
+  const title = branch.branch ? `Contra ${branch.branch}` : "Linha principal";
+  const complete = doneInBranch === branch.lessons.length;
+
+  return (
+    <section aria-label={title} className="mt-8 sm:mt-10">
+      <div className="flex items-center justify-between gap-3 mb-4">
+        <h2 className="font-display font-extrabold text-[17px] sm:text-[18px] tracking-tight text-ink-900">{title}</h2>
+        <Badge tone={complete ? "success" : "neutral"}>
+          {doneInBranch}/{branch.lessons.length}
+        </Badge>
+      </div>
+      <ol aria-label={`Lições: ${title}`}>
+        {branch.lessons.map((lesson, index) => (
+          <TrackStep
+            key={lesson.id}
+            lesson={lesson}
+            openingName={openingName}
+            number={index + 1}
+            state={stepStateOf(lesson, nextLessonId)}
+            tutorial={tutorial}
+            last={index === branch.lessons.length - 1}
+          />
+        ))}
+      </ol>
+    </section>
+  );
+}
+
 function KindIcon({ kind, className }: { kind: LessonKind; className?: string }) {
   return kind === "trap" ? <Swords className={className} /> : <BookOpen className={className} />;
 }
@@ -183,16 +265,17 @@ function TrackStep({
   openingName,
   number,
   state,
-  walked,
   tutorial,
+  last = false,
 }: {
   lesson: LessonSummary;
   openingName: string;
   number: number;
   state: StepState;
-  walked: boolean;
   // A tutorial lesson is not a line or a trap: it only carries its number.
   tutorial: boolean;
+  // The last lesson of a branch has no segment below it: the branch ends there.
+  last?: boolean;
 }) {
   const { kind, name, moves } = lessonTitleParts(lesson.title, openingName);
   const href = `/lessons/${lesson.id}`;
@@ -234,11 +317,13 @@ function TrackStep({
 
   return (
     <li className="relative grid grid-cols-[48px_minmax(0,1fr)] gap-4 sm:gap-5 pb-5">
-      {/* Track segment down to the next node. */}
-      <span
-        aria-hidden
-        className={cn("absolute left-[23px] top-12 bottom-0 w-0.5 rounded-full", walked ? "bg-success" : "bg-border-default")}
-      />
+      {/* Track segment down to the next node, "walked" once this lesson is done. */}
+      {!last && (
+        <span
+          aria-hidden
+          className={cn("absolute left-[23px] top-12 bottom-0 w-0.5 rounded-full", state === "done" ? "bg-success" : "bg-border-default")}
+        />
+      )}
 
       <div
         className={cn(

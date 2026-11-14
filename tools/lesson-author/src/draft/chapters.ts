@@ -12,6 +12,7 @@ import type { OpeningNames } from './names'
 export interface DraftLine {
   sans: string[]
   note: string | null // shown as a // comment above the line
+  punishment: boolean // the line punishes an opponent mistake
 }
 
 export interface DraftChapter {
@@ -65,7 +66,7 @@ function toChapter(group: Group, startLength: number, names: OpeningNames, ratin
       const bMain = sameLine(b.path, mainSans) ? 1 : 0
       return bMain - aMain || b.reach - a.reach
     })
-    .map(({ path }) => ({ sans: path.map((n) => n.san), note: noteFor(path, ratingLabel) }))
+    .map(({ path }) => ({ sans: path.map((n) => n.san), note: noteFor(path, ratingLabel), punishment: path.some((n) => n.mistake !== null) }))
 
   // Continuous numbering ("2...Cf6 3.d3 Bc5"), from the position before the first defining move.
   const definingNodes = group.prefix.slice(startLength)
@@ -77,11 +78,21 @@ function toChapter(group: Group, startLength: number, names: OpeningNames, ratin
   return { title, openingName, reach: last.reach, mistake, lines }
 }
 
+// Tactical choices below this are noise (a tenth of a pawn on average), not a reason.
+const TACTICAL_NOTE_MIN_CP = 30
+
 function noteFor(path: DraftNode[], ratingLabel: string): string | null {
+  const parts: string[] = []
   const mistake = path.find((n) => n.mistake)
-  if (!mistake?.mistake) return null
-  const pct = Math.round(mistake.share * 100)
-  return `${labelOf(mistake)}? — ${pct}% dos jogadores de ${ratingLabel} jogam; depois dele, ${formatCp(mistake.mistake.evalAfterCp)} para nós`
+  if (mistake?.mistake) {
+    const pct = Math.round(mistake.share * 100)
+    parts.push(`${labelOf(mistake)}? — ${pct}% dos jogadores de ${ratingLabel} jogam; depois dele, ${formatCp(mistake.mistake.evalAfterCp)} para nós`)
+  }
+  const tactical = path.filter((n) => (n.trapCp ?? 0) >= TACTICAL_NOTE_MIN_CP)
+  if (tactical.length > 0) {
+    parts.push(`escolha tática: ${tactical.map((n) => `${labelOf(n)} (o adversário entrega ${formatCp(n.trapCp!).replace('+', '')} em média)`).join(', ')}`)
+  }
+  return parts.length > 0 ? parts.join(' | ') : null
 }
 
 function sameLine(path: DraftNode[], sans: string[]): boolean {
