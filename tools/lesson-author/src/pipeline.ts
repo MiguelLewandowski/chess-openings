@@ -9,7 +9,7 @@ import type { ChapterAnnotation, ReviewResult } from './author/schema'
 import { allNodes, mainline } from './pgn/read'
 import type { ChapterOutput, NoteOutput } from './pgn/write'
 import type { Engine } from './sources/engine'
-import { verifyAnnotation, type Issue } from './verify'
+import { verifyAnnotation, type Issue, type VerifyContext } from './verify'
 
 export interface PipelineDeps {
   enricher: Enricher
@@ -43,9 +43,23 @@ export interface ChapterResult {
   dossier: string
 }
 
-export async function processChapter(chapter: Chapter, deps: PipelineDeps): Promise<ChapterResult> {
+// What the enrichment and the card mining produce for one chapter: everything the author
+// (API or agent) needs and everything the verifier checks against.
+export interface PreparedChapter {
+  chapter: Chapter
+  cards: Card[]
+  dossier: string
+  dossierMap: Map<string, NodeDossier>
+  verifyCtx: VerifyContext
+  report: ChapterReport
+}
+
+export type PrepareDeps = Pick<PipelineDeps, 'enricher' | 'engine' | 'explorerAvailable' | 'cardOptions' | 'log'>
+
+export async function prepareChapter(chapter: Chapter, deps: PrepareDeps): Promise<PreparedChapter> {
   const { log } = deps
-  log(`\n▸ ${chapter.title} (aluno de ${chapter.studentColor === 'w' ? 'brancas' : 'pretas'})`)
+  log(`
+▸ ${chapter.title} (aluno de ${chapter.studentColor === 'w' ? 'brancas' : 'pretas'})`)
 
   const dossiers = await deps.enricher.chapter(chapter, (done, total) => {
     if (done === total || done % 10 === 0) log(`  posições analisadas: ${done}/${total}`)
@@ -69,7 +83,7 @@ export async function processChapter(chapter: Chapter, deps: PipelineDeps): Prom
   const dossier = renderDossier(chapter, dossiers, cards, cardDossiers)
   const dossierMap = new Map([...dossiers, ...cardDossiers].map((d) => [d.node.id, d]))
   const lineSans = new Set([...allNodes(chapter.roots), ...cards.flatMap((c) => allNodes(c.roots))].map((n) => n.san))
-  const verifyCtx = { dossiers: [...dossiers, ...cardDossiers], cards, lineSans, lastMainline: main[main.length - 1] }
+  const verifyCtx: VerifyContext = { dossiers: [...dossiers, ...cardDossiers], cards, lineSans, lastMainline: main[main.length - 1] }
 
   const report: ChapterReport = {
     title: chapter.title,
@@ -81,6 +95,13 @@ export async function processChapter(chapter: Chapter, deps: PipelineDeps): Prom
     review: [],
     flagged: 0,
   }
+  return { chapter, cards, dossier, dossierMap, verifyCtx, report }
+}
+
+export async function processChapter(chapter: Chapter, deps: PipelineDeps): Promise<ChapterResult> {
+  const { log } = deps
+  const prepared = await prepareChapter(chapter, deps)
+  const { cards, dossier, dossierMap, verifyCtx, report } = prepared
 
   if (!deps.claude) {
     return { outputs: buildOutputs(chapter, cards, dossierMap, null, [], [], report), report, dossier }
@@ -136,7 +157,7 @@ export async function processChapter(chapter: Chapter, deps: PipelineDeps): Prom
   return { outputs: buildOutputs(chapter, cards, dossierMap, annotation, issues, reviewErrors, report), report, dossier }
 }
 
-function buildOutputs(
+export function buildOutputs(
   chapter: Chapter,
   cards: Card[],
   dossiers: Map<string, NodeDossier>,

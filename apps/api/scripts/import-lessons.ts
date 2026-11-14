@@ -4,23 +4,34 @@
 //
 //   pnpm lessons:import out/lesson-author/bispo-cap1.revisado.pgn out/lesson-author/bispo-cap14.revisado.pgn
 //   pnpm lessons:import content/primeiros-passos.pgn --tutorial
+//   pnpm lessons:import out/lesson-author/bispo.pgn --check   (only checks the format, no database)
 //
 // Re-importing an opening replaces all of its lessons (and the students' progress on them), so
 // every chapter of an opening must go in the same call.
 import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { parseArgs } from 'node:util'
-import { ContentNotReviewedError, IngestStudy } from '@chess-openings/domain'
+import {
+  ContentNotReviewedError,
+  IngestStudy,
+  type IContentRepository,
+  type IngestMoveNode,
+  type IngestOptions,
+  type IngestStudyData,
+} from '@chess-openings/domain'
 import { PrismaService } from '../src/infrastructure/prisma.service'
 import { PgnParserService } from '../src/infrastructure/services/pgn-parser.service'
 import { EngineService } from '../src/infrastructure/services/engine.service'
 import { CoachService } from '../src/infrastructure/services/coach.service'
 import { PrismaContentRepository } from '../src/infrastructure/repositories/prisma-content.repository'
 
-const USAGE = `Uso: pnpm lessons:import <arquivo.pgn>... [--tutorial] [--nome "Nome da abertura"]
+const USAGE = `Uso: pnpm lessons:import <arquivo.pgn>... [--tutorial] [--nome "Nome da abertura"] [--check]
 
   --tutorial   conteúdo de tutorial: aparece no catálogo, mas fica fora das revisões
   --nome       nome da abertura (padrão: o StudyName do PGN)
+  --check      só confere o formato com o importador de verdade, sem banco e sem rede: lista
+               lições, exercícios e cartões e aponta cartão solto, lição ou cartão vazio,
+               cartão sem pergunta e marcas [REVISAR
 
 Todos os capítulos de uma abertura vão na mesma chamada: reimportar substitui as lições.`
 
@@ -30,6 +41,7 @@ async function main(): Promise<void> {
     options: {
       tutorial: { type: 'boolean', default: false },
       nome: { type: 'string' },
+      check: { type: 'boolean', default: false },
       help: { type: 'boolean', default: false },
     },
   })
@@ -38,21 +50,20 @@ async function main(): Promise<void> {
     process.exit(values.help ? 0 : 1)
   }
 
+  const pgn = positionals.map((file) => readFileSync(resolve(file), 'utf8').trim()).join('\n\n')
+  const options: IngestOptions = { useAuthorComments: true, tutorial: values.tutorial, openingName: values.nome }
+  if (values.check) process.exit(await checkFormat(pgn, options))
+
   // Say where the data is going before writing anything: the same command imports locally
   // and into production, depending only on DATABASE_URL.
   const target = process.env.DATABASE_URL ? new URL(process.env.DATABASE_URL) : null
   console.log(`Banco: ${target ? `${target.hostname}:${target.port}${target.pathname}` : '(DATABASE_URL do .env)'}`)
 
-  const pgn = positionals.map((file) => readFileSync(resolve(file), 'utf8').trim()).join('\n\n')
   const prisma = new PrismaService()
   await prisma.$connect()
   try {
     const useCase = new IngestStudy(new PgnParserService(), new EngineService(), new CoachService(), new PrismaContentRepository(prisma))
-    const { id, name } = await useCase.execute(pgn, {
-      useAuthorComments: true,
-      tutorial: values.tutorial,
-      openingName: values.nome,
-    })
+    const { id, name } = await useCase.execute(pgn, options)
 
     const lessons = await prisma.lesson.findMany({
       where: { openingId: id },
@@ -70,6 +81,53 @@ async function main(): Promise<void> {
   } finally {
     await prisma.$disconnect()
   }
+}
+
+const countMoves = (nodes: IngestMoveNode[]): number => nodes.reduce((n, node) => n + 1 + countMoves(node.children), 0)
+
+// Runs the real IngestStudy (same parser, same grouping of cards into lessons) against a
+// repository that only captures what would be saved, with no engine or coach calls.
+async function checkFormat(pgn: string, options: IngestOptions): Promise<number> {
+  const captured: IngestStudyData[] = []
+  const repo: IContentRepository = {
+    upsertStudy: async (data) => {
+      captured.push(data)
+      return { id: 'check', name: data.openingName }
+    },
+  }
+  const noEngine = { getEvaluationsBatch: async () => ({}) }
+  const noCoach = { generateExplanationsBatch: async () => ({}) }
+  try {
+    await new IngestStudy(new PgnParserService(), noEngine, noCoach, repo).execute(pgn, options)
+  } catch (error) {
+    if (error instanceof ContentNotReviewedError) {
+      console.error(`FORMATO: ${error.message}\n${error.pending.slice(0, 30).map((p) => `  - ${p}`).join('\n')}`)
+      return 1
+    }
+    throw error
+  }
+  const [data] = captured
+
+  const problems: string[] = []
+  console.log(`${data.openingName} (slug ${data.openingSlug}): ${data.lessons.length} lição(ões)`)
+  for (const lesson of data.lessons) {
+    const [theory, ...rest] = lesson.exercises
+    const cards = rest.filter((e) => e.cardKind)
+    console.log(`  ${lesson.order}. ${lesson.title} — ${countMoves(theory.moves)} lances, ${cards.length} cartão(ões)`)
+    // A card or practice title as a lesson means it did not find the lesson it belongs to.
+    if (/ \| (cr[ií]tica|armadilha|pr[aá]tica)\b/i.test(lesson.title)) problems.push(`cartão sem lição de mesmo título: "${lesson.title}"`)
+    if (countMoves(theory.moves) === 0) problems.push(`lição sem lances: "${lesson.title}"`)
+    for (const card of cards) {
+      if (!card.description?.trim()) problems.push(`cartão sem pergunta: "${lesson.title} | ${card.title}"`)
+      if (countMoves(card.moves) === 0) problems.push(`cartão sem lances: "${lesson.title} | ${card.title}"`)
+    }
+  }
+  if (problems.length > 0) {
+    console.error(`\nFORMATO: ${problems.length} problema(s)\n${problems.map((p) => `  - ${p}`).join('\n')}`)
+    return 1
+  }
+  console.log('\nFormato OK: o app importa este PGN como está.')
+  return 0
 }
 
 main().catch((error: unknown) => {

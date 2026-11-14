@@ -5,6 +5,7 @@ import Anthropic from '@anthropic-ai/sdk'
 import { DEFAULT_CARDS } from './cards'
 import { DEFAULT_ENRICH, Enricher } from './enrich'
 import { UsageTracker, type Effort } from './author/claude'
+import { processChapterWithAgent, renderAuthorInstructions, renderReviewerInstructions, type AgentStatus } from './agent'
 import { processChapter, type ChapterReport } from './pipeline'
 import { readRepertoireText } from './pgn/lines'
 import { loadPgnSource, readChapters } from './pgn/read'
@@ -33,6 +34,10 @@ Opções:
   --depth <n>               profundidade do Stockfish (padrão: 20)
   --style <arquivo.md>      exemplos de estilo (padrão: tools/lesson-author/style/exemplos.md)
   --dry-run                 faz tudo menos chamar a IA: dossiês, cartões e estimativa de custo
+  --agente <pasta>          sem API da Anthropic: grava o dossiê de cada capítulo na pasta,
+                            lê a anotação que um agente do Claude Code escreveu ao lado
+                            (capNN.anotacao.json), confere com o verificador e monta o PGN.
+                            Rode de novo depois de cada rodada do agente.
 
 Variáveis de ambiente: ANTHROPIC_API_KEY, LICHESS_TOKEN (explorer), STOCKFISH_PATH.
 `
@@ -55,6 +60,7 @@ async function main(): Promise<void> {
       depth: { type: 'string', default: '20' },
       style: { type: 'string' },
       'dry-run': { type: 'boolean', default: false },
+      agente: { type: 'string' },
       help: { type: 'boolean', default: false },
     },
   })
@@ -65,7 +71,8 @@ async function main(): Promise<void> {
   }
 
   const log = (message: string) => console.error(message)
-  const dryRun = values['dry-run']
+  const agentDir = values.agente ? path.resolve(userCwd, values.agente) : null
+  const dryRun = values['dry-run'] || agentDir !== null
   if (!dryRun && !process.env.ANTHROPIC_API_KEY && !process.env.ANTHROPIC_AUTH_TOKEN) {
     throw new Error('Defina ANTHROPIC_API_KEY (ou rode com --dry-run para simular sem IA).')
   }
@@ -108,15 +115,32 @@ async function main(): Promise<void> {
   }
 
   const baseName = slug(chapters[0].studyName ?? (chapters[0].title.split(':')[0] || 'estudo'))
-  const outPath = values.out ? path.resolve(userCwd, values.out) : path.join(repoRoot, 'out', 'lesson-author', `${baseName}.pgn`)
+  const outPath = values.out
+    ? path.resolve(userCwd, values.out)
+    : agentDir
+      ? path.join(agentDir, `${baseName}.pgn`)
+      : path.join(repoRoot, 'out', 'lesson-author', `${baseName}.pgn`)
   await mkdir(path.dirname(outPath), { recursive: true })
+  if (agentDir) {
+    await mkdir(agentDir, { recursive: true })
+    await writeFile(path.join(agentDir, 'INSTRUCOES-AUTOR.md'), renderAuthorInstructions(styleExamples))
+    await writeFile(path.join(agentDir, 'INSTRUCOES-REVISOR.md'), renderReviewerInstructions())
+  }
+  const statuses: AgentStatus[] = []
 
   const outputs: ChapterOutput[] = []
   const reports: ChapterReport[] = []
   const dossiers: Record<string, unknown> = {}
   try {
     for (const chapter of chapters) {
-      const result = await processChapter(chapter, deps)
+      let result
+      if (agentDir) {
+        const done = await processChapterWithAgent(chapter, deps, agentDir)
+        statuses.push(done.status)
+        result = done.result
+      } else {
+        result = await processChapter(chapter, deps)
+      }
       outputs.push(...result.outputs)
       reports.push(result.report)
       dossiers[chapter.title] = JSON.parse(result.dossier)
@@ -133,7 +157,7 @@ async function main(): Promise<void> {
     renderReport({
       source,
       output: outPath,
-      model: dryRun ? null : values.model,
+      model: agentDir ? 'agente do Claude Code (sem API)' : dryRun ? null : values.model,
       engine: engine.name,
       explorer: explorer.available,
       chapters: reports,
@@ -143,6 +167,16 @@ async function main(): Promise<void> {
   const dossierPath = outPath.replace(/\.pgn$/, '.dossie.json')
   await writeFile(dossierPath, JSON.stringify(dossiers, null, 1))
 
+  if (agentDir) {
+    await writeFile(path.join(agentDir, 'estado.json'), JSON.stringify(statuses.map(({ issues, ...s }) => ({ ...s, issues: issues.length })), null, 1))
+    log('\nCapítulos (modo agente):')
+    for (const s of statuses) {
+      const extra = s.state === 'com-problemas' ? ` (${s.issues.length})` : s.state === 'revisao-com-erros' ? ` (${s.reviewErrors})` : ''
+      log(`  ${s.file}  ${s.state}${extra}  ${s.title}`)
+    }
+    const ready = statuses.filter((s) => s.state === 'pronto').length
+    log(`${ready}/${statuses.length} prontos. Detalhes em ${path.join(agentDir, 'capNN.problemas.md')}`)
+  }
   log(`\nPGN: ${outPath}\nRelatório: ${reportPath}\nDossiê (o que a IA recebe): ${dossierPath}`)
 }
 

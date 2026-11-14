@@ -11,6 +11,9 @@ const nextConfig: NextConfig = {
   output: "standalone",
   outputFileTracingRoot: repoRoot,
   turbopack: { root: repoRoot },
+  // Dev only: lets the app be opened at 127.0.0.1 (a separate cookie jar from other apps on
+  // localhost). Next 16 blocks dev resources for any other host, which leaves pages without JS.
+  allowedDevOrigins: ["127.0.0.1"],
 };
 
 export default nextConfig;
