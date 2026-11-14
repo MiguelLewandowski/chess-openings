@@ -7,6 +7,20 @@ export class LessonSummaryDto {
   @ApiProperty() order: number
 }
 
+export class OpeningPathDto {
+  @ApiProperty() id: string
+  @ApiProperty({ example: 'Abertura do Bispo — Tático' }) name: string
+  @ApiProperty({ example: 'abertura-do-bispo-tatico' }) slug: string
+  @ApiProperty({ enum: OPENING_STYLES }) style: OpeningStyle
+  @ApiProperty({ type: [LessonSummaryDto] }) lessons: LessonSummaryDto[]
+
+  @ApiProperty({ type: [OpeningPathDto], description: 'The family paths, calmest first; empty for an opening without paths.' })
+  paths: OpeningPathDto[]
+
+  @ApiProperty({ nullable: true, enum: OPENING_STYLES, description: 'The path the logged-in student chose; null without a choice or a token.' })
+  chosenStyle: OpeningStyle | null
+}
+
 export class OpeningResponseDto {
   @ApiProperty() id: string
   @ApiProperty() name: string
@@ -21,4 +35,10 @@ export class OpeningResponseDto {
   style: OpeningStyle | null
 
   @ApiProperty({ type: [LessonSummaryDto] }) lessons: LessonSummaryDto[]
+
+  @ApiProperty({ type: [OpeningPathDto], description: 'The family paths, calmest first; empty for an opening without paths.' })
+  paths: OpeningPathDto[]
+
+  @ApiProperty({ nullable: true, enum: OPENING_STYLES, description: 'The path the logged-in student chose; null without a choice or a token.' })
+  chosenStyle: OpeningStyle | null
 }
