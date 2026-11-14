@@ -222,3 +222,56 @@ describe('splitChapters in the tactical style', () => {
     expect(chapter.lines[0].note).toContain('escolha tática: 3.Cf3 (o adversário entrega 0.80 em média)')
   })
 })
+
+describe('RepertoireBuilder in the balanced style', () => {
+  // Same position as the tactical test: masters play 3.c3; after 3.Cf3, 40% of amateurs blunder
+  // with 3...f6 (0.80 given away on average). Balanced keeps the masters move unless the
+  // tactical one gains at least `minTacticalGainCp` more.
+  const BC5 = [...START, 'Bc5']
+  const balancedEngine = new FakeEngine({
+    [AFTER_START]: eval_(['Bc5'], 30),
+    [fenAfter(...BC5)]: {
+      source: 'fake',
+      depth: 20,
+      lines: [
+        { san: ['c3'], cp: 35, mate: null },
+        { san: ['Nf3'], cp: 30, mate: null },
+      ],
+    },
+    [fenAfter(...BC5, 'c3')]: eval_(['Nf6'], 35),
+    [fenAfter(...BC5, 'c3', 'Nf6')]: eval_(['d4'], 35),
+    [fenAfter(...BC5, 'Nf3')]: eval_(['d6'], 30),
+    [fenAfter(...BC5, 'Nf3', 'd6')]: eval_(['c3'], 30),
+    [fenAfter(...BC5, 'Nf3', 'f6')]: eval_(['Nxe5'], 230),
+  })
+  const explorer: ExplorerLike = {
+    query: async (fen, db) => {
+      if (db === 'amateurs' && fen === AFTER_START) return stats([['Bc5', 1000]])
+      if (db === 'masters' && fen === fenAfter(...BC5)) return stats([['c3', 90], ['Nf3', 10]])
+      if (db === 'amateurs' && fen === fenAfter(...BC5, 'c3')) return stats([['Nf6', 1000]])
+      if (db === 'amateurs' && fen === fenAfter(...BC5, 'Nf3')) return stats([['d6', 600], ['f6', 400]])
+      return null
+    },
+  }
+  const ourMove = async (minTacticalGainCp: number) => {
+    const builder = new RepertoireBuilder(balancedEngine, explorer, 'w', new Map(), {
+      ...DEFAULT_DRAFT,
+      maxPlies: 6,
+      style: 'balanced',
+      minTacticalGainCp,
+    })
+    return childOf(await builder.build(START), 'e4', 'e5', 'Bc4', 'Bc5').children[0]
+  }
+
+  it('should switch to the tactical move when it clearly makes opponents err more', async () => {
+    const ours = await ourMove(40)
+    expect(ours.san).toBe('Nf3')
+    expect(ours.trapCp).toBe(80)
+  })
+
+  it('should keep the masters move when the tactical gain is below the threshold', async () => {
+    const ours = await ourMove(100)
+    expect(ours.san).toBe('c3')
+    expect(ours.trapCp).toBeNull()
+  })
+})

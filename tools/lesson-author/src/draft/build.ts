@@ -53,7 +53,10 @@ export interface DraftOptions {
   // solid: among the moves about as good as the engine's best, the one masters play most.
   // tactical: among those, the one after which real opponents of the chosen rating go wrong
   // most (expected centipawns given away), with a small bonus for checks and captures.
-  style: 'solid' | 'tactical'
+  // balanced: the masters' move, unless the best tactical candidate scores at least
+  // `minTacticalGainCp` more than it.
+  style: 'solid' | 'tactical' | 'balanced'
+  minTacticalGainCp: number
 }
 
 export const DEFAULT_DRAFT: DraftOptions = {
@@ -70,6 +73,7 @@ export const DEFAULT_DRAFT: DraftOptions = {
   punishUntilCp: 250,
   maxPunishPlies: 6,
   style: 'solid',
+  minTacticalGainCp: 40,
 }
 
 // Gains above this count as "already winning": a 9-pawn blunder should not outweigh a line
@@ -173,7 +177,7 @@ export class RepertoireBuilder {
     const fromBase = this.base.get(positionKey(fen))
     if (fromBase && isLegal(fen, fromBase)) return { san: fromBase, fromBase: true, trapCp: null }
 
-    const tactical = this.options.style === 'tactical'
+    const tactical = this.options.style !== 'solid'
     const analysis = await this.engine.analyse(fen, tactical ? 5 : 3)
     const lines = analysis?.lines ?? []
     if (lines.length === 0) return null
@@ -187,14 +191,17 @@ export class RepertoireBuilder {
     if (!tactical || byMasters.length < 2) return { san: (byMasters[0] ?? lines[0]).san[0], fromBase: false, trapCp: null }
 
     // Scored in the masters' order, so a tie keeps the more established move.
-    let pick: { san: string; trapCp: number; score: number } | null = null
+    const scored: { san: string; trapCp: number; score: number }[] = []
     for (const line of byMasters) {
       const san = line.san[0]
       const trapCp = await this.trapCp(fen, san)
-      const score = trapCp + forcingBonus(fen, san)
-      if (!pick || score > pick.score) pick = { san, trapCp, score }
+      scored.push({ san, trapCp, score: trapCp + forcingBonus(fen, san) })
     }
-    return { san: pick!.san, fromBase: false, trapCp: pick!.trapCp }
+    const pick = scored.reduce((best, s) => (s.score > best.score ? s : best))
+    if (this.options.style === 'balanced' && pick.score - scored[0].score < this.options.minTacticalGainCp) {
+      return { san: scored[0].san, fromBase: false, trapCp: null }
+    }
+    return { san: pick.san, fromBase: false, trapCp: pick.trapCp }
   }
 
   // What the opponent's real replies give away after our move, weighted by how often each is

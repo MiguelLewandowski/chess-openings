@@ -34,7 +34,7 @@ e entregar um arquivo limpo.
 | Lições (`--licoes`) | O número pedido | 15 |
 | Rating dos adversários (`--rating`) | "Pegar iniciantes" / armadilhas: `1000-1600`. Repertório para alunos mais fortes: `1600-2200` | `1000-1600` |
 | Profundidade (`--ate-lance`) | Até que lance da partida | 10 |
-| Estilo (`--estilo`) | `tatico` quando o pedido for por linhas táticas, forçantes ou "para pegar o adversário": nosso lance passa a ser o que mais faz os adversários da faixa errarem (dados do explorer + engine), até 0,50 do melhor. `solido` para um repertório posicional | `solido` |
+| Estilo (`--estilo`) | `tatico` quando o pedido for por linhas táticas, forçantes ou "para pegar o adversário": nosso lance passa a ser o que mais faz os adversários da faixa errarem (dados do explorer + engine), até 0,50 do melhor. `equilibrado` para o meio do caminho (o dos mestres, trocado pelo tático só quando rende ≥ 0,40 a mais; ajuste com `--ganho-minimo-cp`). `solido` para um repertório posicional | `solido` |
 | Base (`--base`) | Se já existe um `.txt` aprovado dessa abertura em `tools/lesson-author/repertorios/`, use-o: os nossos lances dele têm prioridade e mantêm o sistema escolhido | — |
 
 ## 2. Pré-requisitos

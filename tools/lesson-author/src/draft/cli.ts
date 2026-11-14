@@ -34,10 +34,14 @@ Opções:
   --min-alcance <0-1>      corta linhas que menos desta fração das partidas alcançam (padrão: 0.003)
   --erro-cp <n>            quanto (em centésimos de peão) um lance precisa perder para virar
                            linha de punição (padrão: 100 = um peão)
-  --estilo solido|tatico   solido: entre os lances quase tão bons quanto o melhor, o mais
+  --estilo <estilo>        solido: entre os lances quase tão bons quanto o melhor, o mais
                            jogado por mestres. tatico: o que mais faz os adversários da faixa
                            errarem de verdade (dados do explorer + engine), com bônus para
-                           xeques e capturas (padrão: solido)
+                           xeques e capturas. equilibrado: o dos mestres, trocado pelo tático
+                           só quando o ganho passa de --ganho-minimo-cp (padrão: solido)
+  --ganho-minimo-cp <n>    no estilo equilibrado, quanto a mais (em centésimos de peão de
+                           perda média do adversário) o lance tático precisa render para
+                           substituir o dos mestres (padrão: 40)
   --tolerancia-cp <n>      quanto o nosso lance pode ser pior que o melhor da engine
                            (padrão: 30; no estilo tático, 50)
   --stockfish <caminho>    executável do Stockfish (ou STOCKFISH_PATH)
@@ -63,6 +67,7 @@ async function main(): Promise<void> {
       'erro-cp': { type: 'string', default: String(DEFAULT_DRAFT.mistakeCp) },
       estilo: { type: 'string', default: 'solido' },
       'tolerancia-cp': { type: 'string' },
+      'ganho-minimo-cp': { type: 'string', default: String(DEFAULT_DRAFT.minTacticalGainCp) },
       stockfish: { type: 'string' },
       depth: { type: 'string', default: '18' },
       out: { type: 'string' },
@@ -90,6 +95,7 @@ async function main(): Promise<void> {
   const options = {
     ...DEFAULT_DRAFT,
     style,
+    minTacticalGainCp: Number(values['ganho-minimo-cp']),
     toleranceCp: Number(values['tolerancia-cp'] ?? (style === 'tactical' ? 50 : DEFAULT_DRAFT.toleranceCp)),
     maxPlies: Number(values['ate-lance']) * 2,
     minShare: Number(values['min-freq']),
@@ -120,7 +126,9 @@ async function main(): Promise<void> {
       `respostas com ≥ ${Math.round(options.minShare * 100)}% das partidas, até ${options.maxReplies} por posição, até o lance ${values['ate-lance']}`,
       style === 'tactical'
         ? `estilo tático: nosso lance é o que mais faz os adversários errarem, até ${options.toleranceCp} centésimos pior que o melhor`
-        : `estilo sólido: nosso lance é o mais jogado por mestres, até ${options.toleranceCp} centésimos pior que o melhor`,
+        : style === 'balanced'
+          ? `estilo equilibrado: nosso lance é o dos mestres, trocado pelo tático quando rende ${options.minTacticalGainCp} centésimos a mais de erro do adversário (até ${options.toleranceCp} pior que o melhor)`
+          : `estilo sólido: nosso lance é o mais jogado por mestres, até ${options.toleranceCp} centésimos pior que o melhor`,
       base.size > 0 ? `base: ${values.base} (${base.size} posições com lance nosso definido)` : 'sem repertório base',
       `gerado em ${new Date().toISOString().slice(0, 10)}`,
     ],
@@ -160,11 +168,12 @@ function parseStart(text: string): { sans: string[]; lastColor: Color } {
   return { sans, lastColor: sans.length % 2 === 1 ? 'w' : 'b' }
 }
 
-function parseStyle(value: string): 'solid' | 'tactical' {
+function parseStyle(value: string): 'solid' | 'tactical' | 'balanced' {
   const v = value.trim().toLowerCase()
   if (['solido', 'sólido', 'solid'].includes(v)) return 'solid'
   if (['tatico', 'tático', 'tactical'].includes(v)) return 'tactical'
-  throw new Error(`--estilo "${value}" inválido (use solido ou tatico)`)
+  if (['equilibrado', 'balanced'].includes(v)) return 'balanced'
+  throw new Error(`--estilo "${value}" inválido (use solido, equilibrado ou tatico)`)
 }
 
 function parseColor(value: string): Color {

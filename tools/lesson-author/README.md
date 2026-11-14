@@ -100,6 +100,9 @@ pnpm lessons:draft --inicio "1.e4 e5 2.Bc4" --nome "Abertura do Bispo" --licoes 
   das respostas reais (frequência do explorer × quanto a engine pune cada uma), com um bônus
   pequeno para xeques e capturas. A linha ganha o comentário `// escolha tática: ...` com o
   número, para você revisar. Combina bem com `--erro-cp 80` (mais linhas de punição).
+- **`--estilo equilibrado`:** o lance dos mestres, como no sólido, trocado pelo tático só quando
+  ele rende pelo menos `--ganho-minimo-cp` (padrão 40) a mais de perda média do adversário.
+  São os três caminhos que o aluno escolhe no app: posicional (`solido`), equilibrado e tático.
 - **Capítulos:** a árvore é dividida pelos desvios do adversário até chegar a `--licoes`,
   com nomes da base de aberturas da Lichess.
 - Nenhuma IA escolhe lances; cada linha vem comentada (`//`) com frequência e avaliação para
