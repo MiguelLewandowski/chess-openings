@@ -12,6 +12,8 @@ import { ChessWrapper } from '@/lib/chess'
 import { cn } from '@/lib/cn'
 import { SPARRING_LEVELS, sideToMove, sparringOutcome, type SparringColor, type SparringLevel, type SparringOutcome } from '@/lib/sparring'
 import { StockfishEngine } from '@/lib/stockfish'
+import { useEngineEvaluation } from '@/hooks/useEngineEvaluation'
+import EvalBar from './EvalBar'
 
 interface Ply {
   fen: string
@@ -20,6 +22,9 @@ interface Ply {
 }
 
 type Phase = 'player' | 'engine' | 'over'
+
+// Deeper than in the lessons: here the bar is the live read of a real game.
+const SPARRING_EVAL_DEPTH = 16
 
 const OUTCOME_COPY: Record<SparringOutcome['reason'], string> = {
   checkmate: 'Xeque-mate.',
@@ -49,6 +54,8 @@ export default function SparringBoard({
   const fen = plies[plies.length - 1].fen
   const outcome = sparringOutcome(plies.map((p) => p.fen), player)
   const phase: Phase = outcome ? 'over' : sideToMove(fen) === player ? 'player' : 'engine'
+  // A second engine, at full strength: the opponent's is weakened by its Skill Level.
+  const evaluation = useEngineEvaluation(fen, { enabled: true, depth: SPARRING_EVAL_DEPTH })
 
   useEffect(() => {
     const engine = new StockfishEngine()
@@ -122,8 +129,11 @@ export default function SparringBoard({
   return (
     <div className="grid grid-cols-1 gap-6 @4xl:grid-cols-[minmax(0,1fr)_minmax(320px,400px)] @4xl:gap-8 @4xl:items-start">
       <div className="flex justify-center min-w-0">
-        <div className="w-full max-w-[calc(100dvh-13.5rem)] lg:max-w-[calc(100dvh-10rem)] aspect-square rounded-[16px] overflow-hidden ring-1 ring-border-default shadow-xl bg-surface-card">
-          <div ref={boardRef} className="w-full h-full" />
+        <div className="w-full max-w-[calc(100dvh-13.5rem)] lg:max-w-[calc(100dvh-10rem)] flex flex-col sm:flex-row gap-2 sm:gap-3">
+          <EvalBar evaluation={evaluation} orientation={player} />
+          <div className="w-full sm:flex-1 min-w-0 aspect-square rounded-[16px] overflow-hidden ring-1 ring-border-default shadow-xl bg-surface-card">
+            <div ref={boardRef} className="w-full h-full" />
+          </div>
         </div>
       </div>
 
