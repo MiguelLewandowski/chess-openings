@@ -1,0 +1,148 @@
+# Defesa Francesa
+cor: pretas
+
+// Rascunho gerado por lessons:draft — lances do adversário pelo que se joga na faixa de
+// rating abaixo; nossos lances pela engine (preferindo os dos mestres) ou pelo repertório base.
+// início: 1.e4 e6 | adversários: 1000–1599 (Lichess, blitz/rápidas/clássicas)
+// respostas com ≥ 5% das partidas, até 4 por posição, até o lance 10
+// estilo equilibrado: nosso lance é o dos mestres, trocado pelo tático quando rende 40 centésimos a mais de erro do adversário (até 30 pior que o melhor)
+// sem repertório base
+// gerado em 2026-11-15
+//
+// Revisão (2026-11-15): títulos em português; cortados "2.Cf3 d5 3.e5 c5 4.d4" (transpõe para
+// a Variante do Avanço com 4.Cf3) e "2.Cf3 d5 3.e5 c5 4.Bb5+" (1% das partidas, uma linha só).
+// Acrescentados, de rascunhos separados com as mesmas opções (--inicio "1.e4 e6 2.d4 d5 3.Nd2"
+// e --inicio "1.e4 e6 2.e5"), a Variante Tarrasch (3.Cd2: 2% das respostas a 2...d5 na faixa,
+// abaixo do corte de 5%) e o desvio 2.e5 (4,8% das respostas a 1...e6).
+
+## 2.d4 d5 3.exd5 — Variante da Troca
+// 9.5% das partidas passam por aqui
+1.e4 e6 2.d4 d5 3.exd5 exd5 4.Cf3 Cf6 5.Cc3 Bd6 6.Bg5 c6
+1.e4 e6 2.d4 d5 3.exd5 exd5 4.De2+ Be7
+1.e4 e6 2.d4 d5 3.exd5 exd5 4.c4 Cf6
+1.e4 e6 2.d4 d5 3.exd5 exd5 4.Cf3 Cf6 5.Bg5 Be7
+1.e4 e6 2.d4 d5 3.exd5 exd5 4.Cc3 c6 5.Cf3 Bd6 6.Bd3 Ce7 7.O-O Bg4
+1.e4 e6 2.d4 d5 3.exd5 exd5 4.Cf3 Cf6 5.Bd3 Bd6 6.O-O O-O
+1.e4 e6 2.d4 d5 3.exd5 exd5 4.Cc3 c6 5.Bf4 Bd6
+
+## 2.d4 d5 3.e5 c5 4.c3 — Variante do Avanço
+// 9.4% das partidas passam por aqui
+// 6.Bb5? — 24% dos jogadores de 1000–1599 jogam; depois dele, +1.63 para nós
+1.e4 e6 2.d4 d5 3.e5 c5 4.c3 Cc6 5.Cf3 Bd7 6.Bb5 Cxe5 7.Bxd7+ Cxd7 8.O-O Cgf6
+1.e4 e6 2.d4 d5 3.e5 c5 4.c3 Cc6 5.Cf3 Bd7 6.Bd3 cxd4 7.cxd4 Db6
+1.e4 e6 2.d4 d5 3.e5 c5 4.c3 Cc6 5.Be3 Db6
+1.e4 e6 2.d4 d5 3.e5 c5 4.c3 Cc6 5.Cf3 Bd7 6.Be2 Cge7 7.O-O Cg6
+1.e4 e6 2.d4 d5 3.e5 c5 4.c3 Cc6 5.Bb5 Bd7 6.Bxc6 Bxc6 7.Cf3 Ce7
+// 6.Cf3? — 36% dos jogadores de 1000–1599 jogam; depois dele, +1.63 para nós
+1.e4 e6 2.d4 d5 3.e5 c5 4.c3 Cc6 5.Bb5 Bd7 6.Cf3 Cxe5 7.Bxd7+ Cxd7
+// 7.b3? — 37% dos jogadores de 1000–1599 jogam; depois dele, +1.34 para nós
+1.e4 e6 2.d4 d5 3.e5 c5 4.c3 Cc6 5.Cf3 Bd7 6.Be3 Db6 7.b3 cxd4
+
+## 2.d4 d5 3.e5 c5 4.Cf3 — Variante do Avanço, Sistema Nimzowitsch
+// 5.5% das partidas passam por aqui
+1.e4 e6 2.d4 d5 3.e5 c5 4.Cf3 Cc6 5.Bb5 Db6 6.Bxc6+ bxc6 7.O-O cxd4
+1.e4 e6 2.d4 d5 3.e5 c5 4.Cf3 Cc6 5.Be3 Ch6
+1.e4 e6 2.d4 d5 3.e5 c5 4.Cf3 Cc6 5.dxc5 Bxc5
+1.e4 e6 2.d4 d5 3.e5 c5 4.Cf3 Cc6 5.Bb5 Db6 6.Cc3 cxd4
+// 6.Bb5? — 24% dos jogadores de 1000–1599 jogam; depois dele, +1.59 para nós
+1.e4 e6 2.d4 d5 3.e5 c5 4.Cf3 Cc6 5.c3 Bd7 6.Bb5 Cxe5
+
+## 2.d4 d5 3.e5 c5 4.dxc5 — Variante do Avanço, Variante Steinitz
+// 1% das partidas passam por aqui
+// escolha tática: 4...Dc7 (o adversário entrega 1.34 em média)
+1.e4 e6 2.d4 d5 3.e5 c5 4.dxc5 Dc7
+
+## 2.d4 d5 3.Cc3 — Variante Winawer
+// 5.3% das partidas passam por aqui
+1.e4 e6 2.d4 d5 3.Cc3 Bb4 4.Bd2 dxe4 5.Cxe4 Dxd4
+1.e4 e6 2.d4 d5 3.Cc3 Bb4 4.e5 c5 5.a3 Bxc3+ 6.bxc3 Ce7
+1.e4 e6 2.d4 d5 3.Cc3 Bb4 4.Bd3 dxe4 5.Bxe4 Cf6
+1.e4 e6 2.d4 d5 3.Cc3 Bb4 4.exd5 exd5 5.Bd2 Cf6
+
+## 2.d4 d5 3.Cd2 — Variante Tarrasch
+// 0.7% das partidas passam por aqui (2% das respostas a 2...d5)
+1.e4 e6 2.d4 d5 3.Cd2 c5 4.c3 cxd4 5.cxd4 dxe4 6.Cxe4 Bb4+ 7.Cc3 Cf6 8.Cf3 O-O 9.Bd3 b6
+// 8.Bxb4? — 25% dos jogadores de 1000–1599 jogam; depois dele, +7.16 para nós
+1.e4 e6 2.d4 d5 3.Cd2 c5 4.c3 cxd4 5.cxd4 dxe4 6.Cxe4 Bb4+ 7.Bd2 Dxd4 8.Bxb4 Dxe4+
+// 8.Da4+? — 30% dos jogadores de 1000–1599 jogam; depois dele, +1.65 para nós
+1.e4 e6 2.d4 d5 3.Cd2 c5 4.c3 cxd4 5.cxd4 dxe4 6.Cxe4 Bb4+ 7.Bd2 Dxd4 8.Da4+ Cc6 9.Bxb4 Dxe4+
+1.e4 e6 2.d4 d5 3.Cd2 c5 4.Cgf3 cxd4 5.Cxd4 Cc6 6.Cxc6 bxc6 7.exd5 cxd5 8.Cf3 Bd6 9.Bb5+ Bd7 10.Bxd7+ Dxd7
+1.e4 e6 2.d4 d5 3.Cd2 c5 4.exd5 Dxd5 5.Cgf3 cxd4 6.Bc4 Dd6 7.O-O Cf6 8.Cb3 Cc6 9.Cbxd4 Cxd4 10.Cxd4 a6
+// 5.Bc4? — 10% dos jogadores de 1000–1599 jogam; depois dele, +1.06 para nós
+1.e4 e6 2.d4 d5 3.Cd2 c5 4.exd5 Dxd5 5.Bc4 Dxg2 6.Df3 Dxf3 7.Cgxf3 Cf6 8.Tg1 g6
+
+## 2.Cf3 d5 3.exd5 exd5 4.d4 — Variante do Cavalo
+// 10.7% das partidas passam por aqui
+1.e4 e6 2.Cf3 d5 3.exd5 exd5 4.d4 Cf6 5.Cc3 Bd6 6.Bg5 c6 7.Bd3 O-O 8.O-O Bg4 9.h3 Bh5
+1.e4 e6 2.Cf3 d5 3.exd5 exd5 4.d4 Cf6 5.Bg5 Be7 6.Cc3 O-O
+1.e4 e6 2.Cf3 d5 3.exd5 exd5 4.d4 Cf6 5.Be2 Bd6 6.O-O O-O
+1.e4 e6 2.Cf3 d5 3.exd5 exd5 4.d4 Cf6 5.Cc3 Bd6 6.Bd3 O-O 7.O-O Bg4
+1.e4 e6 2.Cf3 d5 3.exd5 exd5 4.d4 Cf6 5.Bd3 Bd6 6.O-O O-O 7.Bg5 Bg4
+1.e4 e6 2.Cf3 d5 3.exd5 exd5 4.d4 Cf6 5.Bg5 Be7 6.Bd3 O-O
+1.e4 e6 2.Cf3 d5 3.exd5 exd5 4.d4 Cf6 5.Cc3 Bd6 6.Bb5+ c6
+
+## 2.Cf3 d5 3.Cc3 — Variante dos Dois Cavalos
+// 2.6% das partidas passam por aqui
+1.e4 e6 2.Cf3 d5 3.Cc3 Cf6 4.e5 Cfd7 5.d4 c5
+1.e4 e6 2.Cf3 d5 3.Cc3 Cf6 4.exd5 exd5 5.d4 Bd6
+1.e4 e6 2.Cf3 d5 3.Cc3 Cf6 4.d3 c5
+
+## 2.Cf3 d5 3.exd5 exd5 4.Cc3
+// 2.4% das partidas passam por aqui
+// 6.d3? — 44% dos jogadores de 1000–1599 jogam; depois dele, +2.91 para nós
+1.e4 e6 2.Cf3 d5 3.exd5 exd5 4.Cc3 d4 5.Ce4 De7 6.d3 f5
+1.e4 e6 2.Cf3 d5 3.exd5 exd5 4.Cc3 d4 5.Cb5 Cc6
+1.e4 e6 2.Cf3 d5 3.exd5 exd5 4.Cc3 d4 5.Ce2 Cc6
+
+## 2.Cf3 d5 3.e5 c5 4.c3
+// 2.3% das partidas passam por aqui
+1.e4 e6 2.Cf3 d5 3.e5 c5 4.c3 d4 5.cxd4 cxd4 6.Da4+ Cc6 7.Bb5 Bd7
+1.e4 e6 2.Cf3 d5 3.e5 c5 4.c3 d4 5.cxd4 cxd4 6.d3 Cc6
+
+## 2.Cf3 d5 3.exd5 exd5 4.De2+
+// 1.6% das partidas passam por aqui
+1.e4 e6 2.Cf3 d5 3.exd5 exd5 4.De2+ Be7 5.d4 Cf6
+// escolha tática: 5...Cc6 (o adversário entrega 0.69 em média)
+1.e4 e6 2.Cf3 d5 3.exd5 exd5 4.De2+ Be7 5.Cc3 Cc6
+
+## 2.Cf3 d5 3.exd5 exd5 4.Bb5+
+// 1.2% das partidas passam por aqui
+// escolha tática: 5...a5 (o adversário entrega 1.88 em média)
+1.e4 e6 2.Cf3 d5 3.exd5 exd5 4.Bb5+ c6 5.Ba4 a5
+
+## 2.Bc4
+// 6.5% das partidas passam por aqui
+// escolha tática: 4...a5 (o adversário entrega 1.16 em média)
+1.e4 e6 2.Bc4 d5 3.exd5 exd5 4.Bb3 a5 5.a3 Cf6
+// escolha tática: 4...a5 (o adversário entrega 1.16 em média)
+1.e4 e6 2.Bc4 d5 3.exd5 exd5 4.Bb3 a5 5.a4 Cf6
+1.e4 e6 2.Bc4 d5 3.exd5 exd5 4.Bb5+ Bd7 5.Bxd7+ Dxd7
+1.e4 e6 2.Bc4 d5 3.exd5 exd5 4.De2+ Be7
+// 5.d4? — 12% dos jogadores de 1000–1599 jogam; depois dele, +6.14 para nós | escolha tática: 4...a5 (o adversário entrega 1.16 em média)
+1.e4 e6 2.Bc4 d5 3.exd5 exd5 4.Bb3 a5 5.d4 a4
+// 5.Cf3? — 10% dos jogadores de 1000–1599 jogam; depois dele, +5.39 para nós | escolha tática: 4...a5 (o adversário entrega 1.16 em média)
+1.e4 e6 2.Bc4 d5 3.exd5 exd5 4.Bb3 a5 5.Cf3 a4
+
+## 2.Cc3 — Variante do Cavalo da Dama
+// 6% das partidas passam por aqui
+1.e4 e6 2.Cc3 d5 3.exd5 exd5 4.d4 c6 5.Cf3 Bd6 6.Bd3 Ce7
+1.e4 e6 2.Cc3 d5 3.Cf3 Cf6
+1.e4 e6 2.Cc3 d5 3.d4 Bb4
+1.e4 e6 2.Cc3 d5 3.e5 c5
+1.e4 e6 2.Cc3 d5 3.exd5 exd5 4.Cf3 d4
+1.e4 e6 2.Cc3 d5 3.exd5 exd5 4.De2+ Be7
+
+## 2.e5 — Ataque Steinitz
+// 4.8% das partidas passam por aqui
+1.e4 e6 2.e5 d6 3.exd6 Bxd6 4.Cf3 e5 5.Bc4 e4 6.Cd4 Dg5
+1.e4 e6 2.e5 d6 3.exd6 Bxd6 4.d4 Cf6 5.c3 O-O
+// 3.f4? — 14% dos jogadores de 1000–1599 jogam; depois dele, +2.12 para nós
+1.e4 e6 2.e5 d6 3.f4 dxe5 4.fxe5 Dh4+
+// 8.f3? — 50% dos jogadores de 1000–1599 jogam; depois dele, +3.78 para nós
+1.e4 e6 2.e5 d6 3.d4 dxe5 4.dxe5 Dxd1+ 5.Rxd1 Cc6 6.Bb5 Bd7 7.Bxc6 Bxc6 8.f3 O-O-O+
+// 4.Cf3? — 15% dos jogadores de 1000–1599 jogam; depois dele, +1.78 para nós
+1.e4 e6 2.e5 d6 3.d4 dxe5 4.Cf3 exd4 5.Cxd4 e5 6.Bb5+ c6
+// escolha tática: 7...Bd7 (o adversário entrega 0.63 em média)
+1.e4 e6 2.e5 d6 3.Cf3 Cc6 4.d4 dxe5 5.dxe5 Dxd1+ 6.Rxd1 Cge7 7.Cc3 Bd7
+// 7.Cxc6? — 32% dos jogadores de 1000–1599 jogam; depois dele, +7.68 para nós | escolha tática: 6...Dg5 (o adversário entrega 2.44 em média)
+1.e4 e6 2.e5 d6 3.Cf3 Cc6 4.Bb5 dxe5 5.Bxc6+ bxc6 6.Cxe5 Dg5 7.Cxc6 Dxg2
